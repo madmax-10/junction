@@ -48,6 +48,8 @@ flowchart LR
     Vehicles --> DB
     Issues --> DB
     Posts --> DB
+    Issues --> Media[Issue photo files]
+    Posts -. references .-> Media
     AI --> Issues
     AI --> Posts
     AI --> Research[External research and model APIs]
@@ -58,13 +60,14 @@ flowchart LR
 | Client | React, TypeScript, Vite, Tailwind CSS | Dashboard, issue forms, draft review, public browsing |
 | API | Django + Django REST Framework | Authentication, validation, ownership checks, JSON contracts |
 | Persistence | PostgreSQL | The seven logical models and Django's auth tables |
+| Photos | Backend media directory | One copy per upload, named from the issue primary key; posts reference that copy |
 | Assistant | `ai` Django app, no MVP model | Intake structuring, research, draft generation |
 
 Authentication uses the custom `users` model from the start (`AUTH_USER_MODEL`) and JWT access and refresh tokens. Passwords are Django-managed hashes. `is_staff` participates in admin permission for catalog creation and moderation. It does not by itself grant reading every private issue.
 
 Proposed external services, called only from the server:
 
-- A model API (Gemini in the original brief) for structured extraction, explanation, and optional image or voice intake after credentials and quotas are confirmed.
+- A model API (Gemini in the original brief) for structured extraction, explanation, and optional reading of an already saved issue photo or a voice clip, after credentials and quotas are confirmed.
 - A web-search API (SerpApi in the original brief) for repair research and comparable asking prices. Store source links and retrieval context with the analysis or the draft, not in a separate research table.
 - A places or local-business search for nearby mechanics, used only with a city, ZIP, or other location the user supplied.
 
@@ -76,8 +79,8 @@ If a provider times out or returns nothing, the issue still persists and the res
 |---|---|---|
 | `accounts` | `User`, registration, login, refresh, `/api/auth/me/` | Vehicle or issue records |
 | `vehicles` | `NewCar`, `UsedCar`, admin-only catalog writes, owner-only used-car edits | Public listing text; that lives on an approved post |
-| `issues` | `BuyIssue`, `SellIssue`, `RepairIssue`, ownership checks, repair resolution | Publication; creating an issue does not create a public post |
-| `posts` | `Post` drafts, owner edits, approval, public browse, archive or delete | Cross-table foreign keys; `issue_id` plus `issue_type` is checked in the service layer |
+| `issues` | `BuyIssue`, `SellIssue`, `RepairIssue`, ownership checks, repair resolution, issue photo files | Publication; creating an issue does not create a public post |
+| `posts` | `Post` drafts, owner edits, approval, public browse, archive or delete | Its own photo files, and a database foreign key for `issue_id`; the service layer checks `issue_id` plus `issue_type`, and the post stores a path to the issue photo |
 | `ai` | Symptom extraction, sourced analysis, comparable-price research, draft preparation | Its own database table in the MVP; it writes into issue JSON fields and `posts` |
 
 Serializers accept client fields for the user's request. The server sets `user_id`, `owner_id`, and `approved_at` from the authenticated user and the approval action.
@@ -95,6 +98,7 @@ There is no shared `issues` or `queries` parent. Buy, sell, and repair are separ
 | A sale request | `sell_issues` for one owned `used_cars` row: asking price, condition, damage, location, private `contact_info` |
 | A repair request | `repair_issues` for one owned `used_cars` row: `description`, `symptoms`, `ai_analysis`, `resolution_details` |
 | Anything the public can read | `posts` with `status = published` and a frozen `post_data` snapshot |
+| A photo on an issue or its posts | One file under `media/issues/{issue_type}/{issue_id}/`, referenced by `post_data.photos` |
 
 Earlier brief tables that this architecture does **not** add for the MVP: `queries`, `repair_cases`, `case_comments`, `sale_listings`, `buyer_preferences`, `saved_items`, and `research_sources`.
 
@@ -106,6 +110,28 @@ Consequences:
 - One issue may have zero posts or several drafts. Only `published` posts appear in public browse and in cross-user retrieval.
 - The MVP keeps the latest structured analysis on the repair issue. It does not store a full chat transcript.
 - Saved items and comments are out of the MVP schema. Add them only after the publication boundary is working.
+
+### 4.1 Issue photos
+
+Photos belong to the issue. The backend stores the file once, and every post for that issue uses the same file.
+
+The `issues` app writes uploads under the backend media directory. The folder and the filename are taken from that issue's primary key. The issue type is part of the path so a buy, sell, and repair row never share a folder:
+
+`media/issues/{issue_type}/{issue_id}/{issue_id}_{n}.{ext}`
+
+`{issue_type}` is `buy`, `sell`, or `repair`. `{issue_id}` is that row's UUID. `{n}` is a sequence the server assigns, starting at 1. The client does not choose the stored name. JPEG, PNG, and WebP are accepted. The server rejects other content and enforces a count and size limit.
+
+`post_data.photos` stores those relative paths, for example `issues/repair/{issue_id}/{issue_id}_1.jpg`. Generating or approving a post does not write another file under the post id. Drafts and published posts for the issue point at the issue directory.
+
+Title, body, price, and contact fields in `post_data` remain the snapshot approved for publication. The photo list records which issue files are part of that post. Approval selects paths; it does not duplicate bytes. Replacing the file at an approved path changes the image readers see, because there is one copy.
+
+Access stays with the issue owner until a published post lists the path:
+
+- The owner can upload, list, and delete photos for their issue.
+- A request for a post photo succeeds when `post_data.photos` contains that filename and the filename's issue id matches `posts.issue_id` and `posts.issue_type`. Anonymous callers can load it only when the post is `published`. The owner can load it on their own draft.
+- The media directory is not served as public static files. Anyone else receives no file.
+- Deleting an issue deletes its photo directory. Deleting a post drops that post's references and leaves the issue files in place.
+- Deleting a photo removes the file and removes that path from the owner's posts for the same issue.
 
 ## 5. Runtime flows
 
@@ -131,29 +157,29 @@ Repair and sell start from a used car the caller owns. Buy starts from budget an
 ### 5.1 Repair
 
 1. The user registers the car on `used_cars` (make, model, year, mileage, optional trim and condition).
-2. The user creates `repair_issues` with the original `description`. The API rejects a car the caller does not own.
+2. The user creates `repair_issues` with the original `description` and any photos of the problem. The API rejects a car the caller does not own. Each photo is stored under that repair issue's primary key.
 3. The `ai` app writes `symptoms` as structured observations, keeping owner-stated facts distinct from inferences. It writes `ai_analysis` as sourced possibilities, uncertainty, and safety guidance. Neither field is a confirmed fault.
 4. The response can include published repair posts for similar vehicles and external results with URLs and retrieval context. Labels stay visible: official information, community-reported experience, or other public resource.
 5. Self-help content is sourced and plain-language. Hazardous situations get a limitation and a prompt toward qualified help, not a procedure the design has ruled out.
 6. Mechanic discovery, when implemented, uses a location the user provided and returns real businesses. The app does not book appointments.
 7. The user sets `status` to `resolved`, `unresolved`, or `unsure`. A resolution stores one `resolution_details` object, either mechanic-assisted or self-service, plus `resolved_at` when they report it fixed. That record is owner-reported.
-8. If the user wants to share the outcome, the assistant creates a private post with `issue_type = repair`. Approval sets `approved_at`, `status = published`, and a `post_data` snapshot of the fields the owner agreed to show.
+8. If the user wants to share the outcome, the assistant creates a private post with `issue_type = repair`. Approval sets `approved_at`, `status = published`, and a `post_data` snapshot of the fields the owner agreed to show. Selected photos are the same files stored for the repair issue; the post records their paths.
 
 A public repair post may show vehicle context, symptoms, reported action, optional cost, and the label that the fix is owner-reported.
 
 ### 5.2 Sell
 
 1. The user selects an existing `used_cars` row they own.
-2. The user creates `sell_issues` with description, optional `asking_price`, `condition_details`, `known_damage`, approximate `location`, and private `contact_info`.
+2. The user creates `sell_issues` with description, optional `asking_price`, `condition_details`, `known_damage`, approximate `location`, private `contact_info`, and any photos of the car. Photos are stored under that sell issue's primary key.
 3. The assistant may retrieve current comparable asking-price listings and explain the range, the sources, and the gaps. Sparse data produces an insufficient-data result. The assistant does not invent a price or apply an automatic penalty per past repair.
 4. The seller chooses the asking price and reviews which condition, history, and contact fields are public.
-5. Approval publishes `issue_type = sell` with those fields frozen in `post_data`.
+5. Approval publishes `issue_type = sell` with those fields in `post_data`. The listing's photos are references to the sell issue's files, limited to the paths the seller includes.
 
 Buyers reach the seller through the approved external contact method. There is no in-app checkout, escrow, negotiation chat, or payment.
 
 ### 5.3 Buy
 
-1. The user creates `buy_issues` with a description, optional `min_budget` and `max_budget`, and `preferences`.
+1. The user creates `buy_issues` with a description, optional `min_budget` and `max_budget`, `preferences`, and any reference photos. Those files are stored under that buy issue's primary key.
 2. The assistant compares that request with admin `new_cars` catalog rows, published sell posts, and external sources that are actually available.
 3. Recommendations state which preference each option meets and where information is missing. Catalog MSRP is a reference price. A catalog row is not a claim that a dealer has the car in stock.
 4. A buy post is optional and follows the same draft and approval rule. Creating the issue does not publish anything.
@@ -218,6 +244,16 @@ These routes are the planned contract. They are not implemented.
 | GET, PATCH | `/api/issues/repair/{id}/` | Read or edit one own repair issue |
 | PATCH | `/api/issues/repair/{id}/resolution/` | Record `resolution_details`, status, and `resolved_at` |
 
+**Issue photos.** `{intent}` is `buy`, `sell`, or `repair`. The stored filename is `{issue_id}_{n}.{ext}` inside `media/issues/{intent}/{issue_id}/`.
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| POST | `/api/issues/{intent}/{id}/photos/` | Owner uploads one photo; the server names the file from the issue id |
+| GET | `/api/issues/{intent}/{id}/photos/` | Owner lists that issue's photos |
+| GET | `/api/issues/{intent}/{id}/photos/{filename}/` | Owner reads one photo file |
+| DELETE | `/api/issues/{intent}/{id}/photos/{filename}/` | Owner removes the file and that path from their posts for the issue |
+| GET | `/api/posts/{id}/photos/{filename}/` | Read a photo the post references: the owner while it is a draft, anyone once it is published |
+
 **Posts**
 
 | Method | Endpoint | Purpose |
@@ -236,7 +272,7 @@ Server-side checks on every write:
 3. For buy, validate budget order and the preferences shape, and do not require a vehicle id.
 4. For a post, require a known `issue_type`, an existing row in that issue table, and a caller who owns that issue.
 5. Exclude drafts and unpublished issues from public list endpoints and from assistant retrieval for other users.
-6. Copy contact fields and repair history into `post_data` only from the approval payload.
+6. Copy contact fields and repair history into `post_data` only from the approval payload. Photo entries are paths under that issue's media directory, and the filename must start with that issue id.
 7. Define what happens to posts when an issue is deleted so logical references are not left implicit.
 8. Reject impossible years, negative money, negative mileage, unknown statuses, and unexpected JSON shapes.
 
@@ -248,11 +284,11 @@ The client is a thin caller of the API above.
 
 - Auth screens call register, login, refresh, and me.
 - The dashboard lists the caller's used cars and the three issue collections.
-- Repair, sell, and buy forms post to the matching issue collection. Repair and sell forms select a `used_cars` id first.
+- Repair, sell, and buy forms post to the matching issue collection. Repair and sell forms select a `used_cars` id first. Photo uploads go to that issue's photo endpoint and are shown again from the post without a second upload.
 - The repair detail screen shows `description`, `symptoms`, and `ai_analysis` separately, then the resolution action.
 - The sell detail screen shows research, the seller-chosen price, and a preview of the public snapshot before approve.
 - The buy detail screen shows catalog matches and published sell posts against `preferences` and budget. It does not ask the user to attach a car id.
-- Public pages call `GET /api/posts/` and render `post_data` for published rows only.
+- Public pages call `GET /api/posts/` and render `post_data` for published rows only. Images load through the post photo endpoint, which serves the issue file.
 
 Browsing published posts can be anonymous. Creating a car, an issue, or a post requires a session.
 
@@ -264,9 +300,9 @@ Build in this order. Each step should work against the real API and database bef
 
 1. Custom user, JWT auth, and a dashboard that can open all three issue types.
 2. Used-car registration and owner checks.
-3. Repair: create the issue, persist `symptoms` and `ai_analysis` from a real model call, run a real external search, and show published repair posts as related experience.
+3. Repair: create the issue, save photos under the issue id, persist `symptoms` and `ai_analysis` from a real model call, run a real external search, and show published repair posts as related experience. An approved repair post displays those same photo files.
 4. Resolution statuses `resolved`, `unresolved`, and `unsure`, then an explicit draft and approve step.
-5. Sell: condition, seller-chosen asking price, approved contact snapshot, published post.
+5. Sell: condition, seller-chosen asking price, photos stored on the sell issue and referenced by the published post, and an approved contact snapshot.
 6. Buy: create budget and preferences, and browse published sell posts with working filters.
 7. Safety copy, source links, and a usable response when an external API fails.
 
@@ -274,7 +310,7 @@ Build in this order. Each step should work against the real API and database bef
 
 1. Comparable asking-price research that can return insufficient data.
 2. Nearby mechanic lookup from a user-supplied location.
-3. Image or voice intake into the same repair issue fields.
+3. Voice intake, and having the model read a photo already stored on the repair issue. The file itself is saved in the P0 photo path.
 4. Buy recommendations that cite which preference each catalog row or published post satisfies.
 5. A sell draft that can offer selected fields from the owned car and from the owner's own repair issues, still reviewed before approval.
 
@@ -314,7 +350,8 @@ The MVP is complete when:
 - Published posts are searchable and private issues are not.
 - Repair resolution supports resolved, unresolved, and unsure.
 - Publication happens only through post approval.
-- A seller can publish a post whose `post_data` contains the approved contact method.
+- A seller can publish a post whose `post_data` contains the approved contact method and references the sell issue's photo files.
+- A published post serves those photos from the issue directory. A private issue photo is not readable from the public media path.
 - A buyer can filter to that post.
 - Price research reports insufficient data instead of inventing comparables.
 - Dangerous repair text returns safety guidance.
@@ -333,7 +370,7 @@ The MVP is complete when:
 
 1. Confirm provider credentials and freeze the JSON shapes for preferences, symptoms, analysis, condition, contact, and `post_data`.
 2. Create the custom user and the other models before feature work, matching the database design.
-3. Finish text-only repair, including approval, before image or voice.
+3. Finish repair text, approval, and issue-photo storage before voice or before sending a saved photo to the model. The post references the issue file either way.
 4. Add the minimal sell post and buy browse.
 5. Add mechanic lookup, sourced pricing, and richer catalog matching only after that path is reliable.
 
