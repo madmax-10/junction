@@ -1,6 +1,7 @@
 import type { MarketplaceListing } from '../types/marketplace.ts'
+import type { PostContact, PostData, PostDraft, PostIssueType, PostStatus } from '../types/post.ts'
 import type { CommunityStory, RepairMethod, RepairPostData, RepairSymptoms } from '../types/story.ts'
-import { api, apiUrl, fetchAllPages } from './api.ts'
+import { api, apiBlob, apiUrl, fetchAllPages } from './api.ts'
 
 export type ApiPost = {
   id: string
@@ -172,6 +173,96 @@ function toNewListing(car: ApiNewCar): MarketplaceListing | null {
 
 export async function getPost(id: string) {
   return api<ApiPost>(`/api/posts/${id}/`)
+}
+
+const issueTypes = new Set<PostIssueType>(['buy', 'sell', 'repair'])
+const postStatuses = new Set<PostStatus>(['draft', 'approved', 'published', 'archived'])
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+function textFields<K extends string>(value: unknown, keys: readonly K[]) {
+  if (!isRecord(value)) return undefined
+  const result: Partial<Record<K, string>> = {}
+  for (const key of keys) {
+    const item = text(value[key]).trim()
+    if (item) result[key] = item
+  }
+  return Object.keys(result).length > 0 ? result : undefined
+}
+
+// Tool results send money as decimal strings, while the REST API sends numbers.
+function toPostData(value: unknown): PostData {
+  if (!isRecord(value)) return {}
+  const data: PostData = {}
+  for (const key of ['make', 'model', 'trim', 'known_damage', 'location', 'fuel_type', 'work_performed', 'mechanic_name', 'insurance_settlement'] as const) {
+    const item = text(value[key]).trim()
+    if (item) data[key] = item
+  }
+  for (const key of ['year', 'mileage', 'asking_price', 'min_budget', 'max_budget', 'minimum_year', 'maximum_mileage', 'cost'] as const) {
+    const item = numberOrNull(value[key])
+    if (item !== null) data[key] = item
+  }
+  const makes = stringList(value.preferred_makes)
+  const models = stringList(value.preferred_models)
+  if (makes) data.preferred_makes = makes
+  if (models) data.preferred_models = models
+  if (value.vehicle_type === 'new' || value.vehicle_type === 'used') data.vehicle_type = value.vehicle_type
+  const method = repairMethod(value.method)
+  if (method) data.method = method
+  const condition = textFields(value.condition_details, ['mechanical', 'exterior', 'interior', 'maintenance_history'] as const)
+  if (condition) data.condition_details = condition
+  const contact: PostContact | undefined = textFields(value.contact, ['phone', 'email', 'link'] as const)
+  if (contact) data.contact = contact
+  const repairSymptoms = symptoms(value.symptoms)
+  if (repairSymptoms.confirmed || repairSymptoms.inferred) data.symptoms = repairSymptoms
+  const photos = photoPaths(value.photos)
+  if (photos.length > 0) data.photos = photos
+  if (value.owner_reported === true) data.owner_reported = true
+  return data
+}
+
+export function toPostDraft(value: unknown): PostDraft | null {
+  if (!isRecord(value)) return null
+  const { id, issue_type: issueType, issue_id: issueId, status } = value
+  if (typeof id !== 'string' || typeof issueId !== 'string') return null
+  if (!issueTypes.has(issueType as PostIssueType) || !postStatuses.has(status as PostStatus)) return null
+  return {
+    id,
+    issueType: issueType as PostIssueType,
+    issueId,
+    title: text(value.title),
+    content: text(value.content),
+    postData: toPostData(value.post_data),
+    status: status as PostStatus,
+  }
+}
+
+export async function getPostDraft(id: string) {
+  return toPostDraft(await getPost(id))
+}
+
+export async function updatePostDraft(id: string, changes: { title: string; content: string; post_data: PostData }) {
+  const updated = toPostDraft(await api<ApiPost>(`/api/posts/${id}/`, { method: 'PATCH', body: changes }))
+  if (!updated) throw new Error('The server returned an unexpected post.')
+  return updated
+}
+
+export type IssuePhoto = { filename: string; path: string }
+
+export async function listIssuePhotos(issueType: PostIssueType, issueId: string) {
+  const response = await api<{ photos?: unknown }>(`/api/issues/${issueType}/${issueId}/photos/`)
+  if (!Array.isArray(response.photos)) return []
+  return response.photos.flatMap((photo): IssuePhoto[] =>
+    isRecord(photo) && typeof photo.filename === 'string' && typeof photo.path === 'string'
+      ? [{ filename: photo.filename, path: photo.path }]
+      : [],
+  )
+}
+
+export async function getIssuePhotoBlob(issueType: PostIssueType, issueId: string, filename: string) {
+  return apiBlob(`/api/issues/${issueType}/${issueId}/photos/${encodeURIComponent(filename)}/`)
 }
 
 export async function getRepairStories() {

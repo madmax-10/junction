@@ -1,7 +1,11 @@
+import { Wrench } from '@phosphor-icons/react'
 import type { ChatImage, ChatMessage } from '../../types/chat.ts'
 import type { DetailSuggestion } from '../../types/extraction.ts'
+import type { RepairOutcomePrompt } from '../../types/repair.ts'
 import { FollowUpChips } from './FollowUpChips.tsx'
 import { GuideAvatar } from './GuideAvatar.tsx'
+import { PostReviewCard } from './PostReviewCard.tsx'
+import { RepairOutcomeCard } from './RepairOutcomeCard.tsx'
 import { NoStoryMatches, StoryMatchList } from './StoryMatchList.tsx'
 import { SuggestionChips } from './SuggestionChips.tsx'
 
@@ -56,10 +60,21 @@ type AssistantMessageProps = {
   message: Extract<ChatMessage, { role: 'assistant' }>
   isLatest: boolean
   showFollowUps: boolean
+  showPost: boolean
+  repairOutcome?: RepairOutcomePrompt
+  onShareRepair?: () => void
   onFollowUp: (question: string) => void
 }
 
-export function AssistantMessage({ message, isLatest, showFollowUps, onFollowUp }: AssistantMessageProps) {
+export function AssistantMessage({
+  message,
+  isLatest,
+  showFollowUps,
+  showPost,
+  repairOutcome,
+  onShareRepair,
+  onFollowUp,
+}: AssistantMessageProps) {
   const paragraphs = message.text.split('\n\n')
 
   return (
@@ -73,10 +88,23 @@ export function AssistantMessage({ message, isLatest, showFollowUps, onFollowUp 
           ))}
         </div>
 
-        {message.matchStatus === 'matched' && (
+        {message.matchStatus === 'matched' && message.matches.length > 0 && (
           <StoryMatchList id={`${message.id}-matches`} matches={message.matches} isLatest={isLatest} />
         )}
         {message.matchStatus === 'no-match' && <NoStoryMatches />}
+
+        {showPost && message.post && <PostReviewCard key={message.post.id} initialPost={message.post} />}
+        {repairOutcome && <RepairOutcomeCard key={repairOutcome.issueId} prompt={repairOutcome} />}
+        {onShareRepair && (
+          <button
+            type="button"
+            onClick={onShareRepair}
+            className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-secondary/20 bg-surface px-3 py-1.5 font-body text-xs font-semibold text-secondary transition-colors duration-200 outline-none hover:bg-secondary-light focus-visible:ring-2 focus-visible:ring-secondary"
+          >
+            <Wrench size={14} weight="duotone" aria-hidden="true" />
+            Got it fixed? Share your repair story
+          </button>
+        )}
 
         {showFollowUps && message.followUps.length > 0 && (
           <FollowUpChips questions={message.followUps} onSelect={onFollowUp} />

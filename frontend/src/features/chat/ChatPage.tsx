@@ -4,6 +4,7 @@ import { useOutletContext } from 'react-router'
 import { useScrollFade } from '../../hooks/useScrollFade.ts'
 import { easeOutQuint } from '../../styles/motion.ts'
 import { useIntakeDraft } from '../intake/IntakeContext.ts'
+import type { RepairOutcomePrompt } from '../../types/repair.ts'
 import type { WorkspaceOutletContext } from '../workspace/WorkspaceLayout.tsx'
 import { ChatComposer } from './ChatComposer.tsx'
 import { useChat, useLatestReply } from './ChatContext.ts'
@@ -19,7 +20,8 @@ const messageTransition = { duration: 0.35, ease: easeOutQuint }
 export function ChatPage() {
   const { messages, isResponding, isRestoring, sendMessage, confirmSuggestion, dismissSuggestion, resetChat } =
     useChat()
-  const { draft, resetDraft } = useIntakeDraft()
+  const { draft, saved, resetDraft } = useIntakeDraft()
+  const [repairShareAnchor, setRepairShareAnchor] = useState<string | null>(null)
   const { openEditor } = useOutletContext<WorkspaceOutletContext>()
   const latestReply = useLatestReply()
   const shouldReduceMotion = useReducedMotion()
@@ -35,6 +37,39 @@ export function ChatPage() {
     },
     [setFadeElement],
   )
+
+  // A draft can come back over several turns, so only its newest message shows the review card.
+  const latestPostMessage = new Map<string, string>()
+  // Once a repair has a post card, its review card takes over from the "share this repair" card.
+  const lastRepairPostIndex = new Map<string, number>()
+  const latestOutcomeMessage = new Map<string, string>()
+  messages.forEach((message, index) => {
+    if (message.role !== 'assistant') return
+    if (message.post) {
+      latestPostMessage.set(message.post.id, message.id)
+      if (message.post.issueType === 'repair') lastRepairPostIndex.set(message.post.issueId, index)
+    }
+    if (message.repairOutcome) latestOutcomeMessage.set(message.repairOutcome.issueId, message.id)
+  })
+
+  const repairIssueId = saved.issues.repair ?? null
+  const canOfferRepairShare =
+    repairIssueId !== null &&
+    repairShareAnchor === null &&
+    !latestOutcomeMessage.has(repairIssueId) &&
+    !lastRepairPostIndex.has(repairIssueId)
+
+  function repairOutcomeFor(message: (typeof messages)[number], index: number): RepairOutcomePrompt | undefined {
+    if (message.role !== 'assistant') return undefined
+    const prompt =
+      message.repairOutcome && latestOutcomeMessage.get(message.repairOutcome.issueId) === message.id
+        ? message.repairOutcome
+        : message.id === repairShareAnchor && repairIssueId
+          ? { issueId: repairIssueId }
+          : undefined
+    if (!prompt) return undefined
+    return (lastRepairPostIndex.get(prompt.issueId) ?? -1) < index ? prompt : undefined
+  }
 
   const hasMessages = messages.length > 0
   const isReadyToStart = hasStartingDetails(draft)
@@ -72,6 +107,7 @@ export function ChatPage() {
   }
 
   function handleReset() {
+    setRepairShareAnchor(null)
     resetChat()
     resetDraft()
   }
@@ -99,7 +135,7 @@ export function ChatPage() {
               aria-relevant="additions"
               className="mx-auto flex max-w-2xl flex-col gap-6"
             >
-              {messages.map((message) => (
+              {messages.map((message, index) => (
                 <motion.li
                   key={message.id}
                   initial={{ opacity: 0, y: 12 }}
@@ -119,6 +155,13 @@ export function ChatPage() {
                       message={message}
                       isLatest={message.id === latestReply?.id}
                       showFollowUps={message.id === latestReply?.id && !isResponding}
+                      showPost={message.post ? latestPostMessage.get(message.post.id) === message.id : false}
+                      repairOutcome={repairOutcomeFor(message, index)}
+                      onShareRepair={
+                        canOfferRepairShare && message.id === latestReply?.id && !isResponding
+                          ? () => setRepairShareAnchor(message.id)
+                          : undefined
+                      }
                       onFollowUp={sendSuggestion}
                     />
                   )}
