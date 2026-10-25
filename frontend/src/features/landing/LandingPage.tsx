@@ -1,19 +1,12 @@
 import { ArrowRight, LockSimple } from '@phosphor-icons/react'
-import { motion, stagger, useReducedMotion, type Variants } from 'motion/react'
+import { motion, useReducedMotion } from 'motion/react'
 import { paths } from '../../app/paths.ts'
 import { SiteHeader } from '../../components/layout/SiteHeader.tsx'
 import { ButtonLink } from '../../components/ui/ButtonLink.tsx'
+import { fadeUpVariants, staggerVariants } from '../../styles/motion.ts'
 import { HeroStoryPreview } from './HeroStoryPreview.tsx'
 
-const introVariants: Variants = {
-  hidden: {},
-  visible: { transition: { delayChildren: stagger(0.07, { startDelay: 0.05 }) } },
-}
-
-const fadeUpVariants: Variants = {
-  hidden: { opacity: 0, y: 14 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.22, 1, 0.36, 1] } },
-}
+const introVariants = staggerVariants(0.07, 0.05)
 
 export function LandingPage() {
   const prefersReducedMotion = useReducedMotion()

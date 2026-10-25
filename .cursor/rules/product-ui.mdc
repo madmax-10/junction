@@ -150,7 +150,7 @@ Do not modify backend code.
 
 Do not create additional documentation unless requested.
 
-Never open browser and click, take screenshots to test, let user test in their localhost browser.
+Do not open browser and click or take screenshots to test, but let the user test themselves in their localhost browser.
 
 Wait for the next instruction after completing each task.
 

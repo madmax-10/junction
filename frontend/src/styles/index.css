@@ -9,6 +9,7 @@
   --color-accent: #EA936D;
 
   --color-primary-hover: color-mix(in oklab, var(--color-primary) 85%, black);
+  --color-accent-strong: color-mix(in oklab, var(--color-accent) 60%, black);
 
   --font-sans: "Inter", sans-serif;
   --font-body: "Inter", sans-serif;

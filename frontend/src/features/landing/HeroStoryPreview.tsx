@@ -1,18 +1,11 @@
 import { Flask, Quotes } from '@phosphor-icons/react'
-import { motion, stagger, type Variants } from 'motion/react'
+import { motion } from 'motion/react'
 import { Badge } from '../../components/ui/Badge.tsx'
 import { sampleSituation, sampleStoryPreviews } from '../../mocks/sampleStories.ts'
+import { fadeUpVariants as itemVariants, staggerVariants } from '../../styles/motion.ts'
 import { StoryPreviewCard } from '../stories/StoryPreviewCard.tsx'
 
-const listVariants: Variants = {
-  hidden: {},
-  visible: { transition: { delayChildren: stagger(0.09, { startDelay: 0.35 }) } },
-}
-
-const itemVariants: Variants = {
-  hidden: { opacity: 0, y: 16 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.22, 1, 0.36, 1] } },
-}
+const listVariants = staggerVariants(0.09, 0.35)
 
 const cardOffsetClassNames = ['lg:mr-6', 'lg:ml-6', 'lg:mx-3']
 
