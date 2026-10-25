@@ -12,12 +12,9 @@ export function ChatHeader({ hasMessages, onReset }: ChatHeaderProps) {
     <header className="flex items-center justify-between gap-3 border-b border-text/[0.06] px-4 py-3 sm:px-6">
       <div className="flex min-w-0 items-center gap-3">
         <GuideAvatar size="md" />
-        <div className="min-w-0">
-          <h1 id="chat-title" className="font-heading text-base font-bold tracking-tight">
-            Assistant
-          </h1>
-          <p className="truncate font-body text-xs text-text/60">Answers grounded in community stories</p>
-        </div>
+        <h1 id="chat-title" className="min-w-0 truncate font-heading text-base font-bold tracking-tight">
+          Assistant
+        </h1>
       </div>
 
       {hasMessages && (

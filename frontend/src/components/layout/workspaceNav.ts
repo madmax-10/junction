@@ -34,7 +34,7 @@ export const workspaceNavItems: WorkspaceNavItem[] = [
     to: paths.marketplace,
     label: 'Marketplace',
     shortLabel: 'Market',
-    summary: 'Explore repair shops, buyers, and replacement options suggested by the community.',
+    summary: 'Browse replacement cars and damaged cars sold as-is for repair or parts.',
     icon: Storefront,
   },
   {

@@ -10,9 +10,14 @@ export const paths = {
   stories: '/stories',
   story: '/stories/:storyId?',
   marketplace: '/marketplace',
+  marketplaceListing: '/marketplace/:listingId?',
   myStory: '/my-story',
 } as const
 
 export function getStoryPath(storyId: string) {
   return generatePath(paths.story, { storyId })
+}
+
+export function getListingPath(listingId: string) {
+  return generatePath(paths.marketplaceListing, { listingId })
 }

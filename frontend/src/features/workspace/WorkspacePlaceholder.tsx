@@ -4,7 +4,7 @@ import { Badge } from '../../components/ui/Badge.tsx'
 import { easeOutQuint } from '../../styles/motion.ts'
 
 export function WorkspacePlaceholder({ tab }: { tab: WorkspaceNavId }) {
-  const { label, summary, icon: Icon } = getWorkspaceNavItem(tab)
+  const { label, icon: Icon } = getWorkspaceNavItem(tab)
   const titleId = `${tab}-title`
 
   return (
@@ -22,8 +22,7 @@ export function WorkspacePlaceholder({ tab }: { tab: WorkspaceNavId }) {
       <h1 id={titleId} className="mt-5 font-heading text-2xl font-extrabold tracking-[-0.02em]">
         {label}
       </h1>
-      <p className="mt-2 max-w-sm font-body text-sm leading-relaxed text-text/65">{summary}</p>
-      <div className="mt-5">
+      <div className="mt-4">
         <Badge>Coming soon</Badge>
       </div>
     </motion.section>

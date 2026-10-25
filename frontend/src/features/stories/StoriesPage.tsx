@@ -1,9 +1,10 @@
 import { ArrowCounterClockwise, MagnifyingGlass, WarningCircle } from '@phosphor-icons/react'
 import { AnimatePresence, motion } from 'motion/react'
-import { useMemo, useState, type ReactNode } from 'react'
+import { useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { getStoryPath, paths } from '../../app/paths.ts'
 import { Button } from '../../components/ui/Button.tsx'
+import { StatusMessage } from '../../components/ui/StatusMessage.tsx'
 import { useScrollFade } from '../../hooks/useScrollFade.ts'
 import { easeOutQuint, fadeUpVariants, staggerVariants } from '../../styles/motion.ts'
 import type { StoryFilters } from '../../types/story.ts'
@@ -15,34 +16,6 @@ import { useCommunityStories } from './useCommunityStories.ts'
 const pageTransition = { duration: 0.35, ease: easeOutQuint }
 const layoutTransition = { duration: 0.3, ease: easeOutQuint }
 const placeholderCards = [0, 1, 2, 3]
-
-function StatusMessage({
-  icon,
-  title,
-  description,
-  action,
-}: {
-  icon: ReactNode
-  title: string
-  description: string
-  action: ReactNode
-}) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={pageTransition}
-      className="flex flex-col items-center px-6 py-14 text-center"
-    >
-      <span className="grid size-12 place-items-center rounded-2xl bg-primary-light text-primary" aria-hidden="true">
-        {icon}
-      </span>
-      <h2 className="mt-4 font-heading text-lg font-bold tracking-tight">{title}</h2>
-      <p className="mt-1 max-w-sm font-body text-sm leading-relaxed text-text/65">{description}</p>
-      <div className="mt-5">{action}</div>
-    </motion.div>
-  )
-}
 
 function LoadingCards() {
   return (
@@ -98,15 +71,9 @@ export function StoriesPage() {
     >
       <div ref={setFadeElement} className="scroll-fade-y @container min-h-0 flex-1 overflow-y-auto overscroll-contain">
         <header className="px-5 pt-6 sm:px-8 sm:pt-8">
-          <div className="max-w-xl">
-            <h1 id="stories-title" className="font-heading text-2xl font-extrabold tracking-[-0.02em] sm:text-[1.75rem]">
-              Community Stories
-            </h1>
-            <p className="mt-1.5 font-body text-sm leading-relaxed text-text/65">
-              What other owners decided, how it turned out, and what they learned, organized into the same
-              sections so stories are easy to compare.
-            </p>
-          </div>
+          <h1 id="stories-title" className="font-heading text-2xl font-extrabold tracking-[-0.02em] sm:text-[1.75rem]">
+            Community Stories
+          </h1>
         </header>
 
         <div className="z-10 border-b @3xl:sticky @3xl:top-0 border-text/[0.06] bg-surface px-5 pt-5 pb-4 sm:px-8">
