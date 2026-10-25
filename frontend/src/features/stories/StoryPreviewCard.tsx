@@ -12,7 +12,7 @@ export function StoryPreviewCard({ story, variant = 'full' }: StoryPreviewCardPr
 
   return (
     <article
-      className={`rounded-2xl border border-text/[0.06] bg-surface shadow-card transition-shadow duration-300 ease-out hover:shadow-card-hover ${isCompact ? 'px-5 py-4' : 'p-5'}`}
+      className={`relative rounded-2xl border border-text/[0.06] bg-surface shadow-card transition-shadow duration-300 ease-out hover:shadow-card-hover ${isCompact ? 'px-5 py-4' : 'p-5'}`}
     >
       <header className="flex items-start justify-between gap-3">
         <div className="min-w-0">
