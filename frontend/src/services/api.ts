@@ -66,10 +66,13 @@ export function setTokens(access: string, refresh: string) {
   writeStorage(refreshKey, refresh)
 }
 
+export function removeStoredKey(key: string) {
+  removeStorage(key)
+}
+
 export function clearSession() {
   removeStorage(accessKey)
   removeStorage(refreshKey)
-  removeStorage(chatEventsKey)
 }
 
 export function readStoredJson(key: string): unknown {
