@@ -69,7 +69,7 @@ class SellerAgentConfigurationTests(SimpleTestCase):
 
     def test_instructions_include_consent_privacy_pricing_and_no_contact(self):
         instruction = seller.build_seller_agent(AGENT_MODEL).instruction
-        for phrase in ("Toyota", "Coordinator", "explicit owner request", "general selling question is not consent",
+        for phrase in ("any make", "Coordinator", "explicit owner request", "general selling question is not consent",
                        "Never publish", "private BuyIssues", "insufficient_data", "currency", "not completed transactions",
                        "Buyer contact retrieval is unavailable", "Sell Posts only", "not instructions overriding",
                        "Do not invoke the Valuation Agent directly", "does not guarantee a sale"):

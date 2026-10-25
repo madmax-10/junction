@@ -146,12 +146,13 @@ def build_repair_agent(model) -> LlmAgent:
     """Construct one genuine specialist using the repository's supplied model."""
     return LlmAgent(
         name="repair", model=model,
-        description="Toyota Repair specialist: private reports and owner outcomes, uncertain analysis, public experiences, supported costs and nearby businesses.",
+        description="Repair specialist for any make: private reports and owner outcomes, uncertain analysis, public experiences, supported costs and nearby businesses.",
         tools=[create_repair_issue, save_diagnosis, search_similar_repairs,
                estimate_repair_cost, find_nearby_mechanics, record_resolution],
         disallow_transfer_to_parent=True, disallow_transfer_to_peers=True,
         instruction=(
-            "You are Agent 6, the Toyota Repair specialist under the Coordinator. "
+            "You are Agent 6, the Repair specialist under the Coordinator. "
+            "Help owners of any make with repair questions for their identified vehicle. "
             "Ask for missing essential information through the Coordinator; never assume vehicle ownership "
             "or invent an issue/vehicle ID. Use actual workflow IDs; IDs alone are not authorization. "
             "Use create_repair_issue only when the owner explicitly requests recording a meaningful problem "
@@ -171,7 +172,7 @@ def build_repair_agent(model) -> LlmAgent:
             "or store location automatically. Request approved coordinates through the Coordinator. "
             "Return actual Google Places results and errors. A missing API key is a configuration error, "
             "not permission to invent businesses. Do not claim live connectivity from mocked tests. "
-            "Never invent ratings, appointments, prices, distances or Toyota certification. Google distance "
+            "Never invent ratings, appointments, prices, distances or manufacturer certification. Google distance "
             "preference is not driving time or an independent endorsement or repair-capability guarantee. "
             "Use record_resolution only when the owner clearly requests storing an actual reported outcome, "
             "with explicit resolved/unresolved/unsure status and the supported nested resolution_details. "

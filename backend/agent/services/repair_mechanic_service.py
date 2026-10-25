@@ -128,7 +128,7 @@ def find_nearby_mechanics(repair_issue_id, latitude, longitude, radius_meters=10
         return error_result("Invalid Google Places response.")
     return tool_result(
         "ok", data={"mechanics": mechanics, "result_count": len(mechanics), "limitations": [
-            "Google Places listings are not independently endorsed or verified as Toyota-certified. "
+            "Google Places listings are not independently endorsed or verified as manufacturer-certified. "
             "Repair capability, appointment availability and affordability are not established.",
             "This search does not diagnose faults or establish that driving to a business is safe.",
         ]},

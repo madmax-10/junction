@@ -75,7 +75,7 @@ class RepairAgentConfigurationTests(SimpleTestCase):
 
     def test_instructions_cover_safety_privacy_consent_and_evidence(self):
         instruction = repair.build_repair_agent(AGENT_MODEL).instruction
-        for phrase in ("Toyota", "Coordinator", "owner explicitly requests", "consent", "preliminary AI analysis",
+        for phrase in ("any make", "Coordinator", "owner explicitly requests", "consent", "preliminary AI analysis",
                        "uncertainty", "anecdotal", "insufficient_data", "authorized location coordinates",
                        "brake failure", "steering failure", "fuel leaks", "smoke", "fire", "severe overheating",
                        "sudden power loss", "Never publish private data", "Do not invoke Buyer", "configuration error"):

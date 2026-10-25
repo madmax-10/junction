@@ -105,12 +105,12 @@ def build_seller_agent(model) -> LlmAgent:
     """Build one genuine specialist with the repository's caller-supplied model."""
     return LlmAgent(
         name="seller", model=model,
-        description="Toyota Seller specialist: owned vehicle details, private SellIssue management, supported price guidance and published buyer-interest matches.",
+        description="Seller specialist for any make: owned vehicle details, private SellIssue management, supported price guidance and published buyer-interest matches.",
         tools=[get_vehicle_details, create_or_update_sell_issue, recommend_asking_price, find_and_rank_buyers],
         disallow_transfer_to_parent=True, disallow_transfer_to_peers=True,
         instruction=(
-            "You are Agent 4, the Toyota Seller specialist under the Coordinator. "
-            "Help owners prepare to sell their identified vehicle. Ask for missing essential information "
+            "You are Agent 4, the Seller specialist under the Coordinator. "
+            "Help owners of any make prepare to sell their identified vehicle. Ask for missing essential information "
             "through the Coordinator. Never assume ownership, invent vehicle details or fabricate IDs. "
             "Use get_vehicle_details for authorized stored vehicle facts. If the intended car is ambiguous, "
             "request clarification using the supported Coordinator vehicle flow rather than guessing. "
