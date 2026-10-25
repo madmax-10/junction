@@ -3,7 +3,8 @@
 from google.adk.agents import LlmAgent
 
 from agent.agents.stubs import SPECIALIST_DESCRIPTIONS
-from agent.config import AGENT_MODEL
+from agent.config import get_agent_model
+from agent.schemas import PostReply
 from agent.prompts.post_gen import POST_GEN_INSTRUCTION
 from agent.tools.adapters import as_async_tool
 from agent.tools.post_tools import (
@@ -22,10 +23,11 @@ def build_post_gen_agent(model=None):
     """
     return LlmAgent(
         name="post_gen",
-        model=model or AGENT_MODEL,
+        model=get_agent_model(model),
         # Same text the coordinator's model reads when it picks a specialist.
         description=SPECIALIST_DESCRIPTIONS["post_gen"],
         instruction=POST_GEN_INSTRUCTION,
+        output_schema=PostReply,
         # The tools are wrapped so they run off ADK's event loop, where Django
         # allows database access.
         tools=[

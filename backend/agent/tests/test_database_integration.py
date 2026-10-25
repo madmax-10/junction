@@ -8,6 +8,7 @@ from unittest.mock import patch
 from uuid import uuid4
 
 from django.test import SimpleTestCase
+from django.utils import timezone
 from rest_framework.test import APITestCase
 from rest_framework_simplejwt.tokens import AccessToken
 
@@ -110,16 +111,22 @@ class DatabaseChatIntegrationTests(APITestCase):
 
     def test_valuation_selected_public_records_and_insufficient_data(self):
         posts = [Post.objects.create(issue_id=uuid4(), issue_type="sell", status="published",
+            approved_at=timezone.now(),
             title="Test fixture only", content="Not production market evidence", post_data={
                 "make": "Toyota", "model": "Camry", "year": 2024, "mileage": 40000,
                 "asking_price": price,
             }) for price in ("10000.00", "12000.00", "15000.00")]
-        result = self.turn("valuation", build_valuation_agent, call("calculate_value_range",
-            used_car_id=str(self.car.pk), comparable_ids=[str(post.pk) for post in posts]))
+        weights = {"weights": [{"post_id": str(post.pk), "weight": weight, "reason": "Fixture relevance"}
+                               for post, weight in zip(posts, ("0.2", "0.3", "0.5"))]}
+        with patch("agent.services.ai_valuation_service.gemini_weights", return_value=weights):
+            result = self.turn("valuation", build_valuation_agent, call("calculate_value_range",
+                used_car_id=str(self.car.pk), comparable_ids=[str(post.pk) for post in posts]))
         self.assertEqual(result["status"], "ok")
-        self.assertEqual(result["data"]["median"], "12000.00")
+        self.assertEqual(result["data"]["estimated_value"], "13100.00")
+        self.assertIsNone(result["data"]["median"])
         self.assertEqual(result["ids"]["post_ids"], [str(post.pk) for post in posts])
-        result = self.turn("valuation", build_valuation_agent, call("calculate_value_range",
-            used_car_id=str(self.car.pk), comparable_ids=[]))
+        with patch("agent.services.ai_valuation_service.gemini_weights", side_effect=RuntimeError("Provider unavailable")):
+            result = self.turn("valuation", build_valuation_agent, call("calculate_value_range",
+                used_car_id=str(self.car.pk), comparable_ids=[]))
         self.assertEqual(result["status"], "insufficient_data")
         self.assertIsNone(result["data"]["median"])

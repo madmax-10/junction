@@ -14,6 +14,7 @@ from agent.services.seller_issue_service import create_or_update_sell_issue as c
 from agent.services.seller_price_service import recommend_asking_price as recommend_asking_price_service
 from agent.services.seller_buyer_match_service import find_and_rank_buyers as find_and_rank_buyers_service
 from agent.tools.result import error_result
+from agent.schemas import SellerReply
 
 
 async def get_vehicle_details(used_car_id: str, tool_context: ToolContext) -> dict:
@@ -104,7 +105,7 @@ async def find_and_rank_buyers(sell_issue_id: str, tool_context: ToolContext, li
 def build_seller_agent(model) -> LlmAgent:
     """Build one genuine specialist with the repository's caller-supplied model."""
     return LlmAgent(
-        name="seller", model=model,
+        name="seller", model=model, output_schema=SellerReply,
         description="Seller specialist for any make: owned vehicle details, private SellIssue management, supported price guidance and published buyer-interest matches.",
         tools=[get_vehicle_details, create_or_update_sell_issue, recommend_asking_price, find_and_rank_buyers],
         disallow_transfer_to_parent=True, disallow_transfer_to_peers=True,

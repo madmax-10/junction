@@ -15,6 +15,7 @@ from agent.services.repair_cost_service import estimate_repair_cost as estimate_
 from agent.services.repair_mechanic_service import find_nearby_mechanics as find_nearby_mechanics_service
 from agent.services.repair_resolution_service import record_resolution as record_resolution_service
 from agent.tools.result import error_result
+from agent.schemas import RepairReply
 
 
 async def create_repair_issue(used_car_id: str, description: str, tool_context: ToolContext) -> dict:
@@ -145,7 +146,7 @@ async def record_resolution(repair_issue_id: str, resolution_details: dict, tool
 def build_repair_agent(model) -> LlmAgent:
     """Construct one genuine specialist using the repository's supplied model."""
     return LlmAgent(
-        name="repair", model=model,
+        name="repair", model=model, output_schema=RepairReply,
         description="Repair specialist for any make: private reports and owner outcomes, uncertain analysis, public experiences, supported costs and nearby businesses.",
         tools=[create_repair_issue, save_diagnosis, search_similar_repairs,
                estimate_repair_cost, find_nearby_mechanics, record_resolution],

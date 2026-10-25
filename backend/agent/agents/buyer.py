@@ -14,6 +14,7 @@ from agent.services.buyer_catalog_service import search_new_catalog as search_ne
 from agent.services.buyer_search_service import search_and_rank_used as search_and_rank_used_service
 from agent.services.post_contact_service import get_post_contact as get_post_contact_service
 from agent.tools.result import error_result
+from agent.schemas import BuyerReply
 
 
 async def search_and_rank_used(
@@ -104,6 +105,7 @@ def build_buyer_agent(model) -> LlmAgent:
     """Build the genuine Buyer agent using caller-supplied model configuration."""
     return LlmAgent(
         name="buyer",
+        output_schema=BuyerReply,
         model=model,
         description=(
             "Buyer Recommendation specialist: saves private Buy issues, searches published "

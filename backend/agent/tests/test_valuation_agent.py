@@ -1,6 +1,7 @@
 """Real ADK agent/bridge tests with synthetic fixtures and no model calls."""
 
 import json
+from decimal import Decimal
 from unittest.mock import patch
 from uuid import uuid4
 
@@ -25,6 +26,7 @@ from agent.auth import get_or_create_authenticated_session
 from agent.config import AGENT_MODEL
 from agent.tools.result import tool_result
 from posts.models import Post
+from django.utils import timezone
 from vehicles.models import UsedCar
 
 
@@ -67,7 +69,13 @@ class ValuationAgentToolTests(TestCase):
             owner=cls.user, make="Toyota", model="Camry", year=2024, mileage=40000,
         )
 
+    def weighting_fixture(self, subject, comparables):
+        return {"weights": [{"post_id": row["post_id"], "weight": "1", "reason": "Matching make/model fixture"} for row in comparables]}
+
     def setUp(self):
+        mock = patch("agent.services.ai_valuation_service.gemini_weights", side_effect=self.weighting_fixture)
+        mock.start()
+        self.addCleanup(mock.stop)
         self.sessions = InMemorySessionService()
         request = APIRequestFactory().post(
             "/api/chat/turns/", {}, format="json",
@@ -82,7 +90,7 @@ class ValuationAgentToolTests(TestCase):
 
     def posts(self):
         return [Post.objects.create(
-            issue_id=uuid4(), issue_type=Post.IssueType.SELL, status=Post.Status.PUBLISHED,
+            approved_at=timezone.now(), issue_id=uuid4(), issue_type=Post.IssueType.SELL, status=Post.Status.PUBLISHED,
             title="Synthetic Toyota fixture", content="Synthetic test data only",
             post_data={"make": "Toyota", "model": "Camry", "year": 2024,
                        "mileage": 40000, "asking_price": price},
@@ -106,7 +114,8 @@ class ValuationAgentToolTests(TestCase):
         )
         self.assertEqual(set(result), {"status", "data", "ids", "provenance", "error"})
         self.assertEqual(result["status"], "ok")
-        self.assertEqual(result["data"]["median"], "12000.00")
+        self.assertIsNone(result["data"]["median"])
+        self.assertTrue(Decimal(result["data"]["estimated_value"]) > Decimal("12000"))
         self.assertEqual(result["data"]["price_basis"], "asking")
         self.assertEqual(result["provenance"], "published_sell_posts")
         self.assertTrue(result["data"]["limitations"])

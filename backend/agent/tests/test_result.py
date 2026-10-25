@@ -77,10 +77,11 @@ class ToolResultTests(unittest.TestCase):
             {"post_id": "fixture-b", "asking_price": "12000.01"},
             {"post_id": "fixture-c", "asking_price": "12000.02"},
             {"post_id": "fixture-d", "asking_price": "15000.00"},
-        ])
+        ], weights={key: "1" for key in ("fixture-a", "fixture-b", "fixture-c", "fixture-d")})
         result = tool_result("ok", data=valuation, provenance="published_sell_posts")
         decoded = json.loads(json.dumps(result))
-        self.assertEqual(decoded["data"]["median"], "12000.015")
+        self.assertIsNone(decoded["data"]["median"])
+        self.assertEqual(decoded["data"]["estimated_value"], "12250.0075")
         self.assertEqual(decoded["data"]["low"], "10000.00")
         self.assertEqual(decoded["data"]["price_basis"], "asking")
 

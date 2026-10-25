@@ -4,14 +4,10 @@ from collections.abc import Mapping
 from decimal import Decimal, InvalidOperation, localcontext
 
 
-def estimate(comparables, msrp_reference=None):
-    """Return observed min/median/max for at least three distinct posts.
+def estimate(comparables, msrp_reference=None, *, weights=None):
+    """Validate evidence and compute a Decimal weighted asking-price mean.
 
-    Each comparable is a mapping with a nonblank string ``post_id`` and a
-    nonnegative, finite ``asking_price`` (Decimal, integer, or numeric string).
-    Invalid input, including conflicting prices for one post, raises ValueError.
-    Identical repeated posts count once. MSRP is returned unchanged, never used
-    in the calculation. See valuation_service.md for the complete contract.
+    Missing weights never produce an estimate. median is deprecated and always None.
     """
     if isinstance(comparables, (str, bytes, Mapping)):
         raise ValueError("comparables must be an iterable of comparable records.")
@@ -46,12 +42,14 @@ def estimate(comparables, msrp_reference=None):
     sample_size = len(prices)
     limitations = [
         "Asking prices only; not verified sold prices or a guaranteed sale value.",
-        "Preliminary observed range; no condition, mileage, or market adjustments.",
+        "AI evidence weights express relevance; this is not calibrated against real sales.",
+        "median is deprecated and always null.",
     ]
     result = {
         "status": "insufficient_data",
         "low": None,
         "median": None,
+        "estimated_value": None,
         "high": None,
         "sample_size": sample_size,
         "price_basis": "asking",
@@ -63,19 +61,29 @@ def estimate(comparables, msrp_reference=None):
         limitations.append("At least three distinct valid comparable posts are required.")
         return result
 
-    middle = sample_size // 2
-    median = prices[middle]
-    if sample_size % 2 == 0:
-        # Allow enough decimal digits for exact addition and division by two,
-        # even when the caller uses a low-precision Decimal context.
-        with localcontext() as context:
-            context.prec = max(
-                28,
-                max(price.adjusted() for price in prices)
-                - min(price.as_tuple().exponent for price in prices)
-                + 3,
-            )
-            median = (prices[middle - 1] + prices[middle]) / Decimal(2)
-
-    result.update(status="completed", low=prices[0], median=median, high=prices[-1])
+    if weights is None:
+        limitations.append("Validated evidence weights are required; median is deprecated.")
+        return result
+    if not isinstance(weights, Mapping) or set(weights) != set(prices_by_id):
+        raise ValueError("Weights must cover exactly the distinct evidence IDs.")
+    parsed = {}
+    for post_id, raw in weights.items():
+        if isinstance(raw, bool) or not isinstance(raw, (Decimal, int, str)):
+            raise ValueError("Weights must be finite nonnegative decimal values.")
+        try:
+            weight = Decimal(raw)
+        except (InvalidOperation, ValueError) as exc:
+            raise ValueError("Invalid weight.") from exc
+        if not weight.is_finite() or weight < 0:
+            raise ValueError("Invalid weight.")
+        parsed[post_id] = weight
+    if sum(value > 0 for value in parsed.values()) < 3:
+        limitations.append("At least three comparables must receive positive weight.")
+        return result
+    with localcontext() as context:
+        context.prec = max(50, max(len(p.as_tuple().digits) + abs(p.as_tuple().exponent)
+                                   for p in prices) + 30)
+        total = sum(parsed.values(), Decimal(0))
+        value = sum((prices_by_id[key] * weight for key, weight in parsed.items()), Decimal(0)) / total
+    result.update(status="completed", low=prices[0], high=prices[-1], estimated_value=value)
     return result

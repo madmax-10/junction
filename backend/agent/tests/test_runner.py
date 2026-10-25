@@ -191,8 +191,8 @@ class SpecialistTurnTests(RunnerTestCase):
              ("tool_response", "valuation", "get_clock"),
              ("tool_response", "coordinator", "valuation")],
         )
-        # The specialist's prose answer is wrapped, and its text never becomes a user-facing message.
-        self.assertEqual(new[-2]["response"]["data"], {"text": "It is a date."})
+        # This deliberately schema-less test specialist cannot claim success.
+        self.assertEqual(new[-2]["response"]["status"], "error")
         self.assertEqual([e["text"] for e in new if e["kind"] == "message"], ["Done."])
         json.dumps(new)  # everything is plain JSON
         validate_events(new + [user_message("ok", "u-9")])

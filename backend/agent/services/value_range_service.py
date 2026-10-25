@@ -2,15 +2,16 @@
 
 from uuid import UUID
 
+from agent.config import valuation_provider_config
 from agent.services.catalog_service import get_catalog_reference
 from agent.services.post_search_service import search_comparable_posts
 from agent.services.valuation_service import estimate
+from agent.services.ai_valuation_service import get_evidence_weights, ValuationProviderError
 from agent.tools.result import error_result, tool_result
-from posts.models import Post
 from vehicles.models import UsedCar
 
 
-def calculate_value_range(used_car_id, comparable_ids, *, user):
+def calculate_value_range(used_car_id, comparable_ids=None, *, user, provider=None):
     """Calculate for an owned car using selected public posts, with no writes.
 
     ``user`` must be supplied by authenticated server code, never by the model.
@@ -27,6 +28,8 @@ def calculate_value_range(used_car_id, comparable_ids, *, user):
     car = UsedCar.objects.filter(pk=vehicle_id, owner=user).first()
     if car is None:
         return error_result("Vehicle not found.")
+    if comparable_ids is None:
+        comparable_ids = []
     if not isinstance(comparable_ids, (list, tuple)):
         raise ValueError("comparable_ids must be a list or tuple of post UUIDs.")
 
@@ -41,49 +44,47 @@ def calculate_value_range(used_car_id, comparable_ids, *, user):
         except ValueError:
             invalid_ids = True
 
-    # Inspect only selected public snapshots to derive search bounds. These are
-    # envelopes of selected records, not invented tolerances around the subject.
-    snapshots = Post.objects.filter(
-        pk__in=selected_ids,
-        status=Post.Status.PUBLISHED,
-        issue_type=Post.IssueType.SELL,
-        post_data__make__iexact=car.make.strip(),
-        post_data__model__iexact=car.model.strip(),
-    ).values_list("post_data", flat=True)
-    bounds = [
-        (data["year"], data["mileage"])
-        for data in snapshots
-        if isinstance(data, dict)
-        and isinstance(data.get("year"), int) and not isinstance(data["year"], bool)
-        and isinstance(data.get("mileage"), int) and not isinstance(data["mileage"], bool)
-        and data["mileage"] >= 0
-    ]
-    comparables = []
-    if bounds:
-        search = search_comparable_posts(
-            car.make, car.model,
-            (min(year for year, _ in bounds), max(year for year, _ in bounds)),
-            (min(mileage for _, mileage in bounds), max(mileage for _, mileage in bounds)),
-        )
-        eligible = {
-            item["post_id"]: item for item in search["comparables"]
-            if item["post_id"] in selected_ids
-        }
-        comparables = [eligible[post_id] for post_id in selected_ids if post_id in eligible]
+    search = search_comparable_posts(car.make, car.model)
+    comparables = search["comparables"]
+    if comparable_ids:
+        comparables_by_id = {item["post_id"]: item for item in comparables}
+        comparables = [comparables_by_id[key] for key in selected_ids if key in comparables_by_id]
+    # Never let an entirely malformed explicit selection broaden into discovery.
+    weights = None
+    evidence = None
+    provider_failed = False
+    if len(comparables) >= 3:
+        try:
+            evidence = get_evidence_weights(
+                {"make": car.make, "model": car.model, "year": car.year,
+                 "mileage": car.mileage, "trim": car.trim, "condition": car.condition},
+                comparables, provider=provider,
+            )
+            weights = {row.post_id: row.weight for row in evidence.weights}
+        except ValuationProviderError:
+            provider_failed = True
 
     catalog = get_catalog_reference(car.make, car.model, car.year, trim=car.trim or None)
-    valuation = estimate(comparables, msrp_reference=catalog["msrp_reference"])
+    valuation = estimate(comparables, msrp_reference=catalog["msrp_reference"], weights=weights)
+    valuation["method"] = "ai_weighted_asking_mean"
+    valuation["formula"] = "sum(asking_price * weight) / sum(weight)"
+    provider_name, provider_model, _ = valuation_provider_config()
+    valuation["weighting_provider"] = "injected" if provider is not None else provider_name
+    # An injected provider must not be attributed to a Gemini model it never used.
+    valuation["weighting_model"] = provider_model if provider is None and evidence is not None else None
+    prices_by_id = {row["post_id"]: row["asking_price"] for row in comparables}
+    valuation["weight_evidence"] = [
+        {**row.model_dump(), "asking_price": prices_by_id[row.post_id]}
+        for row in evidence.weights
+    ] if evidence is not None else []
     valuation["limitations"].extend(catalog["limitations"])
     if invalid_ids or len(comparables) < len(selected_ids):
         valuation["limitations"].append(
             "Some requested comparables were excluded; only eligible published Sell posts were used."
         )
-    valuation["limitations"].extend([
-        "Compatibility checks use make/model and the selected posts' year/mileage bounds; "
-        "prior search bounds or location are not available to this interface.",
-        "A missing synthetic flag does not establish genuine market evidence; "
-        "normal publication validation currently rejects the recognized synthetic flags.",
-    ])
+    if provider_failed:
+        valuation["limitations"].append("AI weighting provider unavailable or returned invalid evidence weights.")
+    valuation["limitations"].append("AI-weighted asking estimate; not calibrated against real sales. median is deprecated and always null.")
     return tool_result(
         "ok" if valuation["status"] == "completed" else "insufficient_data",
         data=valuation,
