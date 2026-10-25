@@ -157,3 +157,10 @@ class DefaultWiringTests(TestCase):
 
         reply = next(e for e in new if e["kind"] == "tool_response" and e["name"] == "post_gen")
         self.assertEqual(reply["response"]["data"], {"text": "Replaced."})
+
+
+class AgentToolTests(SimpleTestCase):
+    def test_agent_tool_exposes_it_under_its_name_with_the_coordinator_description(self):
+        tool = AgentTool(agent=build_post_gen_agent(scripted()))
+        self.assertEqual(tool.name, "post_gen")
+        self.assertEqual(tool.agent.description, SPECIALIST_DESCRIPTIONS["post_gen"])
