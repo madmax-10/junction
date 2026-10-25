@@ -1,18 +1,26 @@
 import { motion, useReducedMotion } from 'motion/react'
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useOutletContext } from 'react-router'
 import { useScrollFade } from '../../hooks/useScrollFade.ts'
 import { easeOutQuint } from '../../styles/motion.ts'
+import { useIntakeDraft } from '../intake/IntakeContext.ts'
+import type { WorkspaceOutletContext } from '../workspace/WorkspaceLayout.tsx'
 import { ChatComposer } from './ChatComposer.tsx'
 import { useChat, useLatestReply } from './ChatContext.ts'
+import { ChatDetailsPrompt } from './ChatDetailsPrompt.tsx'
 import { ChatEmptyState } from './ChatEmptyState.tsx'
 import { ChatHeader } from './ChatHeader.tsx'
 import { AssistantMessage, UserMessage } from './ChatMessages.tsx'
+import { buildStartingMessage, hasStartingDetails } from './startingDetails.ts'
 import { TypingIndicator } from './TypingIndicator.tsx'
 
 const messageTransition = { duration: 0.35, ease: easeOutQuint }
 
 export function ChatPage() {
-  const { messages, isResponding, sendMessage, confirmSuggestion, dismissSuggestion, resetChat } = useChat()
+  const { messages, isResponding, isRestoring, sendMessage, confirmSuggestion, dismissSuggestion, resetChat } =
+    useChat()
+  const { draft, resetDraft } = useIntakeDraft()
+  const { openEditor } = useOutletContext<WorkspaceOutletContext>()
   const latestReply = useLatestReply()
   const shouldReduceMotion = useReducedMotion()
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -29,6 +37,14 @@ export function ChatPage() {
   )
 
   const hasMessages = messages.length > 0
+  const isReadyToStart = hasStartingDetails(draft)
+  const needsDetails = !hasMessages && !isRestoring && !isReadyToStart
+
+  // A new conversation opens with the saved situation, so the first reply is based on those details.
+  useEffect(() => {
+    if (hasMessages || isRestoring || isResponding || !isReadyToStart) return
+    sendMessage(buildStartingMessage(draft))
+  }, [hasMessages, isRestoring, isResponding, isReadyToStart, draft, sendMessage])
 
   // The composer floats over the conversation, so reserve its height at the end of the scroll area.
   useLayoutEffect(() => {
@@ -57,7 +73,7 @@ export function ChatPage() {
 
   function handleReset() {
     resetChat()
-    textareaRef.current?.focus()
+    resetDraft()
   }
 
   return (
@@ -119,13 +135,20 @@ export function ChatPage() {
                 </motion.li>
               )}
             </ol>
+          ) : needsDetails ? (
+            <ChatDetailsPrompt onEdit={openEditor} />
           ) : (
             <ChatEmptyState onSelectExample={sendSuggestion} />
           )}
         </div>
 
         <div ref={composerRef} className="pointer-events-none absolute inset-x-0 bottom-0">
-          <ChatComposer isResponding={isResponding} onSend={sendMessage} textareaRef={textareaRef} />
+          <ChatComposer
+            isResponding={isResponding}
+            disabled={needsDetails}
+            onSend={sendMessage}
+            textareaRef={textareaRef}
+          />
         </div>
       </div>
     </motion.section>

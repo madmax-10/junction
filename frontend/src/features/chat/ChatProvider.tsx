@@ -35,6 +35,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [isResponding, setIsResponding] = useState(false)
   const eventsRef = useRef<ChatEvent[]>(readChatEvents())
+  const [isRestoring, setIsRestoring] = useState(() => eventsRef.current.length > 0)
   const pendingReplyId = useRef<string | null>(null)
   const draftRef = useRef(draft)
   const confirmedRef = useRef(confirmed)
@@ -48,9 +49,13 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     let current = true
     const stored = eventsRef.current
     if (stored.length === 0) return
-    void messagesFromEvents(stored).then((restored) => {
-      if (current) setMessages(restored)
-    })
+    void messagesFromEvents(stored)
+      .then((restored) => {
+        if (current) setMessages(restored)
+      })
+      .finally(() => {
+        if (current) setIsRestoring(false)
+      })
     return () => {
       current = false
     }
@@ -222,8 +227,8 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   }, [messages])
 
   const value = useMemo(
-    () => ({ messages, isResponding, sendMessage, confirmSuggestion, dismissSuggestion, resetChat }),
-    [messages, isResponding, sendMessage, confirmSuggestion, dismissSuggestion, resetChat],
+    () => ({ messages, isResponding, isRestoring, sendMessage, confirmSuggestion, dismissSuggestion, resetChat }),
+    [messages, isResponding, isRestoring, sendMessage, confirmSuggestion, dismissSuggestion, resetChat],
   )
 
   return <ChatContext value={value}>{children}</ChatContext>

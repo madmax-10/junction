@@ -13,6 +13,10 @@ import { SituationSummary } from './SituationSummary.tsx'
 
 type EditorState = { section: SituationSection | null } | null
 
+export type WorkspaceOutletContext = {
+  openEditor: (section?: SituationSection | null) => void
+}
+
 export function WorkspaceLayout() {
   const [editor, setEditor] = useState<EditorState>(null)
 
@@ -34,7 +38,7 @@ export function WorkspaceLayout() {
         <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-3 px-3 lg:px-0">
           <SituationSummary onEdit={() => openEditor()} />
           <main className="flex min-h-0 flex-1 flex-col">
-            <Outlet />
+            <Outlet context={{ openEditor } satisfies WorkspaceOutletContext} />
           </main>
         </div>
 
