@@ -41,7 +41,7 @@ export function NoStoryMatches() {
   return (
     <p className={`${statusClassName} mt-3`}>
       <MagnifyingGlass size={16} className="text-primary" aria-hidden="true" />
-      No close matches among the sample stories
+      No close matches in community stories yet
     </p>
   )
 }

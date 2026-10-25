@@ -10,6 +10,7 @@ import { IntakeProvider } from '../features/intake/IntakeProvider.tsx'
 import { InterestsStep } from '../features/intake/InterestsStep.tsx'
 import { VehicleStep } from '../features/intake/VehicleStep.tsx'
 import { LandingPage } from '../features/landing/LandingPage.tsx'
+import { StoriesPage } from '../features/stories/StoriesPage.tsx'
 import { WorkspaceLayout } from '../features/workspace/WorkspaceLayout.tsx'
 import { WorkspacePlaceholder } from '../features/workspace/WorkspacePlaceholder.tsx'
 import { paths } from './paths.ts'
@@ -37,8 +38,7 @@ export function App() {
               }
             >
               <Route path={paths.chat} element={<ChatPage />} />
-              <Route path={paths.stories} element={<WorkspacePlaceholder tab="stories" />} />
-              <Route path={paths.story} element={<WorkspacePlaceholder tab="stories" />} />
+              <Route path={paths.story} element={<StoriesPage />} />
               <Route path={paths.marketplace} element={<WorkspacePlaceholder tab="marketplace" />} />
               <Route path={paths.myStory} element={<WorkspacePlaceholder tab="my-story" />} />
             </Route>

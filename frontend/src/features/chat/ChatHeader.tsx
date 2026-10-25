@@ -16,7 +16,7 @@ export function ChatHeader({ hasMessages, onReset }: ChatHeaderProps) {
           <h1 id="chat-title" className="font-heading text-base font-bold tracking-tight">
             Assistant
           </h1>
-          <p className="truncate font-body text-xs text-text/60">Preview · replies are simulated</p>
+          <p className="truncate font-body text-xs text-text/60">Answers grounded in community stories</p>
         </div>
       </div>
 

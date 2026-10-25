@@ -226,7 +226,7 @@ function getVehicleSignals(story: CommunityStory, profile: SituationProfile): Ma
 }
 
 function scoreStory(story: CommunityStory, profile: SituationProfile): StoryMatch | null {
-  const { accident, claim, decision } = story
+  const { accident, claim, topics } = story
   const signals: MatchSignal[] = []
 
   if (profile.accidentType === accident.type) {
@@ -247,8 +247,9 @@ function scoreStory(story: CommunityStory, profile: SituationProfile): StoryMatc
     })
   }
 
-  if (profile.interests.includes(decision.kind)) {
-    signals.push({ weight: 2, reason: decisionReasons[decision.kind], isSituational: true })
+  const sharedTopic = profile.interests.find((interest) => topics.includes(interest))
+  if (sharedTopic) {
+    signals.push({ weight: 2, reason: decisionReasons[sharedTopic], isSituational: true })
   }
   if (profile.claimPath === claim.path) {
     signals.push({ weight: 1, reason: claimReasons[claim.path], isSituational: true })

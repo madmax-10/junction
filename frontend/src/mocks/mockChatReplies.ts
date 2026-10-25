@@ -89,7 +89,7 @@ export function createMockReply({
   if (imageCount > 0) {
     const photos = imageCount === 1 ? 'the photo' : `the ${imageCount} photos`
     intro.push(
-      `Thanks for ${photos}. Photo review isn’t available in this preview, so I’m going by your description for now.`,
+      `Thanks for ${photos}. I can’t review photos yet, so I’m going by your description for now.`,
     )
   }
   if (isFirstReply && vehicleName) {

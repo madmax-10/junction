@@ -9,12 +9,10 @@ export type StoryPreview = {
   outcome: string
   reportedAfter?: string
   matchReasons: string[]
-  isSample: boolean
 }
 
 export type SampleSituation = {
   description: string
-  isSample: boolean
 }
 
 export type StoryDecision = Exclude<LearningInterest, 'not-sure'>
@@ -25,19 +23,38 @@ export type DamageSeverity = 'minor' | 'moderate' | 'severe'
 
 export type ClaimPath = 'other-driver' | 'own-policy'
 
+export type StoryChoice = 'repair' | 'sell' | 'replace' | 'undecided'
+
+export type StoryStatus = 'ongoing' | 'resolved'
+
+export type BodyStyle = 'sedan' | 'suv' | 'truck'
+
+export type StoryCost = { label: string; amount: number }
+
 export type CommunityStory = {
   id: string
   title: string
-  vehicle: { year: number; make: string; model: string; mileage: number }
+  owner: { location: string }
+  vehicle: { year: number; make: string; model: string; mileage: number; bodyStyle: BodyStyle }
   accident: {
     type: Exclude<AccidentType, 'other'>
     damage: DamageArea[]
     severity: DamageSeverity
   }
   claim: { path: ClaimPath; status: Exclude<CurrentSituation, 'figuring-out'> }
-  decision: { kind: StoryDecision; summary: string }
-  outcome: { summary: string; reportedAfter: string }
-  isSample: boolean
+  narrative: string
+  decision: { choice: StoryChoice; summary: string }
+  // The learning interests this experience speaks to, used when matching it to a user.
+  topics: StoryDecision[]
+  outcome: { summary: string; reportedAfter: string; costs: StoryCost[] }
+  lessons: string[]
+  status: StoryStatus
+}
+
+export type StoryFilters = {
+  query: string
+  choice: StoryChoice | null
+  bodyStyle: BodyStyle | null
 }
 
 export type StoryMatchQuery = {

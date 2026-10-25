@@ -1,4 +1,4 @@
-import { AppleLogo, ArrowLeft, CircleNotch, GoogleLogo, Info } from '@phosphor-icons/react'
+import { AppleLogo, ArrowLeft, CircleNotch, GoogleLogo } from '@phosphor-icons/react'
 import { motion } from 'motion/react'
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { Link, Navigate, useLocation } from 'react-router'
@@ -153,8 +153,8 @@ export function SignInPage() {
 
   function handleSocialSignIn(provider: Exclude<AuthProvider, 'email'>) {
     completeSignIn({
-      name: 'Demo User',
-      email: provider === 'google' ? 'demo.user@gmail.com' : 'demo.user@icloud.com',
+      name: 'Jordan Lee',
+      email: provider === 'google' ? 'jordan.lee@gmail.com' : 'jordan.lee@icloud.com',
       provider,
     })
   }
@@ -305,12 +305,6 @@ export function SignInPage() {
                 {pendingProvider === 'email' ? 'Just a moment…' : copy.submit}
               </Button>
             </form>
-
-            <p className="mt-6 flex items-start gap-2 rounded-2xl bg-background px-4 py-3 font-body text-xs leading-relaxed text-text/65">
-              <Info size={16} className="mt-px shrink-0 text-primary" aria-hidden="true" />
-              Demo sign-in: no account is created and nothing leaves your browser. Any email and an
-              8+ character password will work.
-            </p>
           </section>
         </motion.div>
       </main>

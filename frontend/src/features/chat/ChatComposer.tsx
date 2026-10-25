@@ -256,7 +256,7 @@ export function ChatComposer({ isResponding, onSend, textareaRef }: ChatComposer
           ) : (
             <span className="text-text/50">
               <span className="hidden sm:inline">Enter to send, Shift + Enter for a new line. </span>
-              Photos stay on this device in this preview.
+              Photos stay private to this conversation.
             </span>
           )}
         </p>

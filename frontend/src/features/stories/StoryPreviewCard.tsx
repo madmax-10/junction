@@ -16,15 +16,12 @@ const termClassName = 'text-xs font-medium tracking-wide text-text/60 uppercase'
 
 function StoryHeader({ story, subtitle }: { story: StoryPreview; subtitle: string }) {
   return (
-    <header className="flex items-start justify-between gap-3">
-      <div className="min-w-0">
-        <h3 className="font-heading text-base font-bold leading-snug tracking-tight">{story.title}</h3>
-        <p className="mt-1 flex items-center gap-1.5 font-body text-sm text-text/70">
-          <Car size={16} className="shrink-0 text-primary" aria-hidden="true" />
-          {subtitle}
-        </p>
-      </div>
-      {story.isSample && <Badge tone="sample">Sample</Badge>}
+    <header className="min-w-0">
+      <h3 className="font-heading text-base font-bold leading-snug tracking-tight">{story.title}</h3>
+      <p className="mt-1 flex items-center gap-1.5 font-body text-sm text-text/70">
+        <Car size={16} className="shrink-0 text-primary" aria-hidden="true" />
+        {subtitle}
+      </p>
     </header>
   )
 }

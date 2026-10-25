@@ -1,10 +1,10 @@
 import type { ReactNode } from 'react'
 
-type BadgeTone = 'neutral' | 'sample'
+type BadgeTone = 'neutral' | 'accent'
 
 const toneClassNames: Record<BadgeTone, string> = {
   neutral: 'bg-background text-text',
-  sample: 'bg-text text-surface',
+  accent: 'bg-primary-light text-primary',
 }
 
 type BadgeProps = {

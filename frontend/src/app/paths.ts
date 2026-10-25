@@ -8,7 +8,7 @@ export const paths = {
   signIn: '/sign-in',
   chat: '/chat',
   stories: '/stories',
-  story: '/stories/:storyId',
+  story: '/stories/:storyId?',
   marketplace: '/marketplace',
   myStory: '/my-story',
 } as const

@@ -1,6 +1,5 @@
-import { Flask, Quotes } from '@phosphor-icons/react'
+import { Quotes } from '@phosphor-icons/react'
 import { motion } from 'motion/react'
-import { Badge } from '../../components/ui/Badge.tsx'
 import { sampleSituation, sampleStoryPreviews } from '../../mocks/sampleStories.ts'
 import { fadeUpVariants as itemVariants, staggerVariants } from '../../styles/motion.ts'
 import { StoryPreviewCard } from '../stories/StoryPreviewCard.tsx'
@@ -12,24 +11,15 @@ const cardOffsetClassNames = ['lg:mr-6', 'lg:ml-6', 'lg:mx-3']
 export function HeroStoryPreview() {
   return (
     <motion.section
-      aria-labelledby="sample-stories-heading"
+      aria-labelledby="hero-stories-heading"
       initial="hidden"
       animate="visible"
       variants={listVariants}
       className="relative rounded-[2rem] bg-primary-light p-5 sm:p-7"
     >
-      <motion.div variants={itemVariants} className="flex flex-wrap items-center gap-x-3 gap-y-2">
-        <Badge tone="sample" icon={<Flask size={14} aria-hidden="true" />}>
-          Sample stories
-        </Badge>
-        <h2 id="sample-stories-heading" className="font-body text-sm text-text/80">
-          Illustrative examples, not real people
-        </h2>
-      </motion.div>
-
       <motion.figure
         variants={itemVariants}
-        className="mt-4 flex gap-3 rounded-2xl rounded-bl-md bg-text p-4 text-surface"
+        className="flex gap-3 rounded-2xl rounded-bl-md bg-text p-4 text-surface"
       >
         <Quotes size={20} className="mt-0.5 shrink-0 text-accent" aria-hidden="true" />
         <div>
@@ -42,13 +32,14 @@ export function HeroStoryPreview() {
         </div>
       </motion.figure>
 
-      <motion.p
+      <motion.h2
+        id="hero-stories-heading"
         variants={itemVariants}
         className="mt-5 mb-3 flex items-center gap-2 font-body text-xs font-semibold tracking-wide text-primary uppercase"
       >
         <span className="size-1.5 rounded-full bg-accent" aria-hidden="true" />
         People who faced something similar
-      </motion.p>
+      </motion.h2>
 
       <ul className="flex flex-col gap-3">
         {sampleStoryPreviews.map((story, index) => (

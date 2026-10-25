@@ -12,6 +12,5 @@ export function toStoryPreview({ story, reasons }: StoryMatch): StoryPreview {
     outcome: story.outcome.summary,
     reportedAfter: story.outcome.reportedAfter,
     matchReasons: reasons,
-    isSample: story.isSample,
   }
 }

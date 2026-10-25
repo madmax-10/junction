@@ -1,6 +1,5 @@
 import { MagnifyingGlass, UsersThree } from '@phosphor-icons/react'
 import { AnimatePresence, motion } from 'motion/react'
-import { Badge } from '../../components/ui/Badge.tsx'
 import { fadeUpVariants, staggerVariants } from '../../styles/motion.ts'
 import type { StoryMatch } from '../../types/story.ts'
 import { StoryPreviewCard } from '../stories/StoryPreviewCard.tsx'
@@ -44,12 +43,9 @@ export function ExperiencePanel({ matches, resultsKey, isSearching }: Experience
       className="flex min-h-56 flex-1 flex-col overflow-hidden rounded-[1.75rem] bg-primary-light"
     >
       <header className="px-5 pt-5 pb-4">
-        <div className="flex items-center justify-between gap-3">
-          <h2 id="experiences-title" className="font-heading text-lg font-bold tracking-tight">
-            Community experiences
-          </h2>
-          <Badge tone="sample">Samples</Badge>
-        </div>
+        <h2 id="experiences-title" className="font-heading text-lg font-bold tracking-tight">
+          Community experiences
+        </h2>
         <p className="mt-1 font-body text-sm leading-snug text-text/65">
           {hasStories
             ? 'People whose situations look like yours.'
