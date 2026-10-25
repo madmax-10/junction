@@ -126,3 +126,34 @@ class PostGenTurnTests(TestCase):
         self.assertEqual(draft.status, "draft")
         refusal = next(e for e in new if e["kind"] == "tool_response" and e["name"] == "approve_and_publish_post")
         self.assertEqual(refusal["response"]["status"], "error")
+
+
+class DefaultWiringTests(TestCase):
+    """run_turn uses the real post_gen agent unless a test replaces it."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = User.objects.create_user(email="ada@example.com", password="pw-12345678", name="Ada")
+        cls.issue = make_sell(cls.user)
+
+    def test_post_gen_is_the_real_agent_by_default(self):
+        # One fake model plays the coordinator and the default post_gen agent in turn.
+        model = scripted(
+            call("post_gen", request=f"Show the context for sell issue {self.issue.id}."),
+            call("get_issue_context", issue_type="sell", issue_id=str(self.issue.id)),
+            say("Context read."),
+            say("Done."),
+        )
+        new = run_turn(str(self.user.id), [user_message("Make a post")], model=model)
+
+        self.assertIn(("post_gen", "get_issue_context"), [(e["author"], e["name"]) for e in new if e["kind"] == "tool_call"])
+        reply = next(e for e in new if e["kind"] == "tool_response" and e["name"] == "post_gen")
+        self.assertNotEqual(reply["response"]["provenance"], "stub")
+
+    def test_a_specialist_passed_in_replaces_the_default(self):
+        replacement = build_post_gen_agent(scripted(say("Replaced.")))
+        model = scripted(call("post_gen", request="Anything."), say("Done."))
+        new = run_turn(str(self.user.id), [user_message("Make a post")], model=model, specialists={"post_gen": replacement})
+
+        reply = next(e for e in new if e["kind"] == "tool_response" and e["name"] == "post_gen")
+        self.assertEqual(reply["response"]["data"], {"text": "Replaced."})
