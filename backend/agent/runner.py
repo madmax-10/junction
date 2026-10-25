@@ -15,6 +15,7 @@ from google.adk.runners import InMemoryRunner
 from google.genai import types
 
 from agent.agents.coordinator import build_coordinator
+from agent.agents.post_gen import build_post_gen_agent
 from agent.events import AUTHORS, ENVELOPE_KEYS, validate_events
 from agent.state import build_state
 from agent.tools.result import error_result, tool_result
@@ -149,14 +150,24 @@ def _to_contract_events(adk_events, used_call_ids):
 
 # ------------------------------------------------------------------ turn ----
 
+def default_specialists(model=None):
+    """The real specialists built so far. Any specialist not listed here is a stub.
+
+    Add each new specialist here when it is finished.
+    """
+    return {"post_gen": build_post_gen_agent(model)}
+
+
 async def run_turn_async(user_id, events, *, specialists=None, model=None):
     """Run one turn and return only the new events (a list of dicts).
 
     user_id: the signed-in user, taken from the JWT by the caller. Nothing
         inside `events` can change it.
     events: the full history from the frontend, ending with the user's new message.
-    specialists / model: passed to build_coordinator (used to swap in real
-        specialists or, in tests, a fake model).
+    specialists: optional {name: agent} that replaces a default specialist or
+        stub of the same name (used by tests).
+    model: optional model override, passed to the coordinator and the default
+        specialists (used by tests to supply a fake model).
     Raises EventsError when the history does not match the contract.
     """
     cleaned = validate_events(events)  # also guarantees the last event is a user message
@@ -167,7 +178,7 @@ async def run_turn_async(user_id, events, *, specialists=None, model=None):
 
     recorder = _EventRecorder()
     runner = InMemoryRunner(
-        agent=build_coordinator(specialists, model=model),
+        agent=build_coordinator({**default_specialists(model), **(specialists or {})}, model=model),
         app_name=APP_NAME,
         plugins=[recorder],
     )
