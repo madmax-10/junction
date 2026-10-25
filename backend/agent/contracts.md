@@ -24,6 +24,7 @@ Every ADK function tool returns this object, built with
 | `status` | One of `ok`, `no_results`, `insufficient_data`, `vision_unavailable`, `search_unavailable`, `error` |
 | `data` | The payload, or `null`. Empty searches return `no_results` with `data: null` or an explanation, never invented rows |
 | `ids` | Named record ids the coordinator restores state from (`used_car_id`, `issue`, `post_id`, `post_ids`, …) |
+| | `get_user_context` returns lists, not a single active record: `used_car_ids`, `issue_ids` (`{"buy": [], "sell": [], "repair": []}`) and `draft_post_ids`. The coordinator picks the active one; it is not restored into state automatically |
 | `provenance` | Where the data came from, e.g. `own_used_cars`, `published_sell_posts`, `new_cars_catalog`, `serpapi_google_maps` |
 | `error` | A short message when `status` is `error`; otherwise `null` |
 
