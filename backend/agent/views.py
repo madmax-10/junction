@@ -8,6 +8,7 @@ from rest_framework.views import APIView
 
 from agent.events import EventsError
 from agent.runner import run_turn
+from agent.responses import database_operations, database_records
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +29,8 @@ class ChatTurnView(APIView):
 
         try:
             new_events = run_turn(request.user.id, events, request=request)
+            records = database_records(request.user, new_events)
+            operations = database_operations(new_events)
         except EventsError as exc:
             # The history broke the rules; say exactly which rule so the client can fix it.
             raise serializers.ValidationError({"events": str(exc)})
@@ -39,4 +42,4 @@ class ChatTurnView(APIView):
                 {"detail": "The assistant is unavailable right now. Please try again."},
                 status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
-        return Response({"events": new_events})
+        return Response({"events": new_events, "records": records, "database_operations": operations})

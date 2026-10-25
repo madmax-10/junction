@@ -10,12 +10,14 @@ from django.test import SimpleTestCase
 from google.adk.agents import BaseAgent, LlmAgent
 from google.adk.events import Event, EventActions
 from google.adk.models import BaseLlm, LlmResponse
+from google.adk.models.base_llm import LlmCapabilities
 from google.adk.runners import InMemoryRunner
 from google.adk.tools import AgentTool
 from google.genai import types
 
 from agent.agents.coordinator import SPECIALIST_NAMES, build_coordinator
 from agent.agents.stubs import make_stub
+from agent.tests.fakes import structured_response
 
 
 class ScriptedModel(BaseLlm):
@@ -24,10 +26,14 @@ class ScriptedModel(BaseLlm):
     script: list = []
     calls: list = []
 
+    @property
+    def capabilities(self):
+        return LlmCapabilities(output_schema_and_tools=True)
+
     async def generate_content_async(self, llm_request, stream=False):
         # Remember what the model was asked, then hand back the next prepared reply.
         self.calls.append(llm_request)
-        yield self.script[len(self.calls) - 1]
+        yield structured_response(llm_request, self.script[len(self.calls) - 1])
 
 
 def call(name, **args):
@@ -124,7 +130,7 @@ class CoordinatorRunTests(SimpleTestCase):
 
         session, reply = await run_turn(coordinator, "What is my Civic worth?", {"user_id": "u-1"})
 
-        self.assertEqual(reply, "I can't price your car yet.")
+        self.assertEqual(json.loads(reply)["message"], "I can't price your car yet.")
         # The second model call saw the stub's no_results answer as a tool result.
         second_request = model.calls[1]
         responses = [

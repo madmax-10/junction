@@ -5,6 +5,7 @@ from django.test import TestCase
 
 from agent.services.post_search_service import search_comparable_posts
 from posts.models import Post
+from django.utils import timezone
 
 
 class ComparablePostSearchTests(TestCase):
@@ -12,7 +13,7 @@ class ComparablePostSearchTests(TestCase):
                     asking_price="18000.00", status=Post.Status.PUBLISHED,
                     issue_type=Post.IssueType.SELL, location="Austin, TX", **extra):
         return Post.objects.create(
-            id=uuid.uuid4(), issue_id=uuid.uuid4(), issue_type=issue_type,
+            approved_at=timezone.now(), id=uuid.uuid4(), issue_id=uuid.uuid4(), issue_type=issue_type,
             title=f"{year} {make} {model}", content="Synthetic isolated fixture.",
             post_data={
                 "make": make, "model": model, "year": year, "mileage": mileage,
@@ -96,7 +97,7 @@ class ComparablePostSearchTests(TestCase):
 
     def test_malformed_ranges_are_rejected_consistently(self):
         malformed = [
-            None, 2020, "12", b"12", {2018, 2022}, {2018: 1, 2022: 2},
+            2020, "12", b"12", {2018, 2022}, {2018: 1, 2022: 2},
             [], [2018], [2018, 2020, 2022], [None, 2022], [True, 2022],
             [2018, False], ["2018", "2022"], [2018.0, 2022],
             [Decimal("2018"), 2022], [float("inf"), 2022],
@@ -126,3 +127,23 @@ class ComparablePostSearchTests(TestCase):
                     [str(included.id)],
                 )
 
+
+    def test_make_model_discovery_needs_no_invented_ranges(self):
+        post = self.create_post(year=1990, mileage=500000)
+        self.assertEqual(search_comparable_posts("Toyota", "Camry")["comparables"][0]["post_id"], str(post.id))
+
+    def test_unapproved_published_post_is_excluded(self):
+        post = self.create_post()
+        Post.objects.filter(pk=post.pk).update(approved_at=None)
+        self.assertEqual(self.search()["comparables"], [])
+
+    def test_mock_issue_owner_is_excluded_even_without_synthetic_flag(self):
+        from accounts.models import User
+        from issues.models import SellIssue
+        from vehicles.models import UsedCar
+        owner = User.objects.create_user(email="seed@mock.local", name="Fixture")
+        car = UsedCar.objects.create(owner=owner, make="Toyota", model="Camry", year=2020, mileage=40000)
+        issue = SellIssue.objects.create(user=owner, used_car=car, description="Fixture")
+        post = self.create_post()
+        Post.objects.filter(pk=post.pk).update(issue_id=issue.id)
+        self.assertEqual(self.search()["comparables"], [])

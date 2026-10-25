@@ -156,7 +156,7 @@ class DefaultWiringTests(TestCase):
         new = run_turn(str(self.user.id), [user_message("Make a post")], model=model, specialists={"post_gen": replacement})
 
         reply = next(e for e in new if e["kind"] == "tool_response" and e["name"] == "post_gen")
-        self.assertEqual(reply["response"]["data"], {"text": "Replaced."})
+        self.assertEqual(reply["response"]["data"]["message"], "Replaced.")
 
 
 class AgentToolTests(SimpleTestCase):

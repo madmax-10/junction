@@ -14,6 +14,7 @@ from accounts.models import User
 from agent.services.value_range_service import calculate_value_range
 from agent.services.valuation_service import estimate
 from posts.models import Post
+from django.utils import timezone
 from vehicles.models import NewCar, UsedCar
 
 
@@ -27,6 +28,14 @@ class ValueRangeTests(TestCase):
             mileage=40000, trim="SE", condition="PRIVATE condition",
         )
 
+    def weighting_fixture(self, subject, comparables):
+        return {"weights": [{"post_id": row["post_id"], "weight": "1", "reason": "Matching make/model fixture"} for row in comparables]}
+
+    def setUp(self):
+        mock = patch("agent.services.ai_valuation_service.gemini_weights", side_effect=self.weighting_fixture)
+        mock.start()
+        self.addCleanup(mock.stop)
+
     def create_post(self, *, status=Post.Status.PUBLISHED,
                     issue_type=Post.IssueType.SELL, **changes):
         data = {
@@ -35,7 +44,7 @@ class ValueRangeTests(TestCase):
         }
         data.update(changes)
         return Post.objects.create(
-            issue_id=uuid4(), issue_type=issue_type, status=status,
+            approved_at=timezone.now(), issue_id=uuid4(), issue_type=issue_type, status=status,
             title="Synthetic fixture", content="PRIVATE text not returned", post_data=data,
         )
 
@@ -51,7 +60,7 @@ class ValueRangeTests(TestCase):
         self.assertEqual(result["data"]["status"], "completed")
         self.assertEqual(result["data"]["sample_size"], 3)
         self.assertEqual([result["data"][k] for k in ("low", "median", "high")],
-                         ["10000.00", "12000.00", "15000.00"])
+                         ["10000.00", None, "15000.00"])
         self.assertEqual(result["ids"]["post_ids"], [str(p.id) for p in posts])
         self.assertEqual(result["data"]["price_basis"], "asking")
 
@@ -64,7 +73,8 @@ class ValueRangeTests(TestCase):
         result = calculate_value_range(self.car.id, [p.id for p in posts], user=self.user)
         self.assertEqual(result["data"]["msrp_reference"]["catalog_id"], str(catalog.id))
         self.assertEqual(result["data"]["msrp_reference"]["msrp"], "99999.99")
-        self.assertEqual(result["data"]["median"], "12000.00")
+        self.assertIsNone(result["data"]["median"])
+        self.assertTrue(Decimal(result["data"]["estimated_value"]) > Decimal("12000"))
 
     def test_nonexistent_foreign_and_malformed_vehicles_have_identical_errors(self):
         results = [
@@ -128,7 +138,7 @@ class ValueRangeTests(TestCase):
 
     def test_empty_one_and_two_comparables_have_no_numeric_range(self):
         posts = self.three_posts()
-        for count in range(3):
+        for count in (1, 2):
             with self.subTest(count=count):
                 result = calculate_value_range(self.car.id, [p.id for p in posts[:count]], user=self.user)
                 self.assertEqual(result["status"], "insufficient_data")
@@ -142,7 +152,7 @@ class ValueRangeTests(TestCase):
         self.assertNotIn("bad", json.dumps(result))
 
     def test_invalid_collection_is_rejected(self):
-        for value in (None, "one-id", {}, 1):
+        for value in ("one-id", {}, 1):
             with self.subTest(value=value), self.assertRaises(ValueError):
                 calculate_value_range(self.car.id, value, user=self.user)
 
@@ -168,3 +178,60 @@ class ValueRangeTests(TestCase):
             calculate_value_range(self.car.id, [p.id for p in posts], user=self.user)
         self.assertTrue(all(q["sql"].lstrip().upper().startswith("SELECT") for q in queries))
         self.assertEqual(list(Post.objects.values()), before)
+
+    def test_automatic_discovery_and_non_median_weighted_estimate(self):
+        posts = self.three_posts()
+        def provider(subject, comparables):
+            self.assertEqual(subject["condition"], self.car.condition)
+            weights = {str(posts[0].id): "0.1", str(posts[1].id): "0.2", str(posts[2].id): "0.7"}
+            return {"weights": [{"post_id": row["post_id"], "weight": weights[row["post_id"]], "reason": "Fixture relevance"} for row in comparables]}
+        result = calculate_value_range(self.car.id, user=self.user, provider=provider)
+        self.assertEqual(result["status"], "ok")
+        self.assertEqual(Decimal(result["data"]["estimated_value"]), Decimal("13900"))
+        self.assertIsNone(result["data"]["median"])
+        data = result["data"]
+        self.assertEqual(data["method"], "ai_weighted_asking_mean")
+        self.assertEqual(data["formula"], "sum(asking_price * weight) / sum(weight)")
+        self.assertEqual(data["weighting_provider"], "injected")
+        self.assertIsNone(data["weighting_model"])
+        evidence = {row["post_id"]: row for row in data["weight_evidence"]}
+        self.assertEqual(set(evidence), {str(post.id) for post in posts})
+        self.assertEqual(evidence[str(posts[0].id)], {
+            "post_id": str(posts[0].id), "weight": "0.1", "reason": "Fixture relevance",
+            "asking_price": "10000.00",
+        })
+        recomputed = sum(Decimal(row["asking_price"]) * Decimal(row["weight"])
+                         for row in evidence.values()) / sum(Decimal(row["weight"]) for row in evidence.values())
+        self.assertEqual(recomputed, Decimal(data["estimated_value"]))
+
+    def test_default_provider_metadata_identifies_configured_model(self):
+        from agent.config import AGENT_MODEL
+        self.three_posts()
+        result = calculate_value_range(self.car.id, user=self.user)
+        self.assertEqual(result["data"]["weighting_provider"], "gemini")
+        self.assertEqual(result["data"]["weighting_model"], AGENT_MODEL)
+        self.assertEqual(len(result["data"]["weight_evidence"]), 3)
+
+    def test_provider_failure_never_becomes_successful_estimate(self):
+        self.three_posts()
+        def failing(subject, comparables):
+            raise RuntimeError("PRIVATE provider detail")
+        result = calculate_value_range(self.car.id, user=self.user, provider=failing)
+        self.assertEqual(result["status"], "insufficient_data")
+        self.assertIsNone(result["data"]["estimated_value"])
+        self.assertNotIn("PRIVATE", json.dumps(result))
+        self.assertEqual(result["data"]["weight_evidence"], [])
+        self.assertIsNone(result["data"]["weighting_model"])
+
+    def test_ungrounded_duplicate_and_invalid_provider_weights_are_rejected(self):
+        posts = self.three_posts()
+        valid = [{"post_id": str(post.id), "weight": "1", "reason": "Fixture"} for post in posts]
+        for rows in ([dict(row, post_id=str(uuid4())) for row in valid],
+                     [valid[0], valid[0], valid[2]],
+                     [dict(row, weight="NaN") for row in valid],
+                     [dict(row, weight="-1") for row in valid],
+                     [dict(row, weight="0") for row in valid]):
+            with self.subTest(rows=rows):
+                result = calculate_value_range(self.car.id, user=self.user, provider=lambda subject, comparables: {"weights": rows})
+                self.assertEqual(result["status"], "insufficient_data")
+                self.assertIsNone(result["data"]["estimated_value"])

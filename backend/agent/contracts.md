@@ -40,7 +40,34 @@ Serialization (`to_jsonable`):
 ## 2. Chat events (client-held history)
 
 `POST /api/chat/turns/` with `{"events": [...]}`, where the last event is a user `message`.
-The response is `{"events": [...new events only]}`.
+The response is `{"events": [...new events only], "records": {...}}`.
+`events` is unchanged. `records` contains allowlisted database rows referenced
+by successful (`ok` or `insufficient_data`) tool responses in this turn, grouped
+by table: `used_cars`, `buy_issues`, `sell_issues`, `repair_issues`, and `posts`.
+Rows are fetched from the ORM, never constructed from the agent's prose or data.
+Vehicles/issues must belong to the authenticated user (including vehicle ownership
+for Sell/Repair issues). Posts must be owned or approved and published. Empty
+groups are arrays. Private user/owner/contact fields and Post content/post_data
+are excluded. Decimal fields are strings and timestamps are ISO 8601 strings.
+This is an additive response field; clients continue replaying only `events`.
+
+### Validated agent final replies and database outcomes
+
+All six real agents declare their own Pydantic `output_schema` from
+[`schemas.py`](./schemas.py). Final replies have `agent`, `status` (one of
+`answer`, `needs_input`, `unavailable`, `error`) and a nonempty `message`.
+Unknown fields and mismatched agent identities are rejected. Coordinator message
+events retain human-readable `text` and also carry the validated `output` object.
+Specialist replies remain in their tool response; malformed prose is not promoted
+to a successful structured reply.
+
+The HTTP response also includes `database_operations`, a list of Pydantic-validated
+server-derived function-tool outcomes: `agent`, `tool`, `call_id`, `operation`
+(`read` or `write`), `status`, `succeeded`, `ids`, and `error`. Only actual database
+function tools populate it; agent final replies and ADK's internal schema tool do
+not. `succeeded` means that function returned `ok`; a read never implies a write,
+and a schema-valid conversational answer never establishes database success.
+The list describes this request's execution, not a durable signed audit log.
 
 ```json
 {"id": "c-1", "kind": "message", "role": "user", "author": "user", "text": "Value my Civic"}
@@ -75,6 +102,13 @@ latest matching `tool_response` in the history.
 | `last_search_results` | list of post ids | `ids.post_ids` from search tools |
 
 ## 3. Valuation result
+
+Current valuation is **not median-based**. Gemini assigns relevance weights to
+eligible database asking-price evidence. Server Decimal arithmetic computes
+`estimated_value = sum(weight_i * asking_price_i) / sum(weight_i)` using at least
+three distinct positively weighted posts. `median` remains null only for backward
+compatibility. Missing/invalid provider output produces no numeric estimate.
+The old median example below is historical and no longer the active output.
 
 The valuation result is owned by Agent 2. Its source of truth is
 [`estimate()`](./services/valuation_service.md). The tool response wraps that

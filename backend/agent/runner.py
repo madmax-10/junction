@@ -13,6 +13,7 @@ from google.adk.events import Event
 from google.adk.plugins import BasePlugin
 from google.adk.runners import InMemoryRunner
 from google.genai import types
+from pydantic import ValidationError as SchemaValidationError
 
 from agent.agents.buyer import build_buyer_agent
 from agent.agents.coordinator import build_coordinator
@@ -21,9 +22,10 @@ from agent.agents.repair import build_repair_agent
 from agent.agents.seller import build_seller_agent
 from agent.agents.valuation import build_valuation_agent
 from agent.auth import get_or_create_authenticated_session
-from agent.config import AGENT_MODEL
+from agent.config import get_agent_model
 from agent.events import AUTHORS, ENVELOPE_KEYS, validate_events
 from agent.state import build_state
+from agent.schemas import CoordinatorReply, REPLY_SCHEMAS
 from agent.tools.result import error_result, tool_result
 
 APP_NAME = "car_owner_hub"
@@ -119,6 +121,26 @@ def _as_envelope(name, response):
     """Make a tool's raw answer fit the {status, data, ids, provenance, error} shape."""
     if isinstance(response, dict) and ENVELOPE_KEYS <= set(response):
         return response  # our own tools already answer in this shape
+    if name in REPLY_SCHEMAS:
+        raw = response.get("result", response) if isinstance(response, dict) else response
+        if isinstance(raw, str):
+            try:
+                stub = json.loads(raw)
+            except ValueError:
+                stub = None
+            if (isinstance(stub, dict) and ENVELOPE_KEYS <= set(stub)
+                    and stub.get("provenance") == "stub" and stub.get("status") == "no_results"):
+                return stub  # Explicit test/development placeholder, never success.
+        try:
+            reply = (REPLY_SCHEMAS[name].model_validate_json(raw) if isinstance(raw, str)
+                     else REPLY_SCHEMAS[name].model_validate(raw))
+        except SchemaValidationError:
+            return error_result("Specialist returned an invalid structured reply.", provenance=f"specialist:{name}")
+        # This is an agent's conversational outcome, NOT a database write receipt.
+        status = "insufficient_data" if reply.status in {"needs_input", "unavailable"} else "ok"
+        if reply.status == "error":
+            return error_result(reply.message, provenance=f"specialist:{name}")
+        return tool_result(status, data=reply.model_dump(mode="json"), provenance=f"specialist:{name}")
     # ADK wraps a plain-text result (such as a specialist's answer) as {"result": text}.
     text = response.get("result") if isinstance(response, dict) else response
     if isinstance(text, str):
@@ -156,18 +178,27 @@ def _to_contract_events(adk_events, used_call_ids):
         def flush_text():
             # Only the coordinator speaks to the user; specialist text stays inside tool responses.
             if text and author == "coordinator":
+                try:
+                    reply = CoordinatorReply.model_validate_json("".join(text))
+                except SchemaValidationError:
+                    reply = CoordinatorReply(status="error", message=FALLBACK_REPLY)
                 new_events.append({"id": _new_id(), "kind": "message", "role": "assistant",
-                                   "author": "coordinator", "text": "".join(text)})
+                                   "author": "coordinator", "text": reply.message,
+                                   "output": reply.model_dump(mode="json")})
             text.clear()
 
         for part in event.content.parts:
             if part.function_call:
+                if part.function_call.name == "set_model_response":
+                    continue  # ADK's schema fallback is not an application operation.
                 flush_text()
                 call = part.function_call
                 new_events.append({"id": _new_id(), "kind": "tool_call", "author": author,
                                    "name": call.name, "call_id": final_call_id(call.id),
                                    "args": dict(call.args or {})})
             elif part.function_response:
+                if part.function_response.name == "set_model_response":
+                    continue
                 flush_text()
                 reply = part.function_response
                 new_events.append({"id": _new_id(), "kind": "tool_response", "author": author,
@@ -183,7 +214,7 @@ def _to_contract_events(adk_events, used_call_ids):
 
 def default_specialists(model=None):
     """The real specialists. The coordinator still stubs any name left out of this dict."""
-    chosen = model or AGENT_MODEL
+    chosen = get_agent_model(model)
     return {
         "valuation": build_valuation_agent(chosen),
         "buyer": build_buyer_agent(chosen),
@@ -239,8 +270,10 @@ async def run_turn_async(user_id, events, *, specialists=None, model=None, reque
 
     # Always give the user something to read, even if the model said nothing.
     if not any(e["kind"] == "message" for e in new_events):
+        reply = CoordinatorReply(status="error", message=FALLBACK_REPLY)
         new_events.append({"id": _new_id(), "kind": "message", "role": "assistant",
-                           "author": "coordinator", "text": FALLBACK_REPLY})
+                           "author": "coordinator", "text": reply.message,
+                           "output": reply.model_dump(mode="json")})
     return new_events
 
 

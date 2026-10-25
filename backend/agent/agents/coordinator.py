@@ -4,7 +4,8 @@ from google.adk.agents import LlmAgent
 from google.adk.tools import AgentTool
 
 from agent.agents.stubs import SPECIALIST_DESCRIPTIONS, make_stub
-from agent.config import AGENT_MODEL
+from agent.config import get_agent_model
+from agent.schemas import CoordinatorReply
 from agent.prompts.coordinator import COORDINATOR_INSTRUCTION
 from agent.tools.adapters import as_async_tool
 from agent.tools.coordinator_tools import (
@@ -46,9 +47,10 @@ def build_coordinator(specialists=None, model=None):
 
     return LlmAgent(
         name="coordinator",
-        model=model or AGENT_MODEL,
+        model=get_agent_model(model),
         description="Talks to the user and delegates to the specialist agents.",
         instruction=COORDINATOR_INSTRUCTION,
+        output_schema=CoordinatorReply,
         # Its own tools (look up the user's cars/issues, register a car),
         # then the five specialists. The three database tools are wrapped so
         # they run off ADK's event loop, where Django allows database access.

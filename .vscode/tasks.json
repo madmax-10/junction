@@ -1,0 +1,19 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Run frontend",
+			"type": "shell",
+			"command": "npm --prefix frontend start -- --host 127.0.0.1",
+			"isBackground": true,
+			"problemMatcher": []
+		},
+		{
+			"label": "Run backend",
+			"type": "shell",
+			"command": "/Users/sanishshrestha/Documents/hackTexas1/.venv-dev/bin/python backend/manage.py runserver 127.0.0.1:8000",
+			"isBackground": true,
+			"problemMatcher": []
+		}
+	]
+}

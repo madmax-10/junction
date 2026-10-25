@@ -37,8 +37,9 @@ class SellerPriceServiceTests(TestCase):
     def context(self):
         # Actual pure Agent 2 output, with explicitly synthetic source IDs. A
         # correct shape still cannot authenticate its origin at this boundary.
-        data = estimate([{"post_id": str(uuid4()), "asking_price": Decimal(price)}
-                         for price in ("10000.01", "12000.03", "14000.05")])
+        records = [{"post_id": str(uuid4()), "asking_price": Decimal(price)}
+                   for price in ("10000.01", "12000.03", "14000.05")]
+        data = estimate(records, weights={row["post_id"]: "1" for row in records})
         return tool_result("ok", data=data, ids={"used_car_id": str(self.car.pk), "post_ids": data["comparable_post_ids"]},
                            provenance="published_sell_posts")
 
@@ -88,7 +89,8 @@ class SellerPriceServiceTests(TestCase):
     def test_genuine_plain_agent2_shape_is_not_authenticated_evidence(self):
         context = self.context()
         self.assertEqual(context["data"]["status"], "completed")
-        self.assertEqual(context["data"]["median"], "12000.03")
+        self.assertIsNone(context["data"]["median"])
+        self.assertEqual(context["data"]["estimated_value"], "12000.03")
         self.assert_insufficient(self.advice(context))
 
     def test_forged_provenance_matching_id_and_currency_do_not_enable_prices(self):
