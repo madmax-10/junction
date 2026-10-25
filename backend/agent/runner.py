@@ -14,6 +14,7 @@ from google.adk.plugins import BasePlugin
 from google.adk.runners import InMemoryRunner
 from google.genai import types
 
+from agent.auth import bind_current_session
 from agent.agents.buyer import build_buyer_agent
 from agent.agents.coordinator import build_coordinator
 from agent.agents.post_gen import build_post_gen_agent
@@ -70,6 +71,18 @@ def _replay_events(history):
 
 
 # --------------------------------------------------------------- capture ----
+
+class _SessionBinding(BasePlugin):
+    """Gives each tool the signed identity for the session it is actually running in."""
+
+    def __init__(self, user_id):
+        super().__init__(name="session_binding")
+        self._user_id = str(user_id)
+
+    async def before_tool_callback(self, *, tool, tool_args, tool_context):
+        bind_current_session(tool_context, user_id=self._user_id)
+        return None
+
 
 class _EventRecorder(BasePlugin):
     """Collects every event ADK produces, including the specialists' own.
@@ -189,7 +202,7 @@ async def run_turn_async(user_id, events, *, specialists=None, model=None):
     runner = InMemoryRunner(
         agent=build_coordinator({**default_specialists(model), **(specialists or {})}, model=model),
         app_name=APP_NAME,
-        plugins=[recorder],
+        plugins=[_SessionBinding(state["user_id"]), recorder],
     )
     # A throwaway session that lives only for this request.
     session = await runner.session_service.create_session(
