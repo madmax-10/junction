@@ -70,6 +70,26 @@ async def get_or_create_authenticated_session(
     return session
 
 
+def bind_current_session(tool_context, *, user_id: str) -> None:
+    """Sign the session a tool is about to run in for this turn's user.
+
+    The chat runner's parent session is not the session specialist tools see.
+    AgentTool copies state into a new session, and a binding signed for the
+    parent session id is rejected there. Server code re-signs the current
+    session only when ADK's session owner is the user authenticated for the turn.
+    """
+    if not isinstance(tool_context, ToolContext) or not isinstance(user_id, str) or not user_id:
+        return
+    session = getattr(tool_context, "session", None)
+    if session is None or session.user_id != user_id or tool_context.user_id != user_id:
+        return
+    binding = {"user_id": user_id, "session_id": session.id, "app_name": session.app_name}
+    tool_context.state[USER_ID_STATE_KEY] = user_id
+    tool_context.state[_BINDING_STATE_KEY] = signing.dumps(
+        binding, key=_BINDING_KEY, salt=_BINDING_SALT,
+    )
+
+
 def get_authenticated_user(tool_context: ToolContext):
     """Return a current active Django user only for a bridge-bound ADK context.
 
