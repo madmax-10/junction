@@ -1,32 +1,8 @@
-import { Fingerprint, HandHeart, ShieldCheck, Sparkle, UsersThree, type Icon } from '@phosphor-icons/react'
+import { Sparkle, UsersThree } from '@phosphor-icons/react'
 import { motion } from 'motion/react'
 import { staggerVariants } from '../../styles/motion.ts'
 import { revealOnScroll, riseVariants, sectionContainerClassName } from './landingMotion.ts'
 import { SectionIntro } from './SectionIntro.tsx'
-
-type Principle = {
-  icon: Icon
-  title: string
-  description: string
-}
-
-const principles: Principle[] = [
-  {
-    icon: Fingerprint,
-    title: 'Matched to your details',
-    description: 'Your make, model, damage, and insurance situation shape every result.',
-  },
-  {
-    icon: HandHeart,
-    title: 'Told by real owners',
-    description: 'Decisions, costs, and outcomes come straight from the people who lived them.',
-  },
-  {
-    icon: ShieldCheck,
-    title: 'Yours to keep private',
-    description: 'Nothing you share is published unless you review it and say yes.',
-  },
-]
 
 const ownerAnswers = [
   { vehicle: '2019 Civic', text: 'Repaired at a body shop. The other driver’s insurer paid $4,600.' },
@@ -44,38 +20,21 @@ export function WhyDifferent() {
       />
 
       <div
-        className={`${sectionContainerClassName} relative grid gap-16 py-24 sm:py-32 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-20`}
+        className={`${sectionContainerClassName} relative grid items-center gap-16 py-28 sm:py-36 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-24`}
       >
-        <div>
-          <SectionIntro
-            id="why-different-title"
-            tone="inverse"
-            eyebrow="Why it’s different"
-            title="Not another generic answer. Real people, real outcomes."
-            description="Most tools tell you what usually happens. Our AI listens to your situation, then connects you with owners who actually faced it, so you can see what really happened next."
-          />
-
-          <motion.ul {...revealOnScroll} variants={columnVariants} className="mt-12 flex flex-col gap-7">
-            {principles.map(({ icon: PrincipleIcon, title, description }) => (
-              <motion.li key={title} variants={riseVariants} className="flex gap-4">
-                <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-surface/10 text-accent">
-                  <PrincipleIcon size={20} aria-hidden="true" />
-                </span>
-                <div>
-                  <h3 className="font-heading text-base font-bold">{title}</h3>
-                  <p className="mt-1 max-w-sm font-body text-sm leading-relaxed text-surface/65">{description}</p>
-                </div>
-              </motion.li>
-            ))}
-          </motion.ul>
-        </div>
+        <SectionIntro
+          id="why-different-title"
+          tone="inverse"
+          title="Not a generic answer. A real one."
+          description="Skip what usually happens. See what actually happened to drivers like you."
+        />
 
         <motion.div
           {...revealOnScroll}
           variants={columnVariants}
           aria-label="Example: a generic answer compared with answers from similar owners"
           role="group"
-          className="flex flex-col gap-4 self-center"
+          className="flex flex-col gap-4"
         >
           <motion.p
             variants={riseVariants}
@@ -113,7 +72,6 @@ export function WhyDifferent() {
                 </li>
               ))}
             </ul>
-            <p className="mt-4 font-body text-xs text-muted">Matched on make, damage, and who’s paying.</p>
           </motion.div>
         </motion.div>
       </div>

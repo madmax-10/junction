@@ -11,7 +11,7 @@ export function FinalCta() {
   const prefersReducedMotion = useReducedMotion()
 
   return (
-    <section aria-labelledby="final-cta-title" className="pb-24 sm:pb-32">
+    <section aria-labelledby="final-cta-title" className="pt-8 pb-28 sm:pt-12 sm:pb-40">
       <motion.div
         {...revealOnScroll}
         variants={ctaVariants}
@@ -46,13 +46,13 @@ export function FinalCta() {
           </span>
         </motion.h2>
 
-        <motion.p variants={riseVariants} className="mt-7 max-w-lg font-body text-lg leading-relaxed text-text/70">
-          Start with a few details. In minutes, you’ll see what people in your exact spot decided, and how it went.
+        <motion.p variants={riseVariants} className="mt-8 max-w-md font-body text-lg leading-relaxed text-text/70">
+          Start with a few details. It only takes a few minutes.
         </motion.p>
 
         <motion.div
           variants={riseVariants}
-          className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:gap-4"
+          className="mt-12 flex flex-col items-center gap-3 sm:flex-row sm:gap-4"
         >
           <ButtonLink to={paths.intake} size="lg">
             Find stories like mine

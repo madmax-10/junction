@@ -1,4 +1,4 @@
-import { ArrowRight, ArrowUpRight, Car, CheckCircle } from '@phosphor-icons/react'
+import { ArrowRight, ArrowUpRight } from '@phosphor-icons/react'
 import { motion } from 'motion/react'
 import { Link } from 'react-router'
 import { paths } from '../../app/paths.ts'
@@ -9,6 +9,8 @@ import { revealOnScroll, riseVariants, sectionContainerClassName } from './landi
 import { SectionIntro } from './SectionIntro.tsx'
 
 const termClassName = 'font-body text-xs font-semibold tracking-wide text-muted uppercase'
+
+const detailClassName = 'mt-2.5 font-body text-base leading-relaxed text-text/80'
 
 const columnClassName = 'lg:border-l lg:border-border lg:pl-8'
 
@@ -22,9 +24,8 @@ function ExperienceRow({ experience }: { experience: ExperienceHighlight }) {
     >
       <header className="flex items-start justify-between gap-4 lg:flex-col lg:justify-start">
         <div>
-          <p className="font-body text-xs font-medium text-primary">{experience.category}</p>
-          <h3 id={titleId} className="mt-1.5 flex items-center gap-1.5 font-heading text-base font-bold tracking-tight">
-            <Car size={16} className="shrink-0 text-primary" aria-hidden="true" />
+          <p className="font-body text-sm font-medium text-primary">{experience.category}</p>
+          <h3 id={titleId} className="mt-1.5 font-heading text-lg font-bold tracking-tight">
             <Link to={paths.stories} className="outline-none after:absolute after:inset-0 after:rounded-[1.75rem]">
               {experience.vehicle}
               <span className="sr-only">: browse stories like this one</span>
@@ -40,22 +41,19 @@ function ExperienceRow({ experience }: { experience: ExperienceHighlight }) {
       </header>
 
       <div className={columnClassName}>
-        <p className={termClassName}>The situation</p>
-        <p className="mt-2 font-body text-[0.95rem] leading-relaxed">{experience.situation}</p>
+        <p className={termClassName}>What happened</p>
+        <p className={detailClassName}>{experience.situation}</p>
       </div>
 
       <div className={columnClassName}>
-        <p className={termClassName}>What they decided</p>
-        <p className="mt-2 font-body text-[0.95rem] leading-relaxed">{experience.decision}</p>
+        <p className={termClassName}>What they did</p>
+        <p className={detailClassName}>{experience.decision}</p>
       </div>
 
       <div className={columnClassName}>
-        <p className={termClassName}>Reported outcome</p>
-        <p className="mt-2 font-body text-[0.95rem] leading-relaxed">{experience.outcome}</p>
-        <p className="mt-3 inline-flex items-start gap-1.5 rounded-xl bg-secondary-light px-3 py-1.5 font-body text-xs leading-snug font-semibold text-secondary">
-          <CheckCircle size={14} weight="fill" className="mt-px shrink-0" aria-hidden="true" />
-          {experience.reported}
-        </p>
+        <p className={termClassName}>How it went</p>
+        <p className={detailClassName}>{experience.outcome}</p>
+        <p className="mt-3 font-body text-sm font-semibold text-secondary">{experience.reported}</p>
       </div>
     </article>
   )
@@ -65,14 +63,13 @@ const listVariants = staggerVariants(0.12, 0.05)
 
 export function ExploreExperiences() {
   return (
-    <section aria-labelledby="explore-experiences-title" className="py-24 sm:py-32">
+    <section aria-labelledby="explore-experiences-title" className="py-28 sm:py-36">
       <div className={sectionContainerClassName}>
-        <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
+        <div className="flex flex-col gap-10 lg:flex-row lg:items-end lg:justify-between">
           <SectionIntro
             id="explore-experiences-title"
-            eyebrow="Explore experiences"
-            title="Every story ends with what actually happened."
-            description="Owners share the situation they faced, the call they made, and how it turned out, so you can weigh your options with real context."
+            title="Every story ends with an outcome."
+            description="From the accident to the final bill."
           />
           <motion.div {...revealOnScroll} variants={riseVariants} className="shrink-0">
             <Link
@@ -91,7 +88,7 @@ export function ExploreExperiences() {
           </motion.div>
         </div>
 
-        <motion.ul {...revealOnScroll} variants={listVariants} className="mt-14 flex flex-col gap-4">
+        <motion.ul {...revealOnScroll} variants={listVariants} className="mt-16 flex flex-col gap-5 sm:mt-20">
           {sampleExperiences.map((experience) => (
             <motion.li key={experience.id} variants={riseVariants}>
               <ExperienceRow experience={experience} />
@@ -99,9 +96,7 @@ export function ExploreExperiences() {
           ))}
         </motion.ul>
 
-        <p className="mt-6 font-body text-xs text-muted">
-          Example stories shown for illustration. Outcomes are owner-reported, not advice.
-        </p>
+        <p className="mt-8 font-body text-sm text-muted">Example stories, shown for illustration.</p>
       </div>
     </section>
   )

@@ -19,7 +19,7 @@ const features: Feature[] = [
   {
     icon: ChatsCircle,
     title: 'AI Companion',
-    description: 'Talk it through anytime. Ask follow-ups and get pointed to the stories that fit.',
+    description: 'Talk it through and ask follow-up questions.',
     action: 'Start a conversation',
     to: paths.chat,
     iconClassName: 'bg-secondary text-surface',
@@ -27,7 +27,7 @@ const features: Feature[] = [
   {
     icon: UsersThree,
     title: 'Community Stories',
-    description: 'Browse repairs, payouts, and fresh starts shared by owners in your shoes.',
+    description: 'Repairs, payouts, and fresh starts.',
     action: 'Read stories',
     to: paths.stories,
     iconClassName: 'bg-primary text-surface',
@@ -35,7 +35,7 @@ const features: Feature[] = [
   {
     icon: Storefront,
     title: 'Vehicle Marketplace',
-    description: 'Find a replacement, or a damaged car sold as-is for repair or parts.',
+    description: 'Find a replacement or an as-is project car.',
     action: 'Browse cars',
     to: paths.marketplace,
     iconClassName: 'bg-surface-dark text-accent',
@@ -46,18 +46,14 @@ const featureVariants = staggerVariants(0.1, 0.1)
 
 export function MoreWaysWeHelp() {
   return (
-    <section aria-labelledby="more-ways-title" className="pb-24 sm:pb-32">
+    <section aria-labelledby="more-ways-title" className="pb-28 sm:pb-36">
       <div className={sectionContainerClassName}>
-        <SectionIntro
-          id="more-ways-title"
-          eyebrow="More ways we help"
-          title="Everything around the decision, in one place."
-        />
+        <SectionIntro id="more-ways-title" title="Everything else, in one place." />
 
         <motion.ul
           {...revealOnScroll}
           variants={featureVariants}
-          className="mt-12 grid divide-y divide-border overflow-hidden rounded-[2rem] border border-border bg-surface shadow-card lg:grid-cols-3 lg:divide-x lg:divide-y-0"
+          className="mt-14 grid sm:mt-16 divide-y divide-border overflow-hidden rounded-[2rem] border border-border bg-surface shadow-card lg:grid-cols-3 lg:divide-x lg:divide-y-0"
         >
           {features.map(({ icon: FeatureIcon, title, description, action, to, iconClassName }) => (
             <motion.li key={title} variants={riseVariants} className="flex">
@@ -71,9 +67,9 @@ export function MoreWaysWeHelp() {
                 >
                   <FeatureIcon size={22} />
                 </span>
-                <h3 className="mt-6 font-heading text-lg font-bold tracking-tight">{title}</h3>
-                <p className="mt-2 font-body text-sm leading-relaxed text-text/70">{description}</p>
-                <span className="mt-6 inline-flex items-center gap-1.5 font-body text-sm font-semibold text-primary lg:mt-auto lg:pt-6">
+                <h3 className="mt-7 font-heading text-lg font-bold tracking-tight">{title}</h3>
+                <p className="mt-2 font-body text-base leading-relaxed text-text/70">{description}</p>
+                <span className="mt-8 inline-flex items-center gap-1.5 font-body text-sm font-semibold text-primary lg:mt-auto lg:pt-8">
                   {action}
                   <ArrowRight
                     size={16}

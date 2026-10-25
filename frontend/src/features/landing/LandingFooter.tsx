@@ -18,7 +18,7 @@ export function LandingFooter() {
         <div className="flex flex-col gap-3">
           <BrandLink />
           <p className="max-w-xs font-body text-xs leading-relaxed text-muted">
-            Stories are shared by owners and reflect their own experience. Not legal, financial, or insurance advice.
+            Stories are owner-reported. Not legal, financial, or insurance advice.
           </p>
         </div>
 

@@ -1,4 +1,4 @@
-import { ArrowRight, Car, Eye, LockSimple, PencilSimpleLine } from '@phosphor-icons/react'
+import { ArrowRight, Car, Eye, PencilSimpleLine } from '@phosphor-icons/react'
 import { motion } from 'motion/react'
 import { Link } from 'react-router'
 import { paths } from '../../app/paths.ts'
@@ -7,11 +7,7 @@ import { staggerVariants } from '../../styles/motion.ts'
 import { revealOnScroll, riseVariants, sectionContainerClassName } from './landingMotion.ts'
 import { SectionIntro } from './SectionIntro.tsx'
 
-const shareSteps = [
-  { title: 'Tell it like you’d tell a friend', description: 'Chat about what happened. No writing skills needed.' },
-  { title: 'We draft the post for you', description: 'Our AI turns your conversation into a clear, useful story.' },
-  { title: 'Publish only when you’re ready', description: 'Review, edit, or remove anything before it goes live.' },
-]
+const shareSteps = ['Tell it like you’d tell a friend', 'We draft the post for you', 'Nothing goes live until you approve it']
 
 function DraftPostPreview() {
   return (
@@ -19,7 +15,7 @@ function DraftPostPreview() {
       <div className="flex items-center justify-between gap-3">
         <span className="inline-flex items-center gap-1.5 rounded-full bg-background px-2.5 py-1 text-xs font-medium">
           <Eye size={14} className="text-muted" />
-          Draft · only you can see this
+          Private draft
         </span>
         <PencilSimpleLine size={18} className="text-muted" />
       </div>
@@ -54,30 +50,26 @@ const stepsVariants = staggerVariants(0.1, 0.15)
 
 export function ShareExperience() {
   return (
-    <section aria-labelledby="share-experience-title" className="pb-24 sm:pb-32">
+    <section aria-labelledby="share-experience-title" className="pb-28 sm:pb-36">
       <div className={sectionContainerClassName}>
         <div className="grid items-center gap-12 overflow-hidden rounded-[2.5rem] bg-primary-light px-6 py-14 sm:px-12 sm:py-16 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:gap-16 lg:px-16 lg:py-20">
           <div>
             <SectionIntro
               id="share-experience-title"
-              eyebrow="Share your experience"
               title="Your story could steady someone else."
-              description="The stories here exist because owners took a few minutes to pay it forward. When you’re ready, yours can help the next driver."
+              description="When you’re ready, a few minutes of yours can guide the next driver."
             />
 
-            <motion.ol {...revealOnScroll} variants={stepsVariants} className="mt-10 flex flex-col gap-5">
+            <motion.ol {...revealOnScroll} variants={stepsVariants} className="mt-10 flex flex-col gap-4">
               {shareSteps.map((step, index) => (
-                <motion.li key={step.title} variants={riseVariants} className="flex gap-4">
+                <motion.li key={step} variants={riseVariants} className="flex items-center gap-4">
                   <span
-                    className="mt-0.5 grid size-7 shrink-0 place-items-center rounded-full bg-surface font-heading text-xs font-bold text-primary shadow-card"
+                    className="grid size-7 shrink-0 place-items-center rounded-full bg-surface font-heading text-xs font-bold text-primary shadow-card"
                     aria-hidden="true"
                   >
                     {index + 1}
                   </span>
-                  <div>
-                    <h3 className="font-heading text-base font-bold">{step.title}</h3>
-                    <p className="mt-0.5 font-body text-sm leading-relaxed text-text/70">{step.description}</p>
-                  </div>
+                  <p className="font-heading text-base font-bold">{step}</p>
                 </motion.li>
               ))}
             </motion.ol>
@@ -85,7 +77,7 @@ export function ShareExperience() {
             <motion.div
               {...revealOnScroll}
               variants={riseVariants}
-              className="mt-10 flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:gap-6"
+              className="mt-12 flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:gap-6"
             >
               <ButtonLink to={paths.myStory} size="lg">
                 Share your experience
@@ -114,11 +106,6 @@ export function ShareExperience() {
             <DraftPostPreview />
           </motion.div>
         </div>
-
-        <p className="mt-5 flex items-center justify-center gap-2 font-body text-sm text-muted">
-          <LockSimple size={16} className="shrink-0 text-primary" aria-hidden="true" />
-          Private unless you choose to share
-        </p>
       </div>
     </section>
   )

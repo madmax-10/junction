@@ -13,8 +13,3 @@ export const riseVariants: Variants = {
   hidden: { opacity: 0, y: 28 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: easeOutQuint } },
 }
-
-export const drawLineVariants: Variants = {
-  hidden: { scaleX: 0 },
-  visible: { scaleX: 1, transition: { duration: 0.9, delay: 0.35, ease: easeOutQuint } },
-}
