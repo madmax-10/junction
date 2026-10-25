@@ -103,7 +103,7 @@ export const interestOptions: IntakeOption<LearningInterest>[] = [
   {
     value: 'replaced',
     label: 'People who replaced their cars',
-    description: 'Moving on to a different car after the accident',
+    description: 'Starting fresh with a different car',
     icon: <ArrowsClockwise size={22} />,
   },
   {

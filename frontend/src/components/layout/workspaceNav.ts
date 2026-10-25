@@ -18,7 +18,7 @@ export const workspaceNavItems: WorkspaceNavItem[] = [
     to: paths.chat,
     label: 'Assistant',
     shortLabel: 'Assistant',
-    summary: 'Ask questions and find people whose accidents looked like yours.',
+    summary: 'Ask questions and find people whose situations looked like yours.',
     icon: ChatsCircle,
   },
   {

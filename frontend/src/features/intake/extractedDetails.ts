@@ -9,7 +9,7 @@ const detailLabels: Record<ExtractedDetail['field'], string> = {
   model: 'Model',
   year: 'Year',
   mileage: 'Mileage',
-  accidentType: 'Accident',
+  accidentType: 'What happened',
   situation: 'Insurance',
 }
 

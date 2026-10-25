@@ -31,7 +31,7 @@ export function SituationSummary({ onEdit }: { onEdit: () => void }) {
             {!isFullyConfirmed && <span className="text-text/55"> · needs review</span>}
           </>
         ) : (
-          <span className="text-text/65">Add your car and accident details for closer matches</span>
+          <span className="text-text/65">Add your car and what happened for closer matches</span>
         )}
       </p>
       <button

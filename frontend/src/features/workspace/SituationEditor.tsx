@@ -230,8 +230,8 @@ function EditorSheet({ focusSection, onClose }: Omit<SituationEditorProps, 'isOp
               </div>
             </EditorSection>
 
-            <EditorSection section="accident" title="Accident" icon={TriangleAlert}>
-              <div role="radiogroup" aria-label="Accident type" className="grid grid-cols-2 gap-3">
+            <EditorSection section="accident" title="What happened" icon={TriangleAlert}>
+              <div role="radiogroup" aria-label="What happened" className="grid grid-cols-2 gap-3">
                 {accidentTypeOptions.map((option) => (
                   <ChoiceCard
                     key={option.value}

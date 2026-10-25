@@ -229,15 +229,15 @@ export function SituationIsland({ className = '', onEdit }: SituationIslandProps
 
         <IslandSection
           section="accident"
-          title="Accident"
+          title="What happened"
           icon={TriangleAlert}
           status={statuses.accident}
-          addLabel="Add accident type"
+          addLabel="Add what happened"
           onEdit={onEdit}
           onConfirm={confirmSection}
         >
           <p className={`font-body text-sm ${accidentLabel ? 'font-medium' : 'text-text/40'}`}>
-            {accidentLabel ?? 'Type not added'}
+            {accidentLabel ?? 'Not added yet'}
           </p>
           {details && (
             <p className="mt-1 line-clamp-3 font-body text-sm leading-snug text-text/70">{details}</p>

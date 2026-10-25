@@ -21,7 +21,7 @@ export function LandingPage() {
             variants={fadeUpVariants}
             className="font-body text-sm font-semibold tracking-wide text-primary uppercase"
           >
-            For the days after a car accident
+            For drivers figuring out what comes next
           </motion.p>
 
           <motion.h1
@@ -55,7 +55,7 @@ export function LandingPage() {
             variants={fadeUpVariants}
             className="mt-7 max-w-lg font-body text-lg leading-relaxed text-text/75"
           >
-            Tell us what happened. We’ll connect you with people whose accidents looked like yours,
+            Tell us what happened. We’ll connect you with people who’ve been in a similar spot,
             so you can see what they decided, how it turned out, and what they learned.
           </motion.p>
 

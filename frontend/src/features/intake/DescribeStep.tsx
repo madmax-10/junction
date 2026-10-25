@@ -39,7 +39,7 @@ export function DescribeStep() {
         variants={staggerVariants(0.08, 0.15)}
         className="flex flex-col gap-10"
       >
-        <IntakeQuestion number={1} title="What kind of accident was it?">
+        <IntakeQuestion number={1} title="What happened to your car?">
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {accidentTypeOptions.map((option) => (
               <ChoiceCard
@@ -98,7 +98,7 @@ export function DescribeStep() {
         <IntakeActions
           backTo={paths.home}
           canContinue={canContinue}
-          incompleteHint="Choose an accident type and where things stand to continue"
+          incompleteHint="Choose what happened and where things stand to continue"
         />
       </motion.form>
     </IntakeStepLayout>

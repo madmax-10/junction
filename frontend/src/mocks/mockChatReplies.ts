@@ -50,7 +50,7 @@ const followUpsByTopic: Record<ChatTopic, string[]> = {
 const countWords = ['no', 'one', 'two', 'three', 'four', 'five']
 
 const noMatchText =
-  'I couldn’t find a community story close enough to your situation, so I won’t show ones that don’t fit.\n\nIf you share the type of accident, where your car was damaged, or where things stand with insurance, I can look again.'
+  'I couldn’t find a community story close enough to your situation, so I won’t show ones that don’t fit.\n\nIf you share what happened, where your car was damaged, or where things stand with insurance, I can look again.'
 
 const unavailableText = 'I couldn’t reach the community stories just now. Please try sending that again in a moment.'
 
