@@ -3,7 +3,7 @@
 import unittest
 from decimal import Decimal, localcontext
 
-from backend.agent.services.valuation_service import estimate as raw_estimate
+from agent.services.valuation_service import estimate as raw_estimate
 
 
 def estimate(comparables, msrp_reference=None):
