@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { ApiError, api } from '../../services/api.ts'
 import {
   buildUserEventText,
+  discardLegacyChatEvents,
   matchesFromEvents,
   messagesFromEvents,
   postFromEvents,
@@ -33,63 +34,72 @@ function updateSuggestions(
 }
 
 export function ChatProvider({ children }: { children: ReactNode }) {
-  const { user } = useAuth()
+  const { user, isReady } = useAuth()
+  const userId = user?.id ?? null
   const { draft, confirmed, applyConfirmedChanges, setSaved } = useIntakeDraft()
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [isResponding, setIsResponding] = useState(false)
-  const eventsRef = useRef<ChatEvent[]>(readChatEvents())
-  const [isRestoring, setIsRestoring] = useState(() => eventsRef.current.length > 0)
+  const [isRestoring, setIsRestoring] = useState(true)
+  const [trackedUserId, setTrackedUserId] = useState<string | null | undefined>(undefined)
+  const eventsRef = useRef<ChatEvent[]>([])
   const pendingReplyId = useRef<string | null>(null)
+  const sessionRef = useRef(0)
+  const appliedUserId = useRef<string | null | undefined>(undefined)
   const draftRef = useRef(draft)
   const confirmedRef = useRef(confirmed)
+
+  if (isReady && trackedUserId !== userId) {
+    const stored = userId ? readChatEvents(userId) : []
+    setTrackedUserId(userId)
+    setMessages([])
+    setIsResponding(false)
+    setIsRestoring(stored.length > 0)
+  }
 
   useEffect(() => {
     draftRef.current = draft
     confirmedRef.current = confirmed
   }, [draft, confirmed])
 
+  useLayoutEffect(() => {
+    if (!isReady || appliedUserId.current === userId) return
+    appliedUserId.current = userId
+    sessionRef.current += 1
+    pendingReplyId.current = null
+    discardLegacyChatEvents()
+    eventsRef.current = userId ? readChatEvents(userId) : []
+  }, [isReady, userId])
+
   useEffect(() => {
-    let current = true
+    if (!isReady || !userId || eventsRef.current.length === 0) return
+    const session = sessionRef.current
     const stored = eventsRef.current
-    if (stored.length === 0) return
+    let current = true
     void messagesFromEvents(stored)
       .then((restored) => {
-        if (current) setMessages(restored)
+        if (current && sessionRef.current === session) setMessages(restored)
       })
       .finally(() => {
-        if (current) setIsRestoring(false)
+        if (current && sessionRef.current === session) setIsRestoring(false)
       })
     return () => {
       current = false
     }
-  }, [])
-
-  const userId = user?.id ?? null
-  const previousUserId = useRef<string | null | undefined>(undefined)
-  useEffect(() => {
-    if (previousUserId.current === undefined) {
-      previousUserId.current = userId
-      return
-    }
-    if (previousUserId.current && previousUserId.current !== userId) {
-      pendingReplyId.current = null
-      eventsRef.current = []
-      setMessages([])
-      setIsResponding(false)
-    }
-    previousUserId.current = userId
-  }, [userId])
+  }, [isReady, userId])
 
   const sendMessage = useCallback(
     (text: string, images: ChatImage[] = [], hiddenNote?: string) => {
       const trimmedText = text.trim()
-      if ((!trimmedText && images.length === 0) || pendingReplyId.current !== null) {
+      const ownerId = userId
+      const session = sessionRef.current
+      if (!ownerId || (!trimmedText && images.length === 0) || pendingReplyId.current !== null) {
         return
       }
 
       const messageId = crypto.randomUUID()
       pendingReplyId.current = messageId
       const visibleText = trimmedText || 'Photo added'
+      const stillCurrent = () => sessionRef.current === session && pendingReplyId.current === messageId
       setMessages((current) => [
         ...current,
         { id: messageId, role: 'user', text: visibleText, images, suggestions: [] },
@@ -114,6 +124,8 @@ export function ChatProvider({ children }: { children: ReactNode }) {
             storedPhotos = images.length
           }
 
+          if (!stillCurrent()) return
+
           const isFirst = eventsRef.current.length === 0
           const userEvent: ChatEvent = {
             id: messageId,
@@ -131,18 +143,19 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           }
           const history = [...eventsRef.current, userEvent]
           eventsRef.current = history
-          writeChatEvents(history)
+          writeChatEvents(ownerId, history)
 
           const response = await api<{ events: ChatEvent[] }>('/api/chat/turns/', {
             method: 'POST',
             body: { events: history },
           })
-          if (pendingReplyId.current !== messageId) return
+          if (!stillCurrent()) return
 
           const created = Array.isArray(response.events) ? response.events : []
           eventsRef.current = [...history, ...created]
-          writeChatEvents(eventsRef.current)
+          writeChatEvents(ownerId, eventsRef.current)
           const { matchStatus, matches } = await matchesFromEvents(created)
+          if (!stillCurrent()) return
           const post = postFromEvents(created)
           const repairOutcome = post ? undefined : repairOutcomeFromEvents(created)
           const replies = created.flatMap((event) =>
@@ -162,7 +175,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
             },
           ])
         } catch (error) {
-          if (pendingReplyId.current !== messageId) return
+          if (!stillCurrent()) return
           const message = error instanceof ApiError
             ? error.message
             : 'Something went wrong. Please try again.'
@@ -178,14 +191,14 @@ export function ChatProvider({ children }: { children: ReactNode }) {
             },
           ])
         } finally {
-          if (pendingReplyId.current === messageId) {
+          if (sessionRef.current === session && pendingReplyId.current === messageId) {
             pendingReplyId.current = null
             setIsResponding(false)
           }
         }
       })()
     },
-    [setSaved],
+    [setSaved, userId],
   )
 
   const setSuggestionStatus = useCallback(
@@ -219,6 +232,8 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   )
 
   const resetChat = useCallback(() => {
+    const ownerId = userId
+    sessionRef.current += 1
     pendingReplyId.current = null
     for (const message of messages) {
       if (message.role === 'user') {
@@ -226,10 +241,10 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       }
     }
     eventsRef.current = []
-    writeChatEvents([])
+    if (ownerId) writeChatEvents(ownerId, [])
     setMessages([])
     setIsResponding(false)
-  }, [messages])
+  }, [messages, userId])
 
   const value = useMemo(
     () => ({ messages, isResponding, isRestoring, sendMessage, confirmSuggestion, dismissSuggestion, resetChat }),

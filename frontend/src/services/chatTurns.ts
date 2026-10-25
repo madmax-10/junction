@@ -2,7 +2,7 @@ import type { ChatImage, ChatMessage } from '../types/chat.ts'
 import type { PostDraft } from '../types/post.ts'
 import type { RepairOutcomePrompt } from '../types/repair.ts'
 import type { StoryMatch, StoryMatchStatus } from '../types/story.ts'
-import { chatEventsKey, readStoredJson, writeStoredJson } from './api.ts'
+import { chatEventsKey, readStoredJson, removeStoredKey, writeStoredJson } from './api.ts'
 import { getPost, toCommunityStory, toPostDraft } from './posts.ts'
 import { toOutcomeStatus, toRepairResolution } from './repairOutcome.ts'
 import type { SavedSituation } from './situation.ts'
@@ -52,14 +52,22 @@ function isChatEvent(value: unknown): value is ChatEvent {
   return false
 }
 
-export function readChatEvents(): ChatEvent[] {
-  const stored = readStoredJson(chatEventsKey)
+function chatEventsStorageKey(userId: string) {
+  return `${chatEventsKey}.${userId}`
+}
+
+export function readChatEvents(userId: string): ChatEvent[] {
+  const stored = readStoredJson(chatEventsStorageKey(userId))
   if (!Array.isArray(stored)) return []
   return stored.filter(isChatEvent)
 }
 
-export function writeChatEvents(events: ChatEvent[]) {
-  writeStoredJson(chatEventsKey, events)
+export function writeChatEvents(userId: string, events: ChatEvent[]) {
+  writeStoredJson(chatEventsStorageKey(userId), events)
+}
+
+export function discardLegacyChatEvents() {
+  removeStoredKey(chatEventsKey)
 }
 
 export function displayText(text: string) {
