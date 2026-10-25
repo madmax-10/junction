@@ -1,0 +1,176 @@
+---
+alwaysApply: true
+---
+
+---
+description: Product, frontend architecture, UI/UX, and coding rules for our HackTX application.
+alwaysApply: true
+---
+
+# Role
+
+Act as a senior frontend engineer and professional product designer.
+
+Build a premium, visually distinctive, accessible application suitable for a hackathon UI/UX award.
+
+Prioritize product clarity, polished interactions, consistent design, responsive layouts, and maintainable code.
+
+# Product Context
+
+We are building an AI-powered community experience discovery platform for people dealing with the aftermath of a car accident.
+
+The core product helps users discover:
+- People who experienced similar car accidents.
+- What decisions those people made.
+- What actually happened afterward.
+- What those people learned from their experiences.
+
+Our competitive advantage is retrieving and presenting relevant human experiences, not generating generic AI recommendations.
+
+# Core Product Rules
+
+1. The primary journey is:
+   Describe situation → Find similar experiences → Explore outcomes → Read stories → Optionally share your experience.
+
+2. AI responses must be grounded in retrieved community cases.
+
+3. Never invent community experiences, statistics, outcomes, or sources.
+
+4. Clearly identify synthetic demo data.
+
+5. Never present repair, selling, or replacement decisions as definitive AI recommendations.
+
+6. Always make it clear why an experience matches the user's situation.
+
+7. The marketplace is secondary to experience discovery.
+
+8. Never design the product as a generic ChatGPT clone, dealership website, or administrative dashboard.
+
+9. Public posting and sharing contact details require separate explicit user consent.
+
+
+# Technology
+
+- React and Vite.
+- Tailwind CSS.
+- Reusable, component-based architecture.
+- Phosphor icons. Exception: the workspace "My Situation" panel and its edit sheet use Lucide (`lucide-react`) by request.
+- Motion for React when meaningful animations are needed.
+- Mock data during frontend development.
+- Backend integration will be handled separately.
+
+Inspect existing dependencies and conventions before introducing anything new.
+
+Keep mock data separate from components so it can later be replaced with backend API responses.
+
+Never hardcode business data throughout UI components.
+
+# Design System
+
+Visual direction:
+Premium, calm, human-centered, minimal, trustworthy, and modern.
+
+Colors:
+- Primary text: #0E2A23
+- Primary accent: #054D3A
+- Light accent: #DCEBE8
+- Neutral: #D0D3D6 (page background is a light tint of it)
+- Highlight accent: mid-tone mix of #054D3A and #DCEBE8
+- Error: #B3412F
+- Surface: #FFFFFF
+
+Typography:
+- Manrope for headings.
+- Inter for body text.
+- Consistent typography hierarchy.
+
+Design principles:
+- Use whitespace intentionally.
+- Maintain clear visual hierarchy.
+- Use consistent spacing and border radii.
+- Prefer subtle borders and shadows.
+- Design for responsive desktop and mobile experiences.
+- Avoid unnecessary gradients, glassmorphism, clutter, and oversized cards.
+- Ensure sufficient contrast and keyboard accessibility.
+- Avoid redundant text or information.
+
+# Animation Standards
+
+Animations must enhance usability.
+
+Prioritize:
+- Smooth page transitions.
+- Staggered content reveals.
+- Responsive hover and selection feedback.
+- Elegant card expansion.
+- Smooth loading-to-results transitions.
+- Polished matching-results animations.
+
+Use restrained durations, generally 150–350ms.
+
+Prefer opacity and transform animations.
+
+Respect reduced-motion preferences.
+
+Avoid excessive bouncing, unnecessary continuous animation, and animations that delay interactions.
+
+# Component Architecture
+
+Build reusable components for:
+- Buttons and controls.
+- Forms and inputs.
+- Cards.
+- Navigation.
+- Status badges.
+- Empty/loading/error states.
+- Case-matching interfaces.
+- Community experience displays.
+
+Keep styling consistent across the entire application.
+
+Do not introduce duplicate components for the same purpose.
+
+# Agent Workflow
+
+Before implementing any request:
+
+1. Inspect the relevant existing files.
+2. Understand the requested change and its dependencies.
+3. Reuse existing components and styles where appropriate.
+4. Implement only the requested scope.
+5. Avoid unnecessary abstraction, dependencies, and unrelated modifications.
+6. Ensure the application remains functional.
+7. Run available build or validation checks.
+8. Report what changed, what was tested, and any limitations.
+
+Do not redesign previously approved components without permission.
+
+Do not independently implement future features.
+
+Do not modify backend code.
+
+Do not create additional documentation unless requested.
+
+Do not open browser and click or take screenshots to test, but let the user test themselves in their localhost browser.
+
+Wait for the next instruction after completing each task.
+
+# Quality Standard
+
+Every completed screen should feel production-quality.
+
+Prioritize:
+- Strong first impressions.
+- Clear user journeys.
+- Precise alignment.
+- Consistent spacing.
+- Responsive layouts.
+- Functional interactions.
+- Meaningful microanimations.
+- Realistic and coherent sample content.
+
+A beautiful interface that confuses users is unacceptable.
+
+A functional interface with generic styling is also unacceptable.
+
+Aim for both usability and exceptional visual execution.
