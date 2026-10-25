@@ -3,7 +3,7 @@
 import unittest
 from decimal import Decimal, localcontext
 
-from backend.ai.services.valuation_service import estimate
+from backend.agent.services.valuation_service import estimate
 
 
 class EstimateTests(unittest.TestCase):

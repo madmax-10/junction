@@ -61,7 +61,7 @@ not add that integration or a shared agent response envelope.
 These are synthetic teaching fixtures, not real marketplace evidence:
 
 ```python
-from backend.ai.services.valuation_service import estimate
+from backend.agent.services.valuation_service import estimate
 
 result = estimate([
     {"post_id": "example-a", "asking_price": "15000.00"},
@@ -137,7 +137,7 @@ session, authentication, ADK, or agent connections are implemented in this task.
 The tests use synthetic fixtures only. From the repository root, run:
 
 ```shell
-python3 -B -m unittest discover -s backend/ai/tests -p "test_valuation_service.py" -v
+python3 -B -m unittest discover -s backend/agent/tests -p "test_valuation_service.py" -v
 ```
 
 The directories use Python namespace packages, so no additional `__init__.py`
