@@ -1,4 +1,4 @@
-import { ArrowUpRight, ChatCircleText, ChatsCircle } from '@phosphor-icons/react'
+import { ArrowUpRight, ChatCircleText } from '@phosphor-icons/react'
 import { motion } from 'motion/react'
 import { fadeUpVariants, staggerVariants } from '../../styles/motion.ts'
 import { useAuth } from '../auth/AuthContext.ts'
@@ -29,51 +29,40 @@ export function ChatEmptyState({ onSelectExample }: ChatEmptyStateProps) {
       variants={staggerVariants(0.07, 0.1)}
       className="mx-auto flex min-h-full max-w-2xl flex-col justify-center py-2"
     >
-      <motion.span
-        variants={fadeUpVariants}
-        className="grid size-14 place-items-center rounded-2xl bg-primary-light text-primary"
-        aria-hidden="true"
-      >
-        <ChatsCircle size={30} />
-      </motion.span>
-
       <motion.h2
         variants={fadeUpVariants}
-        className="mt-6 font-heading text-3xl leading-[1.1] font-extrabold tracking-[-0.03em] text-balance sm:text-4xl"
+        className="font-heading text-xl leading-tight font-bold tracking-[-0.02em] text-balance sm:text-2xl"
       >
-        {firstName ? `Welcome, ${firstName}. What would you like to know?` : 'What would you like to know?'}
+        {firstName ? `Hi ${firstName}, what would you like to know?` : 'What would you like to know?'}
       </motion.h2>
-      <motion.p
-        variants={fadeUpVariants}
-        className="mt-3 max-w-lg font-body text-base leading-relaxed text-text/70 sm:text-lg"
-      >
-        Ask anything about your situation or add photos of the damage. I’ll find people who
-        went through something similar.
+      <motion.p variants={fadeUpVariants} className="mt-1.5 max-w-lg font-body text-sm leading-relaxed text-text/65">
+        Ask about your situation or add photos of the damage. I’ll find people who went through
+        something similar.
       </motion.p>
 
       <motion.p
         variants={fadeUpVariants}
         id="example-questions-label"
-        className="mt-8 font-body text-xs font-semibold tracking-wide text-text/55 uppercase"
+        className="mt-6 font-body text-xs font-semibold tracking-wide text-text/55 uppercase"
       >
         Try asking
       </motion.p>
       <motion.ul
         variants={staggerVariants(0.06)}
         aria-labelledby="example-questions-label"
-        className="mt-3 grid gap-3 sm:grid-cols-2"
+        className="mt-2.5 grid gap-2.5 sm:grid-cols-2"
       >
         {suggestions.map((suggestion) => (
           <motion.li key={suggestion.id} variants={fadeUpVariants}>
             <button
               type="button"
               onClick={() => onSelectExample(suggestion.text)}
-              className={`group flex h-full w-full items-start gap-3 rounded-2xl border p-4 text-left transition-[border-color,box-shadow,transform] duration-200 ease-out outline-none hover:-translate-y-0.5 hover:border-primary/35 hover:shadow-card focus-visible:border-primary focus-visible:ring-1 focus-visible:ring-primary active:translate-y-0 ${
+              className={`group flex h-full w-full items-start gap-3 rounded-2xl border p-3.5 text-left transition-[border-color,box-shadow,transform] duration-200 ease-out outline-none hover:-translate-y-0.5 hover:border-primary/35 hover:shadow-card focus-visible:border-primary focus-visible:ring-1 focus-visible:ring-primary active:translate-y-0 ${
                 suggestion.isOwn ? 'border-primary/30 bg-primary-light/40' : 'border-text/10 bg-surface'
               }`}
             >
               <span
-                className="grid size-9 shrink-0 place-items-center rounded-xl bg-primary-light text-primary transition-colors duration-200 group-hover:bg-primary group-hover:text-surface"
+                className="grid size-8 shrink-0 place-items-center rounded-xl bg-primary-light text-primary transition-colors duration-200 group-hover:bg-primary group-hover:text-surface"
                 aria-hidden="true"
               >
                 {suggestion.icon}

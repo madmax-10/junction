@@ -21,7 +21,7 @@ export function Field({ id, label, optional = false, hint, error, children }: Fi
       </label>
       <div className="mt-2">{children}</div>
       {error ? (
-        <p id={`${id}-error`} className="mt-2 font-body text-xs font-medium text-accent-strong">
+        <p id={`${id}-error`} className="mt-2 font-body text-xs font-medium text-danger">
           {error}
         </p>
       ) : (

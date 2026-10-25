@@ -10,6 +10,8 @@ import { IntakeProvider } from '../features/intake/IntakeProvider.tsx'
 import { InterestsStep } from '../features/intake/InterestsStep.tsx'
 import { VehicleStep } from '../features/intake/VehicleStep.tsx'
 import { LandingPage } from '../features/landing/LandingPage.tsx'
+import { WorkspaceLayout } from '../features/workspace/WorkspaceLayout.tsx'
+import { WorkspacePlaceholder } from '../features/workspace/WorkspacePlaceholder.tsx'
 import { paths } from './paths.ts'
 import { ScrollToTop } from './ScrollToTop.tsx'
 
@@ -28,13 +30,17 @@ export function App() {
             </Route>
             <Route path={paths.signIn} element={<SignInPage />} />
             <Route
-              path={paths.chat}
               element={
                 <RequireAuth>
-                  <ChatPage />
+                  <WorkspaceLayout />
                 </RequireAuth>
               }
-            />
+            >
+              <Route path={paths.chat} element={<ChatPage />} />
+              <Route path={paths.stories} element={<WorkspacePlaceholder tab="stories" />} />
+              <Route path={paths.marketplace} element={<WorkspacePlaceholder tab="marketplace" />} />
+              <Route path={paths.myStory} element={<WorkspacePlaceholder tab="my-story" />} />
+            </Route>
           </Routes>
         </ChatProvider>
       </IntakeProvider>

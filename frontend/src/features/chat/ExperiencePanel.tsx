@@ -40,7 +40,7 @@ export function ExperiencePanel({ stories, resultsKey, isSearching }: Experience
   return (
     <aside
       aria-labelledby="experiences-title"
-      className="hidden min-h-0 flex-col overflow-hidden rounded-[1.75rem] bg-primary-light lg:flex"
+      className="flex min-h-56 flex-1 flex-col overflow-hidden rounded-[1.75rem] bg-primary-light"
     >
       <header className="px-5 pt-5 pb-4">
         <div className="flex items-center justify-between gap-3">

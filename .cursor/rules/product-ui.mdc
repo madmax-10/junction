@@ -71,11 +71,12 @@ Visual direction:
 Premium, calm, human-centered, minimal, trustworthy, and modern.
 
 Colors:
-- Primary text: #15313D
-- Primary accent: #127A78
-- Light accent: #D9EDE9
-- Secondary warm accent: #EA936D
-- Background: #F5F7F6
+- Primary text: #0E2A23
+- Primary accent: #054D3A
+- Light accent: #DCEBE8
+- Neutral: #D0D3D6 (page background is a light tint of it)
+- Highlight accent: mid-tone mix of #054D3A and #DCEBE8
+- Error: #B3412F
 - Surface: #FFFFFF
 
 Typography:

@@ -11,12 +11,9 @@ import { IntakeActions } from './IntakeActions.tsx'
 import { useIntakeDraft } from './IntakeContext.ts'
 import { IntakeQuestion } from './IntakeQuestion.tsx'
 import { IntakeStepLayout } from './IntakeStepLayout.tsx'
+import { formatMileage } from './intakeHighlights.ts'
 
 const mileageMaxDigits = 7
-
-function formatMileage(digits: string) {
-  return digits ? Number(digits).toLocaleString('en-US') : ''
-}
 
 export function VehicleStep() {
   const navigate = useNavigate()

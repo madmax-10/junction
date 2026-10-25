@@ -8,6 +8,8 @@ export type ChatContextValue = {
   resetChat: () => void
 }
 
+type AssistantChatMessage = Extract<ChatMessage, { role: 'assistant' }>
+
 export const ChatContext = createContext<ChatContextValue | null>(null)
 
 export function useChat() {
@@ -16,4 +18,9 @@ export function useChat() {
     throw new Error('useChat must be used within ChatProvider')
   }
   return context
+}
+
+export function useLatestReply() {
+  const { messages } = useChat()
+  return messages.findLast((message): message is AssistantChatMessage => message.role === 'assistant')
 }

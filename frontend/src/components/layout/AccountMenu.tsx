@@ -17,7 +17,17 @@ function getInitials(name: string) {
   return initials || '?'
 }
 
-export function AccountMenu() {
+const placementClassNames = {
+  below: 'top-12 right-0 origin-top-right',
+  above: 'bottom-12 left-0 origin-bottom-left',
+} as const
+
+type AccountMenuProps = {
+  placement?: keyof typeof placementClassNames
+}
+
+export function AccountMenu({ placement = 'below' }: AccountMenuProps) {
+  const offsetY = placement === 'below' ? -6 : 6
   const { user, signOut } = useAuth()
   const { resetChat } = useChat()
   const { resetDraft } = useIntakeDraft()
@@ -91,11 +101,11 @@ export function AccountMenu() {
             id="account-menu"
             role="menu"
             aria-label="Account"
-            initial={{ opacity: 0, y: -6, scale: 0.97 }}
+            initial={{ opacity: 0, y: offsetY, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -6, scale: 0.97 }}
+            exit={{ opacity: 0, y: offsetY, scale: 0.97 }}
             transition={{ duration: 0.16, ease: 'easeOut' }}
-            className="absolute top-12 right-0 z-40 w-64 origin-top-right rounded-2xl border border-text/[0.06] bg-surface p-2 shadow-card-hover"
+            className={`absolute z-40 w-64 ${placementClassNames[placement]} rounded-2xl border border-text/[0.06] bg-surface p-2 shadow-card-hover`}
           >
             <div className="px-3 py-2.5">
               <p className="truncate font-body text-sm font-semibold">{user.name}</p>

@@ -252,7 +252,7 @@ export function ChatComposer({ isResponding, onSend, textareaRef }: ChatComposer
 
         <p id="chat-input-hint" aria-live="polite" className="mt-2 px-2 font-body text-xs">
           {error ? (
-            <span className="text-accent-strong">{error}</span>
+            <span className="text-danger">{error}</span>
           ) : (
             <span className="text-text/50">
               <span className="hidden sm:inline">Enter to send, Shift + Enter for a new line. </span>

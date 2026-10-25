@@ -6,5 +6,6 @@ export const paths = {
   signIn: '/sign-in',
   chat: '/chat',
   stories: '/stories',
-  share: '/share',
+  marketplace: '/marketplace',
+  myStory: '/my-story',
 } as const

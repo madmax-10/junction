@@ -1,22 +1,23 @@
 @import "tailwindcss";
 
 @theme {
-  --color-background: #F5F7F6;
+  --color-neutral: #D0D3D6;
+  --color-background: color-mix(in oklab, var(--color-neutral) 45%, white);
   --color-surface: #FFFFFF;
-  --color-primary: #127A78;
-  --color-primary-light: #D9EDE9;
-  --color-text: #15313D;
-  --color-accent: #EA936D;
+  --color-primary: #054D3A;
+  --color-primary-light: #DCEBE8;
+  --color-text: #0E2A23;
+  --color-accent: color-mix(in oklab, var(--color-primary) 55%, var(--color-primary-light));
+  --color-danger: #B3412F;
 
-  --color-primary-hover: color-mix(in oklab, var(--color-primary) 85%, black);
-  --color-accent-strong: color-mix(in oklab, var(--color-accent) 60%, black);
+  --color-primary-hover: color-mix(in oklab, var(--color-primary) 80%, black);
 
   --font-sans: "Inter", sans-serif;
   --font-body: "Inter", sans-serif;
   --font-heading: "Manrope", sans-serif;
 
-  --shadow-card: 0 1px 2px rgb(21 49 61 / 0.04), 0 12px 32px -16px rgb(21 49 61 / 0.18);
-  --shadow-card-hover: 0 1px 2px rgb(21 49 61 / 0.05), 0 20px 40px -18px rgb(21 49 61 / 0.28);
+  --shadow-card: 0 1px 2px rgb(14 42 35 / 0.05), 0 12px 32px -16px rgb(14 42 35 / 0.2);
+  --shadow-card-hover: 0 1px 2px rgb(14 42 35 / 0.06), 0 20px 40px -18px rgb(14 42 35 / 0.3);
 }
 
 @layer base {
