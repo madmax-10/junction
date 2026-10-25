@@ -13,6 +13,7 @@ from agent.agents.stubs import make_stub
 from agent.events import EventsError, validate_events
 from agent.runner import FALLBACK_REPLY, run_turn
 from agent.tests.fakes import call, say, scripted
+from agent.agents.stubs import make_stub
 from agent.tools.result import tool_result
 from vehicles.models import UsedCar
 

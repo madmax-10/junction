@@ -27,7 +27,7 @@ class ChatTurnView(APIView):
             raise serializers.ValidationError({"events": "This field is required and must be a list."})
 
         try:
-            new_events = run_turn(request.user.id, events)
+            new_events = run_turn(request.user.id, events, request=request)
         except EventsError as exc:
             # The history broke the rules; say exactly which rule so the client can fix it.
             raise serializers.ValidationError({"events": str(exc)})
