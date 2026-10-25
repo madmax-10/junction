@@ -1,12 +1,13 @@
 import { ArrowRight, LockSimple } from '@phosphor-icons/react'
-import { MotionConfig, motion, useReducedMotion } from 'motion/react'
+import { MotionConfig, motion, useMotionTemplate, useReducedMotion, useScroll, useTransform } from 'motion/react'
+import { useRef, type RefObject } from 'react'
 import { paths } from '../../app/paths.ts'
 import { SiteHeader } from '../../components/layout/SiteHeader.tsx'
 import { ButtonLink } from '../../components/ui/ButtonLink.tsx'
-import { fadeUpVariants, staggerVariants } from '../../styles/motion.ts'
+import heroImageSrc from '../../components/ui/heroimage.png'
+import { easeOutQuint, fadeUpVariants, staggerVariants } from '../../styles/motion.ts'
 import { ExploreExperiences } from './ExploreExperiences.tsx'
 import { FinalCta } from './FinalCta.tsx'
-import { HeroStoryPreview } from './HeroStoryPreview.tsx'
 import { HowItWorks } from './HowItWorks.tsx'
 import { LandingFooter } from './LandingFooter.tsx'
 import { MoreWaysWeHelp } from './MoreWaysWeHelp.tsx'
@@ -15,13 +16,42 @@ import { WhyDifferent } from './WhyDifferent.tsx'
 
 const introVariants = staggerVariants(0.07, 0.05)
 
+function HeroRoad({ heroRef }: { heroRef: RefObject<HTMLElement | null> }) {
+  const prefersReducedMotion = useReducedMotion()
+  const { scrollYProgress } = useScroll({ target: heroRef, offset: ['start start', 'end start'] })
+  const y = useTransform(scrollYProgress, [0, 1], ['0%', prefersReducedMotion ? '0%' : '22%'])
+  const fadeStart = useTransform(scrollYProgress, [0, 0.35], [100, 75])
+  const maskImage = useMotionTemplate`linear-gradient(to bottom, #000 ${fadeStart}%, transparent)`
+
+  return (
+    <motion.div
+      style={{ maskImage, WebkitMaskImage: maskImage }}
+      className="relative h-[26rem] overflow-clip sm:h-[34rem] lg:-mt-4 lg:-mr-[50vw] lg:-mb-16 lg:h-auto lg:self-stretch"
+    >
+      <motion.img
+        src={heroImageSrc}
+        alt=""
+        aria-hidden="true"
+        decoding="async"
+        initial={prefersReducedMotion ? false : { clipPath: 'inset(100% 0% 0% 0%)' }}
+        animate={{ clipPath: 'inset(0% 0% 0% 0%)' }}
+        transition={{ duration: 1.2, delay: 0.15, ease: easeOutQuint }}
+        style={{ y }}
+        className="absolute inset-0 size-full object-contain object-bottom will-change-transform lg:right-auto lg:w-auto lg:max-w-none"
+      />
+    </motion.div>
+  )
+}
+
 function LandingHero() {
   const prefersReducedMotion = useReducedMotion()
+  const heroRef = useRef<HTMLElement>(null)
 
   return (
     <section
+      ref={heroRef}
       aria-labelledby="hero-title"
-      className="mx-auto grid w-full max-w-6xl items-center gap-12 px-6 pt-8 pb-20 sm:px-8 sm:pt-12 lg:min-h-[calc(100svh-5.5rem)] lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)] lg:gap-16 lg:pt-4 lg:pb-16"
+      className="relative mx-auto grid w-full max-w-6xl items-center gap-12 px-6 pt-8 pb-20 sm:px-8 sm:pt-12 lg:min-h-[calc(100svh-5.5rem)] lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)] lg:gap-16 lg:pt-4 lg:pb-16"
     >
       <motion.div initial="hidden" animate="visible" variants={introVariants} className="max-w-xl">
         <motion.p
@@ -86,7 +116,7 @@ function LandingHero() {
         </motion.div>
       </motion.div>
 
-      <HeroStoryPreview />
+      <HeroRoad heroRef={heroRef} />
     </section>
   )
 }
@@ -94,7 +124,7 @@ function LandingHero() {
 export function LandingPage() {
   return (
     <MotionConfig reducedMotion="user">
-      <div className="min-h-svh bg-background text-text">
+      <div className="min-h-svh overflow-x-clip bg-background text-text">
         <SiteHeader />
 
         <main>
