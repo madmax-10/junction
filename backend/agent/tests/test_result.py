@@ -6,8 +6,12 @@ from datetime import date, datetime, timezone
 from decimal import Decimal
 from uuid import UUID
 
-from backend.agent.services.valuation_service import estimate
-from backend.agent.tools.result import error_result, to_jsonable, tool_result
+try:  # `manage.py test` runs from backend/; the repo-root unittest command does not
+    from agent.services.valuation_service import estimate
+    from agent.tools.result import error_result, to_jsonable, tool_result
+except ModuleNotFoundError:
+    from backend.agent.services.valuation_service import estimate
+    from backend.agent.tools.result import error_result, to_jsonable, tool_result
 
 
 class ToJsonableTests(unittest.TestCase):
