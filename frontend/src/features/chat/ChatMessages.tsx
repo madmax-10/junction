@@ -9,6 +9,18 @@ import { RepairOutcomeCard } from './RepairOutcomeCard.tsx'
 import { NoStoryMatches, StoryMatchList } from './StoryMatchList.tsx'
 import { SuggestionChips } from './SuggestionChips.tsx'
 
+function renderInline(text: string) {
+  return text.split(/(\*\*[^*]+\*\*|\*[^*\s][^*]*\*)/g).map((part, index) => {
+    if (part.startsWith('**') && part.endsWith('**') && part.length > 4) {
+      return <strong key={index}>{part.slice(2, -2)}</strong>
+    }
+    if (part.startsWith('*') && part.endsWith('*') && part.length > 2) {
+      return <em key={index}>{part.slice(1, -1)}</em>
+    }
+    return part
+  })
+}
+
 type UserMessageProps = {
   text: string
   images: ChatImage[]
@@ -84,7 +96,9 @@ export function AssistantMessage({
         <span className="sr-only">Guide said:</span>
         <div className="max-w-xl space-y-3 rounded-3xl rounded-tl-lg bg-secondary-light px-4 py-3 font-body text-[0.95rem] leading-relaxed">
           {paragraphs.map((paragraph) => (
-            <p key={paragraph}>{paragraph}</p>
+            <p key={paragraph} className="whitespace-pre-line">
+              {renderInline(paragraph)}
+            </p>
           ))}
         </div>
 
