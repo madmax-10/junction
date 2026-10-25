@@ -6,6 +6,8 @@ only the events created during this turn.
 """
 
 import json
+import logging
+import re
 import uuid
 
 from asgiref.sync import async_to_sync
@@ -30,6 +32,34 @@ from agent.tools.result import error_result, tool_result
 
 APP_NAME = "car_owner_hub"
 FALLBACK_REPLY = "Sorry, I couldn't finish that. Please try again."
+
+logger = logging.getLogger(__name__)
+
+
+def _parse_coordinator_reply(raw):
+    """Validate the coordinator's final text, tolerating common model wrappers.
+
+    Models sometimes wrap the JSON in code fences or add a sentence around it,
+    most often right after a tool call. Strict parsing first; then the fenced or
+    outermost {...} object; then plain prose becomes the message itself.
+    """
+    candidates = [raw.strip()]
+    fenced = re.search(r"```(?:json)?\s*(.*?)```", raw, re.DOTALL)
+    if fenced:
+        candidates.append(fenced.group(1).strip())
+    start, end = raw.find("{"), raw.rfind("}")
+    if 0 <= start < end:
+        candidates.append(raw[start:end + 1])
+    for candidate in candidates:
+        try:
+            return CoordinatorReply.model_validate_json(candidate)
+        except SchemaValidationError:
+            continue
+    logger.warning("Coordinator reply was not valid JSON: %r", raw[:500])
+    prose = raw.strip()
+    if prose and not prose.startswith(("{", "[", "```")):
+        return CoordinatorReply(status="answer", message=prose)
+    return CoordinatorReply(status="error", message=FALLBACK_REPLY)
 
 
 def _new_id():
@@ -178,10 +208,7 @@ def _to_contract_events(adk_events, used_call_ids):
         def flush_text():
             # Only the coordinator speaks to the user; specialist text stays inside tool responses.
             if text and author == "coordinator":
-                try:
-                    reply = CoordinatorReply.model_validate_json("".join(text))
-                except SchemaValidationError:
-                    reply = CoordinatorReply(status="error", message=FALLBACK_REPLY)
+                reply = _parse_coordinator_reply("".join(text))
                 new_events.append({"id": _new_id(), "kind": "message", "role": "assistant",
                                    "author": "coordinator", "text": reply.message,
                                    "output": reply.model_dump(mode="json")})
@@ -270,6 +297,8 @@ async def run_turn_async(user_id, events, *, specialists=None, model=None, reque
 
     # Always give the user something to read, even if the model said nothing.
     if not any(e["kind"] == "message" for e in new_events):
+        logger.warning("Coordinator produced no reply; events: %s",
+                       [(e["kind"], e.get("name")) for e in new_events])
         reply = CoordinatorReply(status="error", message=FALLBACK_REPLY)
         new_events.append({"id": _new_id(), "kind": "message", "role": "assistant",
                            "author": "coordinator", "text": reply.message,
