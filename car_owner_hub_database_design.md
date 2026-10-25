@@ -246,7 +246,7 @@ PostgreSQL cannot use a **single standard foreign key** from `posts.issue_id` to
 | `vehicles` | New- and used-car profiles, admin ownership constraints | `NewCar`, `UsedCar` |
 | `issues` | User intents, workflow and ownership checks | `BuyIssue`, `SellIssue`, `RepairIssue` |
 | `posts` | Draft generation workflow, publication permissions, public browsing | `Post` |
-| `ai` | Agent integration, research services, structured extraction | No model required for MVP |
+| `ai` | One chat turn from the client event history; structured extraction into issue fields | No model. The client stores messages, tool calls, and tool responses |
 
 ### 4.1 Django ORM conventions
 
@@ -377,7 +377,7 @@ These are planned endpoints; not claims about already implemented routes.
 - **New vs. used:** Separate vehicle tables duplicate shared fields (`make`, `model`, `year`, `trim`) intentionally to match current requirements. Vehicle transitions or shared references may need additional business logic later.
 - **Admin-owned new cars:** `owner` means the admin/catalog account; it does **not** assert ownership of manufacturer inventory.
 - **Repair scope:** The current design requires a `used_car_id` for a Repair issue, so users must register the vehicle before creating its repair issue. Make this relation optional or introduce an alternative workflow if anonymous/unregistered vehicle troubleshooting is required.
-- **Conversation history:** The MVP stores issue descriptions and latest agent analysis but not a full multi-message chat transcript. Long-lived chat would need additional storage or a deliberately managed JSON history field.
+- **Conversation history:** The frontend stores the transcript as an ordered event list: user messages, Agent 1 messages, tool calls, and tool responses. Each turn posts that list and appends the new events the backend returns. PostgreSQL does not store the list. Issue descriptions, symptoms, analysis, and resolution remain on the issue rows, so a cleared client history can still resume the case.
 - **No payments/transactions:** Buyer and seller communication, service bookings, payments and vehicle purchases occur outside the app.
 - **Public vs. private:** Do not directly expose all `used_cars`, private issues, raw agent conversations or private contacts to public searches. Public listing data should be constructed from approved posts.
 
