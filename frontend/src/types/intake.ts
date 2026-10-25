@@ -2,7 +2,7 @@ export type AccidentType = 'rear-end' | 'front-collision' | 'side-impact' | 'wea
 
 export type CurrentSituation = 'repair-estimate' | 'total-loss' | 'figuring-out'
 
-export type LearningInterest = 'repaired' | 'sold' | 'replaced' | 'insurance-settlement' | 'not-sure'
+export type LearningInterest = 'repair' | 'sell' | 'buy' | 'not-sure'
 
 export type VehicleInfo = {
   make: string | null
@@ -19,6 +19,9 @@ export type IntakeDraft = {
   vehicle: VehicleInfo
   interests: LearningInterest[]
   question: string
+  insuranceSettlement: string
+  minBudget: string
+  maxBudget: string
 }
 
 export type IntakeFields = Omit<IntakeDraft, 'vehicle'>

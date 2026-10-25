@@ -14,10 +14,12 @@ import {
 } from 'react'
 import { useImageAttachments } from '../../hooks/useImageAttachments.ts'
 import { useScrollFade } from '../../hooks/useScrollFade.ts'
+import { photoTarget } from '../../services/situation.ts'
+import { useIntakeDraft } from '../intake/IntakeContext.ts'
 import type { ChatImage } from '../../types/chat.ts'
 
-const maxImages = 6
-const maxFileSizeMb = 10
+const maxImages = 8
+const maxFileSizeMb = 5
 const maxMessageLength = 2000
 const maxTextareaHeight = 176
 
@@ -37,9 +39,12 @@ export function ChatComposer({ isResponding, onSend, textareaRef }: ChatComposer
   const [text, setText] = useState('')
   const [isDragging, setIsDragging] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const { saved } = useIntakeDraft()
+  const issue = photoTarget(saved)
   const { attachments, error, addFiles, removeAttachment, takeAttachments } = useImageAttachments({
     maxImages,
     maxFileSizeMb,
+    issue: issue ? { ...issue, existingCount: 0 } : null,
   })
   const setThumbnailFadeElement = useScrollFade<HTMLUListElement>({ axis: 'x' })
   const setTextareaFadeElement = useScrollFade<HTMLTextAreaElement>()
@@ -236,7 +241,7 @@ export function ChatComposer({ isResponding, onSend, textareaRef }: ChatComposer
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/*"
+            accept="image/jpeg,image/png,image/webp"
             multiple
             onChange={handleFileChange}
             tabIndex={-1}

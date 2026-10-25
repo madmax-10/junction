@@ -21,8 +21,15 @@ CONDITION_KEYS = {"mechanical", "exterior", "interior", "maintenance_history"}
 CONTACT_KEYS = {"phone", "email", "link"}
 SYMPTOM_KEYS = {"confirmed", "inferred"}
 ANALYSIS_KEYS = {"possibilities", "notes"}
-MECHANIC_RESOLUTION_KEYS = {"method", "mechanic_name", "location", "work_performed", "cost"}
-SELF_RESOLUTION_KEYS = {"method", "instructions", "parts_used", "cost"}
+MECHANIC_RESOLUTION_KEYS = {
+    "method",
+    "mechanic_name",
+    "location",
+    "work_performed",
+    "cost",
+    "insurance_settlement",
+}
+SELF_RESOLUTION_KEYS = {"method", "instructions", "parts_used", "cost", "insurance_settlement"}
 
 
 def maximum_year():
@@ -269,4 +276,7 @@ def normalize_resolution_details(value):
     cost = _money(value, "cost")
     if cost is not None:
         cleaned["cost"] = cost
+    settlement = _optional_string(value, "insurance_settlement", 500)
+    if settlement:
+        cleaned["insurance_settlement"] = settlement
     return cleaned

@@ -4,7 +4,6 @@ import {
   Compass,
   DotsThreeOutline,
   FileX,
-  Handshake,
   Receipt,
   Shuffle,
   Tag,
@@ -89,28 +88,22 @@ export function toggleInterest(current: LearningInterest[], interest: LearningIn
 
 export const interestOptions: IntakeOption<LearningInterest>[] = [
   {
-    value: 'repaired',
+    value: 'repair',
     label: 'People who repaired their cars',
     description: 'What the repair involved and how the car held up',
     icon: <Wrench size={22} />,
   },
   {
-    value: 'sold',
-    label: 'People who sold their damaged cars',
+    value: 'sell',
+    label: 'Sell your car',
     description: 'Selling as-is, trade-ins, and the offers they got',
     icon: <Tag size={22} />,
   },
   {
-    value: 'replaced',
-    label: 'People who replaced their cars',
-    description: 'Starting fresh with a different car',
+    value: 'buy',
+    label: 'Buy another car',
+    description: 'Used cars people are selling, or a new one',
     icon: <ArrowsClockwise size={22} />,
-  },
-  {
-    value: 'insurance-settlement',
-    label: 'Insurance settlement experiences',
-    description: 'Claims, payouts, and working with insurers',
-    icon: <Handshake size={22} />,
   },
   {
     value: notSureInterest,

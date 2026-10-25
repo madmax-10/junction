@@ -1,42 +1,21 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import { createMockReply } from '../../mocks/mockChatReplies.ts'
-import { extractSituationDetails } from '../../services/situationExtraction.ts'
-import { findSimilarStories } from '../../services/storyMatching.ts'
+import { ApiError, api } from '../../services/api.ts'
+import {
+  buildUserEventText,
+  matchesFromEvents,
+  messagesFromEvents,
+  readChatEvents,
+  writeChatEvents,
+  type ChatEvent,
+} from '../../services/chatTurns.ts'
+import { photoTarget, syncSituation, uploadIssuePhotos } from '../../services/situation.ts'
 import type { ChatImage, ChatMessage } from '../../types/chat.ts'
 import type { DetailSuggestion, SuggestionStatus } from '../../types/extraction.ts'
-import type { StoryMatch, StoryMatchQuery, StoryMatchStatus } from '../../types/story.ts'
 import { getDetailChanges, isDetailSaved } from '../intake/extractedDetails.ts'
 import { useIntakeDraft } from '../intake/IntakeContext.ts'
 import { getVehicleName } from '../intake/intakeHighlights.ts'
+import { useAuth } from '../auth/AuthContext.ts'
 import { ChatContext } from './ChatContext.ts'
-
-let messageCount = 0
-
-const matchLimit = 3
-
-type StorySearch = { matchStatus: StoryMatchStatus; matches: StoryMatch[] }
-
-function createMessageId(role: ChatMessage['role']) {
-  messageCount += 1
-  return `${role}-${messageCount}`
-}
-
-function getReplyDelay(text: string) {
-  return 900 + Math.min(text.length * 6, 900)
-}
-
-function wait(ms: number) {
-  return new Promise<void>((resolve) => window.setTimeout(resolve, ms))
-}
-
-async function searchStories(query: StoryMatchQuery): Promise<StorySearch> {
-  try {
-    const matches = await findSimilarStories(query)
-    return { matchStatus: matches.length > 0 ? 'matched' : 'no-match', matches }
-  } catch {
-    return { matchStatus: 'unavailable', matches: [] }
-  }
-}
 
 function updateSuggestions(
   messages: ChatMessage[],
@@ -51,19 +30,47 @@ function updateSuggestions(
 }
 
 export function ChatProvider({ children }: { children: ReactNode }) {
-  const { draft, confirmed, applyConfirmedChanges } = useIntakeDraft()
+  const { user } = useAuth()
+  const { draft, confirmed, applyConfirmedChanges, setSaved } = useIntakeDraft()
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [isResponding, setIsResponding] = useState(false)
+  const eventsRef = useRef<ChatEvent[]>(readChatEvents())
   const pendingReplyId = useRef<string | null>(null)
-
-  const vehicleName = getVehicleName(draft.vehicle)
-  const hasReplied = messages.some((message) => message.role === 'assistant')
+  const draftRef = useRef(draft)
+  const confirmedRef = useRef(confirmed)
 
   useEffect(() => {
+    draftRef.current = draft
+    confirmedRef.current = confirmed
+  }, [draft, confirmed])
+
+  useEffect(() => {
+    let current = true
+    const stored = eventsRef.current
+    if (stored.length === 0) return
+    void messagesFromEvents(stored).then((restored) => {
+      if (current) setMessages(restored)
+    })
     return () => {
-      pendingReplyId.current = null
+      current = false
     }
   }, [])
+
+  const userId = user?.id ?? null
+  const previousUserId = useRef<string | null | undefined>(undefined)
+  useEffect(() => {
+    if (previousUserId.current === undefined) {
+      previousUserId.current = userId
+      return
+    }
+    if (previousUserId.current && previousUserId.current !== userId) {
+      pendingReplyId.current = null
+      eventsRef.current = []
+      setMessages([])
+      setIsResponding(false)
+    }
+    previousUserId.current = userId
+  }, [userId])
 
   const sendMessage = useCallback(
     (text: string, images: ChatImage[] = []) => {
@@ -72,50 +79,103 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         return
       }
 
-      const messageId = createMessageId('user')
+      const messageId = crypto.randomUUID()
       pendingReplyId.current = messageId
+      const visibleText = trimmedText || 'Photo added'
       setMessages((current) => [
         ...current,
-        { id: messageId, role: 'user', text: trimmedText, images, suggestions: [] },
+        { id: messageId, role: 'user', text: visibleText, images, suggestions: [] },
       ])
       setIsResponding(true)
 
-      if (trimmedText) {
-        void extractSituationDetails(trimmedText).then((details) => {
-          const suggestions: DetailSuggestion[] = details
-            .filter((detail) => !isDetailSaved(detail, draft, confirmed))
-            .map((detail) => ({ ...detail, id: `${messageId}-${detail.field}`, status: 'pending' }))
+      void (async () => {
+        try {
+          const nextSaved = await syncSituation(draftRef.current)
+          setSaved(nextSaved)
+          const suggestions: DetailSuggestion[] = nextSaved.details
+            .filter((detail) => !isDetailSaved(detail, draftRef.current, confirmedRef.current))
+            .map((detail) => ({ ...detail, id: `${messageId}-${detail.field}`, status: 'pending' as const }))
           if (suggestions.length > 0) {
             setMessages((current) => updateSuggestions(current, messageId, () => suggestions))
           }
-        })
-      }
 
-      void Promise.all([
-        searchStories({ message: trimmedText, situation: draft, limit: matchLimit }),
-        wait(getReplyDelay(trimmedText)),
-      ]).then(([{ matchStatus, matches }]) => {
-        if (pendingReplyId.current !== messageId) {
-          return
+          const target = photoTarget(nextSaved)
+          let storedPhotos = 0
+          if (images.length > 0 && target) {
+            await uploadIssuePhotos(target, images)
+            storedPhotos = images.length
+          }
+
+          const isFirst = eventsRef.current.length === 0
+          const userEvent: ChatEvent = {
+            id: messageId,
+            kind: 'message',
+            role: 'user',
+            author: 'user',
+            text: buildUserEventText(
+              visibleText,
+              storedPhotos,
+              nextSaved,
+              getVehicleName(draftRef.current.vehicle),
+              isFirst,
+            ),
+          }
+          const history = [...eventsRef.current, userEvent]
+          eventsRef.current = history
+          writeChatEvents(history)
+
+          const response = await api<{ events: ChatEvent[] }>('/api/chat/turns/', {
+            method: 'POST',
+            body: { events: history },
+          })
+          if (pendingReplyId.current !== messageId) return
+
+          const created = Array.isArray(response.events) ? response.events : []
+          eventsRef.current = [...history, ...created]
+          writeChatEvents(eventsRef.current)
+          const { matchStatus, matches } = await matchesFromEvents(created)
+          const replyText = created
+            .flatMap((event) => (event.kind === 'message' && event.role === 'assistant' ? [event.text] : []))
+            .join('\n\n')
+            .trim()
+          setMessages((current) => [
+            ...current,
+            {
+              id: `${messageId}-reply`,
+              role: 'assistant',
+              text: replyText || (matches.length > 0
+                ? 'Published experiences that matched your records are below.'
+                : 'I don’t have a reply for that yet. Please try again.'),
+              matchStatus: matches.length > 0 ? 'matched' : matchStatus,
+              matches,
+              followUps: [],
+            },
+          ])
+        } catch (error) {
+          if (pendingReplyId.current !== messageId) return
+          const message = error instanceof ApiError
+            ? error.message
+            : 'Something went wrong. Please try again.'
+          setMessages((current) => [
+            ...current,
+            {
+              id: `${messageId}-reply`,
+              role: 'assistant',
+              text: message,
+              matchStatus: 'unavailable',
+              matches: [],
+              followUps: [],
+            },
+          ])
+        } finally {
+          if (pendingReplyId.current === messageId) {
+            pendingReplyId.current = null
+            setIsResponding(false)
+          }
         }
-        pendingReplyId.current = null
-
-        const reply = createMockReply({
-          text: trimmedText,
-          imageCount: images.length,
-          isFirstReply: !hasReplied,
-          vehicleName,
-          matchStatus,
-          matchCount: matches.length,
-        })
-        setMessages((current) => [
-          ...current,
-          { id: createMessageId('assistant'), role: 'assistant', ...reply, matchStatus, matches },
-        ])
-        setIsResponding(false)
-      })
+      })()
     },
-    [hasReplied, vehicleName, draft, confirmed],
+    [setSaved],
   )
 
   const setSuggestionStatus = useCallback(
@@ -155,6 +215,8 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         message.images.forEach((image) => URL.revokeObjectURL(image.url))
       }
     }
+    eventsRef.current = []
+    writeChatEvents([])
     setMessages([])
     setIsResponding(false)
   }, [messages])

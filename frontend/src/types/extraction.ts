@@ -1,9 +1,10 @@
-import type { AccidentType, CurrentSituation } from './intake.ts'
-
 export type ExtractedDetail =
-  | { field: 'make' | 'model' | 'year' | 'mileage'; value: string; evidence: string }
-  | { field: 'accidentType'; value: AccidentType; evidence: string }
-  | { field: 'situation'; value: CurrentSituation; evidence: string }
+  | { field: 'make' | 'model' | 'year' | 'trim' | 'mileage'; value: string; evidence: string }
+  | {
+      field: 'details' | 'insuranceSettlement' | 'minBudget' | 'maxBudget'
+      value: string
+      evidence: string
+    }
 
 export type SuggestionStatus = 'pending' | 'confirmed' | 'dismissed'
 

@@ -9,7 +9,7 @@ import { useScrollFade } from '../../hooks/useScrollFade.ts'
 import { easeOutQuint, fadeUpVariants, staggerVariants } from '../../styles/motion.ts'
 import type { StoryFilters } from '../../types/story.ts'
 import { CommunityStoryCard } from './CommunityStoryCard.tsx'
-import { countByChoice, emptyStoryFilters, filterStories, hasActiveFilters } from './storyFilters.ts'
+import { countByPrice, emptyStoryFilters, filterStories, hasActiveFilters } from './storyFilters.ts'
 import { StoryToolbar } from './StoryToolbar.tsx'
 import { useCommunityStories } from './useCommunityStories.ts'
 
@@ -43,7 +43,7 @@ export function StoriesPage() {
   const setFadeElement = useScrollFade<HTMLDivElement>({ fadeStart: false })
 
   const visibleStories = useMemo(() => filterStories(stories, filters), [stories, filters])
-  const choiceCounts = useMemo(() => countByChoice(stories, filters), [stories, filters])
+  const priceCounts = useMemo(() => countByPrice(stories, filters), [stories, filters])
   const isFiltered = hasActiveFilters(filters)
 
   function updateFilters(changes: Partial<StoryFilters>) {
@@ -74,10 +74,13 @@ export function StoriesPage() {
           <h1 id="stories-title" className="font-heading text-2xl font-extrabold tracking-[-0.02em] sm:text-[1.75rem]">
             Community Stories
           </h1>
+          <p className="mt-2 max-w-xl font-body text-sm leading-relaxed text-muted">
+            Sample community records for this demo. They are not verified outcomes.
+          </p>
         </header>
 
         <div className="z-10 border-b @3xl:sticky @3xl:top-0 border-border bg-surface px-5 pt-5 pb-4 sm:px-8">
-          <StoryToolbar filters={filters} choiceCounts={choiceCounts} onChange={updateFilters} />
+          <StoryToolbar filters={filters} priceCounts={priceCounts} onChange={updateFilters} />
         </div>
 
         <div className="px-5 pt-4 pb-6 sm:px-8 sm:pb-8" aria-busy={status === 'loading'}>

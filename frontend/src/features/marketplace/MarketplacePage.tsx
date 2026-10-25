@@ -43,14 +43,17 @@ export function MarketplacePage() {
   const { status, listings, retry } = useMarketplaceListings()
   const { listingId } = useParams()
   const navigate = useNavigate()
-  const [category, setCategory] = useState<ListingCategory>('replacement')
+  const [category, setCategory] = useState<ListingCategory>('sell')
   const [filters, setFilters] = useState<MarketplaceFilters>(emptyMarketplaceFilters)
   // The toolbar sticks to the top while scrolling, so only the bottom edge fades.
   const setFadeElement = useScrollFade<HTMLDivElement>({ fadeStart: false })
 
   const visibleListings = useMemo(() => filterListings(listings, category, filters), [listings, category, filters])
   const categoryCounts = useMemo(() => countByCategory(listings, filters), [listings, filters])
-  const categoryTotal = useMemo(() => listings.filter((listing) => listing.category === category).length, [listings, category])
+  const categoryTotal = useMemo(
+    () => listings.filter((listing) => (category === 'sell' ? listing.kind === 'sell' : true)).length,
+    [listings, category],
+  )
   const selectedListing = listings.find((listing) => listing.id === listingId)
   const isFiltered = hasActiveFilters(filters)
 
@@ -60,7 +63,7 @@ export function MarketplacePage() {
 
   function changeCategory(nextCategory: ListingCategory) {
     setCategory(nextCategory)
-    updateFilters({ condition: null })
+    updateFilters({ vehicleType: null, trim: null, location: null })
   }
 
   const clearFiltersButton = (
@@ -80,9 +83,14 @@ export function MarketplacePage() {
     >
       <div ref={setFadeElement} className="scroll-fade-y @container min-h-0 flex-1 overflow-y-auto overscroll-contain">
         <header className="flex items-center justify-between gap-4 px-5 pt-6 sm:px-8 sm:pt-8">
-          <h1 id="marketplace-title" className="font-heading text-2xl font-extrabold tracking-[-0.02em] sm:text-[1.75rem]">
-            Marketplace
-          </h1>
+          <div>
+            <h1 id="marketplace-title" className="font-heading text-2xl font-extrabold tracking-[-0.02em] sm:text-[1.75rem]">
+              Marketplace
+            </h1>
+            <p className="mt-2 max-w-xl font-body text-sm leading-relaxed text-muted">
+              Sample listings for this demo. They are not verified vehicles for sale.
+            </p>
+          </div>
           <ListYourCarButton />
         </header>
 

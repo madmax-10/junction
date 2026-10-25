@@ -1,7 +1,8 @@
-import { extractDetailsFromText } from '../mocks/mockSituationExtractor.ts'
+import { extractFromKnownIds, type KnownIds } from '../mocks/knownRecords.ts'
 import type { ExtractedDetail } from '../types/extraction.ts'
 
-// Backed by local keyword rules for now; replace the body with the backend extraction request.
-export async function extractSituationDetails(text: string): Promise<ExtractedDetail[]> {
-  return extractDetailsFromText(text)
+// Reads local records once their ids are known. This does not call the backend.
+export async function extractSituationDetails(ids: KnownIds): Promise<ExtractedDetail[]> {
+  if (!ids.usedCarId && !ids.issue && !ids.postId) return []
+  return extractFromKnownIds(ids)
 }
