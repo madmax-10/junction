@@ -6,6 +6,7 @@ from google.adk.tools import AgentTool
 from agent.agents.stubs import SPECIALIST_DESCRIPTIONS, make_stub
 from agent.config import AGENT_MODEL
 from agent.prompts.coordinator import COORDINATOR_INSTRUCTION
+from agent.tools.adapters import as_async_tool
 from agent.tools.coordinator_tools import (
     get_user_context,
     get_vehicle_details,
@@ -49,6 +50,12 @@ def build_coordinator(specialists=None, model=None):
         description="Talks to the user and delegates to the specialist agents.",
         instruction=COORDINATOR_INSTRUCTION,
         # Its own tools (look up the user's cars/issues, register a car),
-        # then the five specialists.
-        tools=[get_user_context, get_vehicle_details, register_used_car, *specialist_tools],
+        # then the five specialists. The three database tools are wrapped so
+        # they run off ADK's event loop, where Django allows database access.
+        tools=[
+            as_async_tool(get_user_context),
+            as_async_tool(get_vehicle_details),
+            as_async_tool(register_used_car),
+            *specialist_tools,
+        ],
     )
