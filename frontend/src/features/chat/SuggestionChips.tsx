@@ -34,6 +34,29 @@ export function SuggestionChips({ suggestions, onConfirm, onDismiss }: Suggestio
     return null
   }
 
+  // Once everything is handled, collapse to a quiet one-line receipt so past turns stay light.
+  if (pendingIds.length === 0) {
+    return (
+      <motion.section
+        ref={sectionRef}
+        tabIndex={-1}
+        aria-label="Added to My Situation"
+        initial={{ opacity: 0, y: 4 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={chipTransition}
+        className="flex max-w-[85%] items-start gap-1.5 font-body text-xs text-text/60 outline-none sm:max-w-[75%]"
+      >
+        <CheckCircle size={14} weight="fill" className="mt-px shrink-0 text-primary" aria-hidden="true" />
+        <p>
+          <span className="font-medium text-primary">Added to My Situation</span>
+          <span aria-hidden="true"> · </span>
+          <span className="sr-only">: </span>
+          {items.map(({ suggestion }) => formatDetailValue(suggestion)).join(', ')}
+        </p>
+      </motion.section>
+    )
+  }
+
   // Acting on a chip removes its buttons, so move focus somewhere predictable.
   function act(action: () => void) {
     action()
@@ -59,7 +82,7 @@ export function SuggestionChips({ suggestions, onConfirm, onDismiss }: Suggestio
           className="flex items-center gap-1.5 font-body text-xs font-semibold text-primary"
         >
           <ListPlus size={16} aria-hidden="true" />
-          {pendingIds.length > 0 ? 'Add to My Situation?' : 'Added to My Situation'}
+          Add to My Situation?
         </p>
         {pendingIds.length > 1 && (
           <button

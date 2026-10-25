@@ -1,5 +1,6 @@
 import { motion, useReducedMotion } from 'motion/react'
-import { useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
+import { useScrollFade } from '../../hooks/useScrollFade.ts'
 import { easeOutQuint } from '../../styles/motion.ts'
 import { ChatComposer } from './ChatComposer.tsx'
 import { useChat, useLatestReply } from './ChatContext.ts'
@@ -16,6 +17,14 @@ export function ChatPage() {
   const shouldReduceMotion = useReducedMotion()
   const scrollRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const setFadeElement = useScrollFade<HTMLDivElement>()
+  const setScrollElement = useCallback(
+    (node: HTMLDivElement | null) => {
+      scrollRef.current = node
+      setFadeElement(node)
+    },
+    [setFadeElement],
+  )
 
   const hasMessages = messages.length > 0
 
@@ -51,8 +60,8 @@ export function ChatPage() {
       <ChatHeader hasMessages={hasMessages} onReset={handleReset} />
 
       <div
-        ref={scrollRef}
-        className="relative min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-6 sm:px-8 sm:py-8"
+        ref={setScrollElement}
+        className="scroll-fade-y relative min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-6 sm:px-8 sm:py-8"
       >
         {hasMessages ? (
           <ol
@@ -79,6 +88,7 @@ export function ChatPage() {
                 ) : (
                   <AssistantMessage
                     message={message}
+                    isLatest={message.id === latestReply?.id}
                     showFollowUps={message.id === latestReply?.id && !isResponding}
                     onFollowUp={sendSuggestion}
                   />

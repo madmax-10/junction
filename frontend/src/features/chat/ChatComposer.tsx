@@ -1,6 +1,7 @@
 import { ArrowUp, ImageSquare, X } from '@phosphor-icons/react'
 import { AnimatePresence, motion } from 'motion/react'
 import {
+  useCallback,
   useLayoutEffect,
   useRef,
   useState,
@@ -12,6 +13,7 @@ import {
   type RefObject,
 } from 'react'
 import { useImageAttachments } from '../../hooks/useImageAttachments.ts'
+import { useScrollFade } from '../../hooks/useScrollFade.ts'
 import type { ChatImage } from '../../types/chat.ts'
 
 const maxImages = 6
@@ -39,6 +41,15 @@ export function ChatComposer({ isResponding, onSend, textareaRef }: ChatComposer
     maxImages,
     maxFileSizeMb,
   })
+  const setThumbnailFadeElement = useScrollFade<HTMLUListElement>({ axis: 'x' })
+  const setTextareaFadeElement = useScrollFade<HTMLTextAreaElement>()
+  const setTextareaElement = useCallback(
+    (node: HTMLTextAreaElement | null) => {
+      textareaRef.current = node
+      setTextareaFadeElement(node)
+    },
+    [textareaRef, setTextareaFadeElement],
+  )
 
   const hasContent = text.trim().length > 0 || attachments.length > 0
   const canSend = hasContent && !isResponding
@@ -143,7 +154,8 @@ export function ChatComposer({ isResponding, onSend, textareaRef }: ChatComposer
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
                 transition={thumbnailTransition}
-                className="flex gap-2 overflow-x-auto px-3 pt-3"
+                ref={setThumbnailFadeElement}
+                className="scroll-fade-x flex gap-2 overflow-x-auto px-3 pt-3"
               >
                 <AnimatePresence initial={false}>
                   {attachments.map((attachment, index) => (
@@ -181,7 +193,7 @@ export function ChatComposer({ isResponding, onSend, textareaRef }: ChatComposer
           </label>
           <textarea
             id="chat-input"
-            ref={textareaRef}
+            ref={setTextareaElement}
             rows={1}
             value={text}
             maxLength={maxMessageLength}
@@ -190,7 +202,7 @@ export function ChatComposer({ isResponding, onSend, textareaRef }: ChatComposer
             onPaste={handlePaste}
             placeholder="Describe what happened…"
             aria-describedby="chat-input-hint"
-            className="block w-full resize-none bg-transparent px-4 pt-3.5 pb-1 font-body text-[0.95rem] leading-relaxed outline-none placeholder:text-text/45"
+            className="scroll-fade-y block w-full resize-none bg-transparent px-4 pt-3.5 pb-1 [--fade-size:1.25rem] font-body text-[0.95rem] leading-relaxed outline-none placeholder:text-text/45"
           />
 
           <div className="flex items-center justify-between gap-2 px-2 pb-2">

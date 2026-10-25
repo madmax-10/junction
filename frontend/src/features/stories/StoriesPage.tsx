@@ -4,6 +4,7 @@ import { useMemo, useState, type ReactNode } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { getStoryPath, paths } from '../../app/paths.ts'
 import { Button } from '../../components/ui/Button.tsx'
+import { useScrollFade } from '../../hooks/useScrollFade.ts'
 import { easeOutQuint, fadeUpVariants, staggerVariants } from '../../styles/motion.ts'
 import type { StoryFilters } from '../../types/story.ts'
 import { CommunityStoryCard } from './CommunityStoryCard.tsx'
@@ -65,6 +66,8 @@ export function StoriesPage() {
   const { storyId } = useParams()
   const navigate = useNavigate()
   const [filters, setFilters] = useState<StoryFilters>(emptyStoryFilters)
+  // The toolbar sticks to the top while scrolling, so only the bottom edge fades.
+  const setFadeElement = useScrollFade<HTMLDivElement>({ fadeStart: false })
 
   const visibleStories = useMemo(() => filterStories(stories, filters), [stories, filters])
   const choiceCounts = useMemo(() => countByChoice(stories, filters), [stories, filters])
@@ -93,7 +96,7 @@ export function StoriesPage() {
       transition={pageTransition}
       className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.75rem] border border-text/[0.06] bg-surface shadow-card"
     >
-      <div className="@container min-h-0 flex-1 overflow-y-auto overscroll-contain">
+      <div ref={setFadeElement} className="scroll-fade-y @container min-h-0 flex-1 overflow-y-auto overscroll-contain">
         <header className="px-5 pt-6 sm:px-8 sm:pt-8">
           <div className="max-w-xl">
             <h1 id="stories-title" className="font-heading text-2xl font-extrabold tracking-[-0.02em] sm:text-[1.75rem]">

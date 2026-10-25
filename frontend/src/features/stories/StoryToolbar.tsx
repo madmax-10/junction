@@ -2,6 +2,7 @@ import { MagnifyingGlass, X } from '@phosphor-icons/react'
 import { motion } from 'motion/react'
 import type { ReactNode } from 'react'
 import { fieldClassName } from '../../components/ui/fieldStyles.ts'
+import { useScrollFade } from '../../hooks/useScrollFade.ts'
 import type { StoryChoice, StoryFilters } from '../../types/story.ts'
 import { bodyStyleOptions, choiceOptions } from './storyOptions.tsx'
 
@@ -78,6 +79,7 @@ function ChoiceChip({
 
 export function StoryToolbar({ filters, choiceCounts, onChange }: StoryToolbarProps) {
   const totalCount = Object.values(choiceCounts).reduce((total, count) => total + count, 0)
+  const setChipsFadeElement = useScrollFade<HTMLDivElement>({ axis: 'x' })
 
   return (
     <div className="flex flex-col gap-3">
@@ -129,9 +131,10 @@ export function StoryToolbar({ filters, choiceCounts, onChange }: StoryToolbarPr
       </div>
 
       <div
+        ref={setChipsFadeElement}
         role="group"
         aria-label="What the owner decided"
-        className="-m-1.5 flex gap-2 overflow-x-auto p-1.5 @xl:flex-wrap @xl:overflow-visible"
+        className="scroll-fade-x -m-1.5 flex gap-2 overflow-x-auto p-1.5 @xl:flex-wrap @xl:overflow-visible"
       >
         <ChoiceChip isActive={filters.choice === null} count={totalCount} onClick={() => onChange({ choice: null })}>
           All decisions

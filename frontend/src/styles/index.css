@@ -20,10 +20,58 @@
   --shadow-card-hover: 0 1px 2px rgb(14 42 35 / 0.06), 0 20px 40px -18px rgb(14 42 35 / 0.3);
 }
 
+@property --fade-start {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+@property --fade-end {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+/* Edge fades for scroll containers; useScrollFade toggles the data attributes. */
+/* Edge size can be overridden per element with --fade-size. */
+@utility scroll-fade-y {
+  --fade-mask: linear-gradient(to bottom, transparent, #000 var(--fade-start), #000 calc(100% - var(--fade-end)), transparent);
+  mask-image: var(--fade-mask);
+  transition: --fade-start 200ms ease-out, --fade-end 200ms ease-out;
+
+  &[data-fade-start] {
+    --fade-start: var(--fade-size, 2rem);
+  }
+  &[data-fade-end] {
+    --fade-end: var(--fade-size, 2rem);
+  }
+}
+
+@utility scroll-fade-x {
+  --fade-mask: linear-gradient(to right, transparent, #000 var(--fade-start), #000 calc(100% - var(--fade-end)), transparent);
+  mask-image: var(--fade-mask);
+  transition: --fade-start 200ms ease-out, --fade-end 200ms ease-out;
+
+  &[data-fade-start] {
+    --fade-start: var(--fade-size, 2.5rem);
+  }
+  &[data-fade-end] {
+    --fade-end: var(--fade-size, 2.5rem);
+  }
+}
+
 @layer base {
   html {
     background-color: var(--color-background);
     color: var(--color-text);
+  }
+
+  * {
+    scrollbar-width: none;
+  }
+
+  *::-webkit-scrollbar {
+    display: none;
   }
 
   body {

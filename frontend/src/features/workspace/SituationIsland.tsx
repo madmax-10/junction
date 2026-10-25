@@ -16,6 +16,7 @@ import type { ReactNode } from 'react'
 import { Link } from 'react-router'
 import { paths } from '../../app/paths.ts'
 import { Button } from '../../components/ui/Button.tsx'
+import { useScrollFade } from '../../hooks/useScrollFade.ts'
 import { fadeUpVariants, staggerVariants } from '../../styles/motion.ts'
 import type { SectionStatus, SituationSection } from '../../types/intake.ts'
 import { useChat } from '../chat/ChatContext.ts'
@@ -143,6 +144,7 @@ function VehicleDetail({ label, value }: { label: string; value: string | null }
 export function SituationIsland({ className = '', onEdit }: SituationIslandProps) {
   const { draft, confirmed, confirmSections } = useIntakeDraft()
   const { messages } = useChat()
+  const setFadeElement = useScrollFade<HTMLDivElement>()
   const { vehicle } = draft
 
   const mileage = formatMileage(vehicle.mileage)
@@ -209,7 +211,7 @@ export function SituationIsland({ className = '', onEdit }: SituationIslandProps
         </div>
       </header>
 
-      <div className="flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto px-5 pb-5">
+      <div ref={setFadeElement} className="scroll-fade-y flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto px-5 pb-5">
         <IslandSection
           section="vehicle"
           title="Vehicle"

@@ -1,6 +1,7 @@
 import { CaretDown, Check, Plus } from '@phosphor-icons/react'
 import { AnimatePresence, motion } from 'motion/react'
-import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type RefObject } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent, type RefObject } from 'react'
+import { useScrollFade } from '../../hooks/useScrollFade.ts'
 import { fieldClassName } from './fieldStyles.ts'
 
 type ComboboxProps = {
@@ -70,6 +71,14 @@ export function Combobox({
   const [activeIndex, setActiveIndex] = useState(-1)
   const ownInputRef = useRef<HTMLInputElement>(null)
   const listRef = useRef<HTMLUListElement>(null)
+  const setListFadeElement = useScrollFade<HTMLUListElement>()
+  const setListElement = useCallback(
+    (node: HTMLUListElement | null) => {
+      listRef.current = node
+      setListFadeElement(node)
+    },
+    [setListFadeElement],
+  )
   const resolvedInputRef = inputRef ?? ownInputRef
   const listId = `${id}-listbox`
 
@@ -221,7 +230,12 @@ export function Combobox({
             onPointerDown={(event) => event.preventDefault()}
             className="absolute inset-x-0 top-full z-30 mt-2 origin-top overflow-hidden rounded-2xl border border-text/[0.08] bg-surface shadow-card-hover"
           >
-            <ul ref={listRef} id={listId} role="listbox" className="max-h-64 overflow-y-auto p-1.5">
+            <ul
+              ref={setListElement}
+              id={listId}
+              role="listbox"
+              className="scroll-fade-y max-h-64 overflow-y-auto p-1.5 [--fade-size:1.25rem]"
+            >
               {items.map((item, index) => {
                 const isSelected = !item.isCustom && item.value === value
                 const isActive = index === activeIndex

@@ -7,6 +7,7 @@ import { Combobox } from '../../components/ui/Combobox.tsx'
 import { Field } from '../../components/ui/Field.tsx'
 import { TextArea } from '../../components/ui/TextArea.tsx'
 import { TextInput } from '../../components/ui/TextInput.tsx'
+import { useScrollFade } from '../../hooks/useScrollFade.ts'
 import { vehicleCatalog, vehicleMakes, vehicleYears } from '../../mocks/vehicleCatalog.ts'
 import { easeOutQuint } from '../../styles/motion.ts'
 import type { AccidentType, CurrentSituation, IntakeDraft, LearningInterest, SituationSection } from '../../types/intake.ts'
@@ -70,6 +71,7 @@ function EditorSheet({ focusSection, onClose }: Omit<SituationEditorProps, 'isOp
     question: draft.question,
   })
   const panelRef = useRef<HTMLDivElement>(null)
+  const setFadeElement = useScrollFade<HTMLDivElement>()
   const models = vehicle.make ? (vehicleCatalog[vehicle.make] ?? []) : []
 
   useEffect(() => {
@@ -165,7 +167,7 @@ function EditorSheet({ focusSection, onClose }: Omit<SituationEditorProps, 'isOp
         </header>
 
         <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6">
+          <div ref={setFadeElement} className="scroll-fade-y min-h-0 flex-1 overflow-y-auto overscroll-contain px-6">
             <EditorSection section="vehicle" title="Vehicle" icon={Car}>
               <div className="grid gap-x-4 gap-y-5 sm:grid-cols-2">
                 <Field id="edit-vehicle-make" label="Make">

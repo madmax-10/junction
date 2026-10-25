@@ -54,11 +54,12 @@ export function UserMessage({
 
 type AssistantMessageProps = {
   message: Extract<ChatMessage, { role: 'assistant' }>
+  isLatest: boolean
   showFollowUps: boolean
   onFollowUp: (question: string) => void
 }
 
-export function AssistantMessage({ message, showFollowUps, onFollowUp }: AssistantMessageProps) {
+export function AssistantMessage({ message, isLatest, showFollowUps, onFollowUp }: AssistantMessageProps) {
   const paragraphs = message.text.split('\n\n')
 
   return (
@@ -72,7 +73,9 @@ export function AssistantMessage({ message, showFollowUps, onFollowUp }: Assista
           ))}
         </div>
 
-        {message.matchStatus === 'matched' && <StoryMatchList matches={message.matches} />}
+        {message.matchStatus === 'matched' && (
+          <StoryMatchList id={`${message.id}-matches`} matches={message.matches} isLatest={isLatest} />
+        )}
         {message.matchStatus === 'no-match' && <NoStoryMatches />}
 
         {showFollowUps && message.followUps.length > 0 && (

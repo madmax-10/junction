@@ -1,5 +1,6 @@
 import { MagnifyingGlass, UsersThree } from '@phosphor-icons/react'
 import { AnimatePresence, motion } from 'motion/react'
+import { useScrollFade } from '../../hooks/useScrollFade.ts'
 import { fadeUpVariants, staggerVariants } from '../../styles/motion.ts'
 import type { StoryMatch } from '../../types/story.ts'
 import { StoryPreviewCard } from '../stories/StoryPreviewCard.tsx'
@@ -36,6 +37,7 @@ function PlaceholderCards({ isPulsing }: { isPulsing: boolean }) {
 
 export function ExperiencePanel({ matches, resultsKey, isSearching }: ExperiencePanelProps) {
   const hasStories = matches.length > 0
+  const setFadeElement = useScrollFade<HTMLDivElement>()
 
   return (
     <aside
@@ -53,7 +55,12 @@ export function ExperiencePanel({ matches, resultsKey, isSearching }: Experience
         </p>
       </header>
 
-      <div className="relative min-h-0 flex-1 overflow-y-auto px-5 pb-5" aria-live="polite" aria-busy={isSearching}>
+      <div
+        ref={setFadeElement}
+        className="scroll-fade-y relative min-h-0 flex-1 overflow-y-auto px-5 pb-5"
+        aria-live="polite"
+        aria-busy={isSearching}
+      >
         <AnimatePresence mode="wait" initial={false}>
           {isSearching ? (
             <motion.div
