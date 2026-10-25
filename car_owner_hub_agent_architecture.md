@@ -17,7 +17,7 @@ Every tool reads and writes the seven application models: `users`, `new_cars`, `
 | Valuation evidence | Asking prices in published sell posts + `new_cars.msrp`, always labelled as asking prices |
 | Repair cost | Owner-reported `cost` in published repair posts, labelled anecdotal |
 | Mechanics | Mechanics named in published repair posts first; nearby repair centers from SerpApi (Google Maps) as the alternative |
-| Conversation memory | ADK session state + structured fields on the issue (`symptoms`, `ai_analysis`, `resolution_details`) |
+| Conversation memory | Client-held event history (messages, tool calls, tool responses). Issue rows still store durable facts (`symptoms`, `ai_analysis`, `resolution_details`) |
 | Post types | `buy`, `sell`, `repair` (matches `posts.issue_type`) |
 | Post lifecycle | `draft` → `approved` → `published` → `archived` |
 | Repair prerequisite | The car is registered in `used_cars` first (`repair_issues.used_car_id` is required) |
@@ -27,16 +27,19 @@ Every tool reads and writes the seven application models: `users`, `new_cars`, `
 Wrap Agents 2–6 as `AgentTool`s on Agent 1 rather than as transfer sub-agents, so every specialist result returns to the coordinator and only Agent 1 ever speaks to the user. A transfer (`transfer_to_agent`) hands the conversation to the sub-agent, which would break the single-voice rule.
 
 - **Coordinator:** `LlmAgent(name="coordinator", tools=[get_user_context, get_vehicle_details, AgentTool(valuation), AgentTool(buyer), AgentTool(seller), AgentTool(post_gen), AgentTool(repair)])`.
-- **Cross-agent sequencing:** Agent 1 chains specialists itself (for selling: Agent 2 → Agent 4 → Agent 5) and passes results through session state, e.g. `state["valuation"]`. Specialists never call each other.
-- **Shared deterministic service:** the valuation math lives in one Django service (`valuation_service.estimate()`). Agent 2 owns the explanation; Agent 4 reads the stored result from state, so pricing is never computed twice.
-- **Session state (no conversations table):** use ADK's `DatabaseSessionService` on the same PostgreSQL. Its tables are framework-managed and sit outside the seven application models. Keep structured keys: `user_id` (server-set), `active_used_car_id`, `active_issue {type, id}`, `draft_post_id`, `valuation`, `last_search_results`.
+- **Cross-agent sequencing:** Agent 1 chains specialists itself (for selling: Agent 2 → Agent 4 → Agent 5) and passes results through in-request state, e.g. `state["valuation"]`. Specialists never call each other. That state lasts for one turn. The tool responses in the client history carry it to the next turn.
+- **Shared deterministic service:** the valuation math lives in one Django service (`valuation_service.estimate()`). Agent 2 owns the explanation; Agent 4 reads `state["valuation"]` for this turn, so pricing is never computed twice in the same request.
+- **No server transcript:** there is no conversations table and no ADK `DatabaseSessionService`. The frontend stores the history. Section "Conversation history" defines the event list and the turn loop.
 - **Durable facts go to the issue, not the chat:** extracted symptoms → `repair_issues.symptoms`; analysis → `ai_analysis`; confirmed fix → `resolution_details`; condition → `sell_issues.condition_details`; budget and preferences → `buy_issues`.
-- **Identity:** the DRF layer authenticates the JWT, then creates the ADK session with `state["user_id"]`. Tools read `tool_context.state["user_id"]`; no tool accepts `user_id`, `owner_id` or `buyer_id` as a model argument.
-- **Tool execution:** ADK function tools call the Django service layer in-process (the same services DRF views call), so permission and validation rules are defined once.
+- **Identity:** the DRF layer authenticates the JWT and sets `state["user_id"]` on the in-request session. Tools read `tool_context.state["user_id"]`; no tool accepts `user_id`, `owner_id` or `buyer_id` as a model argument. The client history cannot set `user_id`.
+- **Tool execution:** ADK function tools call the Django service layer in-process (the same services DRF views call), so permission and validation rules are defined once. Only tool calls the model makes during this turn are executed. Tool responses already in the client history are context, and they are not run again.
 
 ```text
-                    User · web app chat
-                            ↕
+     Web app stores events[]
+     messages · tool calls · tool responses
+        │  POST full history, ending in the new user message
+        │  ◀ new events only; the client appends them
+        ▼
           ┌─────────────────────────────────────┐
           │  Agent 1 · Coordinator              │   AgentTool calls,
           │  only agent that replies to user    │   results return to Agent 1
@@ -64,11 +67,57 @@ Wrap Agents 2–6 as `AgentTool`s on Agent 1 rather than as transfer sub-agents,
  │  used_cars ·     │ │  posts/          │ │  images      │ │ nearby      │
  │  buy/sell/repair │ │   {post_id}/     │ │              │ │ repair      │
  │  _issues · posts │ │                  │ │              │ │ centers     │
- │  ADK sessions    │ │                  │ │              │ │             │
  └──────────────────┘ └──────────────────┘ └──────────────┘ └─────────────┘
 ```
 
-Specialists never reach the user or each other; every read and write passes through the same Django services the REST API uses.
+Specialists never reach the user or each other; every read and write passes through the same Django services the REST API uses. PostgreSQL stores the seven application models. It does not store the chat transcript.
+
+## Conversation history
+
+The frontend owns the context. It stores one ordered list, `events`, for the conversation. The list holds user messages, Agent 1 messages, tool calls, and tool responses. The backend does not save this list. On each turn it appends the events it just produced and returns only that delta. The frontend appends the delta, and later appends the next user message.
+
+```text
+frontend events
+    │  append user message
+    ▼
+POST /api/chat/turns/   { events }     last event is the new user message
+    │
+    ▼
+backend runs Agent 1 for this request only
+    appends assistant messages, tool calls, and tool responses
+    │
+    ▼
+{ events: new events only }
+    │
+    ▼
+frontend appends those events
+    │
+    ▼
+user types again → frontend appends that message → repeat
+```
+
+**Event shape.** `id` is unique in the list. The frontend assigns ids for user messages. The backend assigns ids for events it creates.
+
+| `kind` | Fields | Who writes it |
+| --- | --- | --- |
+| `message` | `role` (`user` or `assistant`), `author` (`user` or `coordinator`), `text` | Frontend appends `role: user`. Backend appends Agent 1 text with `role: assistant` and `author: coordinator` |
+| `tool_call` | `author`, `name`, `call_id`, `args` | Backend, when an agent invokes a tool during this turn |
+| `tool_response` | `author`, `name`, `call_id`, `response` | Backend, paired to that `call_id` after the tool returns |
+
+`author` on a tool event is the agent that issued the call: `coordinator`, `valuation`, `buyer`, `seller`, `post_gen`, or `repair`. Coordinator tool names include `get_user_context`, `get_vehicle_details`, `register_used_car`, and the five specialist `AgentTool`s. Specialist events use the function-tool names (`search_comparable_posts`, `analyze_vehicle_photo`, `find_nearby_mechanics`, and the rest). A specialist `AgentTool` call and the function tools inside it are both stored, in execution order, so the next turn can see what was asked and what came back.
+
+`response` uses the tool result contract `{status, data, ids, provenance, error}`. The chat UI renders `message` events. Tool events stay in the stored list and are not a second voice.
+
+**One turn on the server.**
+
+1. Reject the request unless it is authenticated, the list is non-empty, and the last event is a user `message`.
+2. Build an in-memory ADK session and replay `events` as the model context. Discard the session when the response is sent.
+3. Set `state["user_id"]` from the JWT. Ignore any user id inside the history.
+4. Rehydrate the other state keys from the latest matching tool responses already in the list: `active_used_car_id`, `active_issue` (`{type, id}`), `draft_post_id`, `valuation`, `last_search_results`. Agent 4 can then read a valuation from an earlier turn without calling Agent 2 again. Agent 1 calls Agent 2 again when the car or the condition has changed.
+5. Run Agent 1. Execute only the tool calls the model makes now. Append each call, its response, and the coordinator's assistant message, in order.
+6. Return `{ "events": [ ...new events ] }`. Write issue and post rows as the tools require. Do not write `events`.
+
+The history is untrusted context. A previous tool response does not authorize a later write. Ownership checks use `state["user_id"]`. Image bytes stay in media storage; the history stores the tool's findings, not the file. Clearing the frontend list drops the chat wording and the tool trace. Issue rows and image folders remain, and a later turn can resume them through `get_user_context`.
 
 ## Muse integration
 
@@ -195,7 +244,7 @@ Agent 2 returns an indicative asking-price range built only from published sell 
 | `get_vehicle_details(used_car_id)` | Reads owned `used_cars` | Subject vehicle attributes |
 | `search_comparable_posts(make, model, year_range, mileage_range, location?)` | Reads `posts` where `issue_type = 'sell'` and `status = 'published'`, filtering on `post_data` (JSONB) | Comparable asking prices with post IDs |
 | `get_catalog_reference(make, model, year, trim?)` | Reads `new_cars.msrp` | Original reference price for depreciation context |
-| `calculate_value_range(used_car_id, comparable_ids)` | Deterministic Django service; writes result to `state["valuation"]` | Range, median, sample size, data-quality flag |
+| `calculate_value_range(used_car_id, comparable_ids)` | Deterministic Django service; writes `state["valuation"]` for this turn and returns it as a `tool_response` | Range, median, sample size, data-quality flag |
 
 **Output contract:** `{status, low, median, high, sample_size, price_basis: "asking", comparable_post_ids, msrp_reference, limitations}`. Below a minimum sample (e.g. 3 comparables) return `status: "insufficient_data"` with whatever MSRP context exists, never a fabricated range.
 
@@ -226,7 +275,7 @@ Agent 4 creates the `sell_issues` record for an owned car, recommends an asking 
 | `get_vehicle_details(used_car_id)` | Reads owned `used_cars` | Seller's car |
 | `create_or_update_sell_issue(used_car_id, description, asking_price?, condition_details?, known_damage?, location?, contact_info?)` | Writes own `sell_issues`; server checks `used_cars.owner_id` = session user | Capture disclosures and private contact preferences |
 | `assess_car_photos(sell_issue_id)` | Muse Spark reads `issues/sell/{sell_issue_id}/`; suggestions only, saved to `condition_details` after the seller confirms | Visible condition, damage, odometer reading |
-| `recommend_asking_price(sell_issue_id)` | Reads `state["valuation"]` from Agent 2 | Suggested price with evidence; the seller sets the final `asking_price` |
+| `recommend_asking_price(sell_issue_id)` | Reads `state["valuation"]`, set this turn by Agent 2 or rehydrated from the client history | Suggested price with evidence; the seller sets the final `asking_price` |
 | `find_and_rank_buyers(sell_issue_id, limit=5)` | Reads `posts` (`buy`, `published`), matching `post_data` budget and preferences | Ranked buyer posts with match reasons |
 | `get_post_contact(post_id)` | Reads `post_data.contact` of a published buy post | Buyer-approved contact only |
 
@@ -302,7 +351,7 @@ Every write tool maps to an existing planned DRF endpoint, so the chat and the w
 ## Implementation rules
 
 1. **Agents select tools; Django executes.** Filtering, ranking, valuation and every mutation live in the service layer.
-2. **Identity comes from the session.** Tools read `state["user_id"]`; owner and creator IDs are set server-side, matching the DRF serializer rule.
+2. **Identity comes from the JWT.** Each turn sets `state["user_id"]` on the server. Owner and creator IDs are set server-side, matching the DRF serializer rule. Client events cannot supply them.
 3. **Cross-user reads touch published posts only.** Agents never query another user's `used_cars`, issues or drafts.
 4. **Contact data leaves only through `post_data.contact`.** `sell_issues.contact_info` stays private until the owner approves specific fields into a post.
 5. **Validate the polymorphic pair.** Every post write checks `issue_type` ∈ {buy, sell, repair}, the row exists in the matching table, and the caller owns it.
@@ -323,7 +372,7 @@ One registered Civic carries the user from repair to sale; each step leaves a ro
 | 3 | "The mechanic replaced the battery, $180." | Agent 6 | `status = resolved`, `resolution_details`, `resolved_at` |
 | 4 | "Share my experience." | Agent 5 | `posts` draft, `issue_type = repair` |
 | 5 | "Looks good, publish it." | Agent 5 | `approved_at` set, `status = published` |
-| 6 | "Should I sell it?" | Agent 4, Agent 2 | `sell_issues` created; valuation in session state |
+| 6 | "Should I sell it?" | Agent 4, Agent 2 | `sell_issues` created; valuation tool response appended to the client history |
 | 7 | Sets price, approves post | Agent 4, Agent 5 | Sell `posts` row published with `post_data.contact` |
 | 8 | Another user: "Civic under $15k?" | Agent 3 | `buy_issues` created; matches the sell post; shows approved contact |
 
@@ -339,10 +388,11 @@ The seven-model schema supports all six agents for the MVP; these limitations af
 | No `discussion` post type | General community chat unsupported | Extend `issue_type`, or allow posts without an issue |
 | `post_data` searched as JSONB | Slower filters at scale | GIN index now; extract `make`, `model`, `year`, `price` columns later |
 | Repair requires a registered car | Quick anonymous troubleshooting blocked | Make `used_car_id` nullable on `repair_issues` |
+| Chat history lives on the client | A cleared browser store drops messages and tool traces | Issue rows and image folders still resume through `get_user_context`. Server-side transcript storage is out of the MVP |
 
 **Hackathon MVP order**
 
-1. Agent 1 + `register_used_car` + ADK session with server-set `user_id`.
+1. Agent 1 + `register_used_car` + client-held `events` (messages, tool calls, tool responses) with server-set `user_id` on each turn.
 2. Agent 6 → Agent 5 repair flow end to end (create, diagnose, resolve, draft, approve, publish).
 3. Agent 4 + Agent 5 sell flow, with Agent 2 returning `insufficient_data` honestly on thin seed data.
 4. Agent 3 search against seeded published sell posts and `new_cars`.
