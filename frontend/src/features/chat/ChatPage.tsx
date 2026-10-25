@@ -73,6 +73,10 @@ export function ChatPage() {
 
   const hasMessages = messages.length > 0
   const isReadyToStart = hasStartingDetails(draft)
+  // The opening message is built from the saved details, so only its reply is shown.
+  const firstMessage = messages[0]
+  const startingMessageId =
+    firstMessage?.role === 'user' && firstMessage.text.startsWith('My car:') ? firstMessage.id : null
   const needsDetails = !hasMessages && !isRestoring && !isReadyToStart
 
   // A new conversation opens with the saved situation, so the first reply is based on those details.
@@ -135,7 +139,7 @@ export function ChatPage() {
               aria-relevant="additions"
               className="mx-auto flex max-w-2xl flex-col gap-6"
             >
-              {messages.map((message, index) => (
+              {messages.map((message, index) => message.id === startingMessageId ? null : (
                 <motion.li
                   key={message.id}
                   initial={{ opacity: 0, y: 12 }}
