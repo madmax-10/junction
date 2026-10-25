@@ -2,4 +2,4 @@
 
 import os
 
-AGENT_MODEL = os.environ.get("AGENT_MODEL", "gemini-2.5-flash")
+AGENT_MODEL = os.environ.get("AGENT_MODEL", "gemini-3.8-flash")
