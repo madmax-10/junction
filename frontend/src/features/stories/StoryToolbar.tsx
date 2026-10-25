@@ -3,12 +3,12 @@ import { motion } from 'motion/react'
 import type { ReactNode } from 'react'
 import { fieldClassName } from '../../components/ui/fieldStyles.ts'
 import { useScrollFade } from '../../hooks/useScrollFade.ts'
-import type { StoryChoice, StoryFilters } from '../../types/story.ts'
-import { bodyStyleOptions, choiceOptions } from './storyOptions.tsx'
+import type { StoryFilters, StoryPriceBand } from '../../types/story.ts'
+import { priceOptions, yearOptions } from './storyOptions.tsx'
 
 type StoryToolbarProps = {
   filters: StoryFilters
-  choiceCounts: Record<StoryChoice, number>
+  priceCounts: Record<StoryPriceBand, number>
   onChange: (changes: Partial<StoryFilters>) => void
 }
 
@@ -77,8 +77,8 @@ function ChoiceChip({
   )
 }
 
-export function StoryToolbar({ filters, choiceCounts, onChange }: StoryToolbarProps) {
-  const totalCount = Object.values(choiceCounts).reduce((total, count) => total + count, 0)
+export function StoryToolbar({ filters, priceCounts, onChange }: StoryToolbarProps) {
+  const totalCount = Object.values(priceCounts).reduce((total, count) => total + count, 0)
   const setChipsFadeElement = useScrollFade<HTMLDivElement>({ axis: 'x' })
 
   return (
@@ -99,7 +99,7 @@ export function StoryToolbar({ filters, choiceCounts, onChange }: StoryToolbarPr
             autoComplete="off"
             value={filters.query}
             onChange={(event) => onChange({ query: event.target.value })}
-            placeholder="Search by car, damage, or decision"
+            placeholder="Search make, model, or symptom"
             className={`${fieldClassName} h-11 pr-11 pl-11 [&::-webkit-search-cancel-button]:hidden`}
           />
           {filters.query && (
@@ -114,15 +114,15 @@ export function StoryToolbar({ filters, choiceCounts, onChange }: StoryToolbarPr
           )}
         </div>
 
-        <div role="group" aria-label="Vehicle type" className="flex rounded-full bg-background p-1">
-          <SegmentButton isActive={filters.bodyStyle === null} onClick={() => onChange({ bodyStyle: null })}>
-            All<span className="hidden @md:inline"> vehicles</span>
+        <div role="group" aria-label="Model year" className="flex rounded-full bg-background p-1">
+          <SegmentButton isActive={filters.yearMin === null} onClick={() => onChange({ yearMin: null })}>
+            All<span className="hidden @md:inline"> years</span>
           </SegmentButton>
-          {bodyStyleOptions.map((option) => (
+          {yearOptions.map((option) => (
             <SegmentButton
               key={option.value}
-              isActive={filters.bodyStyle === option.value}
-              onClick={() => onChange({ bodyStyle: option.value })}
+              isActive={filters.yearMin === Number(option.value)}
+              onClick={() => onChange({ yearMin: Number(option.value) })}
             >
               {option.label}
             </SegmentButton>
@@ -133,20 +133,19 @@ export function StoryToolbar({ filters, choiceCounts, onChange }: StoryToolbarPr
       <div
         ref={setChipsFadeElement}
         role="group"
-        aria-label="What the owner decided"
+        aria-label="Repair cost"
         className="scroll-fade-x -m-1.5 flex gap-2 overflow-x-auto p-1.5 @xl:flex-wrap @xl:overflow-visible"
       >
-        <ChoiceChip isActive={filters.choice === null} count={totalCount} onClick={() => onChange({ choice: null })}>
-          All decisions
+        <ChoiceChip isActive={filters.price === null} count={totalCount} onClick={() => onChange({ price: null })}>
+          Any cost
         </ChoiceChip>
-        {choiceOptions.map((option) => (
+        {priceOptions.map((option) => (
           <ChoiceChip
             key={option.value}
-            isActive={filters.choice === option.value}
-            count={choiceCounts[option.value]}
-            onClick={() => onChange({ choice: filters.choice === option.value ? null : option.value })}
+            isActive={filters.price === option.value}
+            count={priceCounts[option.value]}
+            onClick={() => onChange({ price: filters.price === option.value ? null : option.value })}
           >
-            {option.icon}
             {option.label}
           </ChoiceChip>
         ))}

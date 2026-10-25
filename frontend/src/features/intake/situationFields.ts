@@ -10,8 +10,8 @@ import type {
 export const fieldsBySection: Record<SituationSection, SituationField[]> = {
   vehicle: ['make', 'model', 'year', 'mileage', 'trim'],
   accident: ['accidentType', 'details'],
-  insurance: ['situation'],
-  concerns: ['interests', 'question'],
+  insurance: ['situation', 'insuranceSettlement'],
+  concerns: ['interests', 'question', 'minBudget', 'maxBudget'],
 }
 
 function isVehicleField(field: SituationField): field is keyof VehicleInfo {

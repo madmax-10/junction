@@ -43,14 +43,17 @@ export function MarketplacePage() {
   const { status, listings, retry } = useMarketplaceListings()
   const { listingId } = useParams()
   const navigate = useNavigate()
-  const [category, setCategory] = useState<ListingCategory>('replacement')
+  const [category, setCategory] = useState<ListingCategory>('sell')
   const [filters, setFilters] = useState<MarketplaceFilters>(emptyMarketplaceFilters)
   // The toolbar sticks to the top while scrolling, so only the bottom edge fades.
   const setFadeElement = useScrollFade<HTMLDivElement>({ fadeStart: false })
 
   const visibleListings = useMemo(() => filterListings(listings, category, filters), [listings, category, filters])
   const categoryCounts = useMemo(() => countByCategory(listings, filters), [listings, filters])
-  const categoryTotal = useMemo(() => listings.filter((listing) => listing.category === category).length, [listings, category])
+  const categoryTotal = useMemo(
+    () => listings.filter((listing) => (category === 'sell' ? listing.kind === 'sell' : true)).length,
+    [listings, category],
+  )
   const selectedListing = listings.find((listing) => listing.id === listingId)
   const isFiltered = hasActiveFilters(filters)
 
@@ -60,7 +63,7 @@ export function MarketplacePage() {
 
   function changeCategory(nextCategory: ListingCategory) {
     setCategory(nextCategory)
-    updateFilters({ condition: null })
+    updateFilters({ vehicleType: null, trim: null, location: null })
   }
 
   const clearFiltersButton = (

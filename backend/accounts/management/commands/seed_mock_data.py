@@ -393,10 +393,12 @@ def _resolution(rng):
                 ("Replaced the worn parts and test drove the car.", "Diagnosed and cleared the fault code.")
             ),
             "cost": cost,
+            "insurance_settlement": "The insurer paid the repair bill.",
         }
     return {
         "method": "self",
         "instructions": "Followed the service manual and confirmed the symptom was gone on a short drive.",
+        "insurance_settlement": "Paid the parts through my own policy.",
         "parts_used": rng.sample(PARTS, k=rng.randint(1, 2)),
         "cost": cost,
     }
@@ -519,4 +521,6 @@ def _repair_post_data(issue, car):
         data["mechanic_name"] = details["mechanic_name"]
     if details.get("cost") is not None:
         data["cost"] = details["cost"]
+    if details.get("insurance_settlement"):
+        data["insurance_settlement"] = details["insurance_settlement"]
     return data

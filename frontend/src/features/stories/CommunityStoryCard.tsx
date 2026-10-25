@@ -4,8 +4,9 @@ import { useEffect, useRef } from 'react'
 import { Badge } from '../../components/ui/Badge.tsx'
 import { easeOutQuint } from '../../styles/motion.ts'
 import type { CommunityStory, StoryStatus } from '../../types/story.ts'
-import { getAccidentLabel, getVehicleName } from './storyFilters.ts'
-import { getChoiceOption, statusLabels } from './storyOptions.tsx'
+import { formatPrice } from '../marketplace/marketplaceOptions.tsx'
+import { getSymptomLabel, getVehicleName } from './storyFilters.ts'
+import { getMethodOption, statusLabels } from './storyOptions.tsx'
 
 type CommunityStoryCardProps = {
   story: CommunityStory
@@ -13,7 +14,6 @@ type CommunityStoryCardProps = {
   onToggle: () => void
 }
 
-const currencyFormat = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })
 const numberFormat = new Intl.NumberFormat('en-US')
 const detailsTransition = { duration: 0.3, ease: easeOutQuint }
 
@@ -30,8 +30,22 @@ function StatusBadge({ status }: { status: StoryStatus }) {
   )
 }
 
+function SolutionRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-baseline justify-between gap-4 border-b border-dashed border-border py-1.5 last:border-b-0">
+      <dt className="text-muted">{label}</dt>
+      <dd className="text-right font-medium tabular-nums">{value}</dd>
+    </div>
+  )
+}
+
 function StoryDetails({ story }: { story: CommunityStory }) {
-  const { costs } = story.outcome
+  const { cost, mechanic_name, insurance_settlement, method, symptoms } = story.post_data
+  const symptomLines = [...(symptoms.confirmed ?? []), ...(symptoms.inferred ?? [])]
+  const decision =
+    method === 'mechanic'
+      ? `Repaired by ${mechanic_name || 'a mechanic'}`
+      : 'Repaired it themselves'
 
   return (
     <>
@@ -39,34 +53,28 @@ function StoryDetails({ story }: { story: CommunityStory }) {
         <div className="space-y-5">
           <section>
             <h3 className={termClassName}>What they decided</h3>
-            <p className="mt-1 font-body text-sm leading-relaxed">{story.decision.summary}</p>
+            <p className="mt-1 font-body text-sm leading-relaxed">{decision}</p>
           </section>
 
-          {costs.length > 0 && (
+          {(cost !== null || mechanic_name || insurance_settlement) && (
             <section>
               <h3 className={termClassName}>Reported costs</h3>
               <dl className="mt-1.5 font-body text-sm">
-                {costs.map((cost) => (
-                  <div
-                    key={cost.label}
-                    className="flex items-baseline justify-between gap-4 border-b border-dashed border-border py-1.5 last:border-b-0"
-                  >
-                    <dt className="text-muted">{cost.label}</dt>
-                    <dd className="font-medium tabular-nums">{currencyFormat.format(cost.amount)}</dd>
-                  </div>
-                ))}
+                {cost !== null && <SolutionRow label="Repair cost" value={formatPrice(cost)} />}
+                {mechanic_name && <SolutionRow label="Mechanic" value={mechanic_name} />}
+                {insurance_settlement && <SolutionRow label="Insurance settlement" value={insurance_settlement} />}
               </dl>
             </section>
           )}
         </div>
 
         <section>
-          <h3 className={termClassName}>What they learned</h3>
+          <h3 className={termClassName}>Symptoms</h3>
           <ul className="mt-1.5 space-y-2.5 font-body text-sm leading-relaxed">
-            {story.lessons.map((lesson) => (
-              <li key={lesson} className="flex gap-2.5">
+            {symptomLines.map((symptom) => (
+              <li key={symptom} className="flex gap-2.5">
                 <Lightbulb size={16} weight="duotone" className="mt-0.5 shrink-0 text-primary" aria-hidden="true" />
-                {lesson}
+                {symptom}
               </li>
             ))}
           </ul>
@@ -79,7 +87,9 @@ function StoryDetails({ story }: { story: CommunityStory }) {
 export function CommunityStoryCard({ story, isExpanded, onToggle }: CommunityStoryCardProps) {
   const articleRef = useRef<HTMLElement>(null)
   const shouldReduceMotion = useReducedMotion()
-  const choice = getChoiceOption(story.decision.choice)
+  const method = getMethodOption(story.post_data.method)
+  const symptomLabel = getSymptomLabel(story)
+  const displayStatus: StoryStatus = story.post_data.work_performed || story.post_data.cost !== null ? 'resolved' : 'ongoing'
   const titleId = `${story.id}-title`
   const detailsId = `${story.id}-details`
   const clampClassName = isExpanded ? '' : 'line-clamp-2'
@@ -103,9 +113,11 @@ export function CommunityStoryCard({ story, isExpanded, onToggle }: CommunitySto
           <span className="grid size-6 shrink-0 place-items-center rounded-full bg-primary-light text-primary" aria-hidden="true">
             <User size={13} weight="bold" />
           </span>
-          <span className="truncate">Anonymous owner · {story.owner.location}</span>
+          <span className="truncate">
+            Anonymous owner{story.post_data.mechanic_name ? ` · ${story.post_data.mechanic_name}` : ''}
+          </span>
         </p>
-        <StatusBadge status={story.status} />
+        <StatusBadge status={displayStatus} />
       </div>
 
       <header className="mt-3">
@@ -114,29 +126,31 @@ export function CommunityStoryCard({ story, isExpanded, onToggle }: CommunitySto
         </h2>
         <p className="mt-1 flex items-center gap-1.5 font-body text-sm text-muted">
           <Car size={16} className="shrink-0 text-primary" aria-hidden="true" />
-          {getVehicleName(story)} · {numberFormat.format(story.vehicle.mileage)} mi
+          {getVehicleName(story)} · {numberFormat.format(story.post_data.mileage)} mi
         </p>
       </header>
 
       <section className="mt-4">
         <h3 className={termClassName}>
-          What happened <span className={asideClassName}>· {getAccidentLabel(story)}</span>
+          What happened{symptomLabel && <span className={asideClassName}> · {symptomLabel}</span>}
         </h3>
-        <p className={`mt-1 font-body text-sm leading-relaxed text-text/85 ${clampClassName}`}>{story.narrative}</p>
+        <p className={`mt-1 font-body text-sm leading-relaxed text-text/85 ${clampClassName}`}>{story.content}</p>
       </section>
 
       <section className="mt-4 rounded-xl bg-background/70 p-3.5">
         <h3 className="sr-only">Decision and outcome</h3>
         <p className="inline-flex items-center gap-1.5 rounded-full border border-primary/15 bg-surface px-2.5 py-1 font-body text-xs font-semibold text-primary">
-          {choice.icon}
-          <span className="sr-only">Decision: </span>
-          {choice.label}
+          {method.icon}
+          <span className="sr-only">Repair method: </span>
+          {method.label}
         </p>
         <p className={`mt-2.5 ${termClassName}`}>
-          {story.status === 'resolved' ? 'Reported outcome' : 'Where things stand'}{' '}
-          <span className={asideClassName}>· {story.outcome.reportedAfter}</span>
+          {displayStatus === 'resolved' ? 'Reported outcome' : 'Where things stand'}
+          {story.post_data.insurance_settlement && (
+            <span className={asideClassName}> · {story.post_data.insurance_settlement}</span>
+          )}
         </p>
-        <p className={`mt-0.5 font-body text-sm leading-snug ${clampClassName}`}>{story.outcome.summary}</p>
+        <p className={`mt-0.5 font-body text-sm leading-snug ${clampClassName}`}>{story.post_data.work_performed}</p>
       </section>
 
       <AnimatePresence initial={false}>

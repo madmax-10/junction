@@ -1,7 +1,7 @@
 import { CaretDown, MagnifyingGlass, X } from '@phosphor-icons/react'
 import { fieldClassName } from '../../components/ui/fieldStyles.ts'
 import type { ListingCategory, MarketplaceFilters } from '../../types/marketplace.ts'
-import { getConditionOptions, mileageOptions, priceOptions, yearOptions } from './marketplaceOptions.tsx'
+import { locationOptions, priceOptions, trimOptions, vehicleTypeOptions, yearMaxOptions, yearOptions } from './marketplaceOptions.tsx'
 
 type MarketplaceToolbarProps = {
   category: ListingCategory
@@ -98,36 +98,57 @@ export function MarketplaceToolbar({ category, filters, onChange }: MarketplaceT
       <div role="group" aria-label="Filters" className="grid grid-cols-2 gap-2 @xl:grid-cols-4 @4xl:flex @4xl:shrink-0">
         <FilterSelect
           id="marketplace-price"
-          label="Price"
-          anyLabel="Any price"
+          label={category === 'buy' && filters.vehicleType === 'new' ? 'MSRP' : 'Price'}
+          anyLabel={category === 'buy' && filters.vehicleType === 'new' ? 'Any MSRP' : 'Any price'}
           value={filters.price}
           options={priceOptions}
           onChange={(price) => onChange({ price })}
         />
         <FilterSelect
           id="marketplace-year"
-          label="Model year"
-          anyLabel="Any year"
-          value={filters.minYear}
+          label="Minimum year"
+          anyLabel="Any minimum year"
+          value={filters.yearMin}
           options={yearOptions}
-          onChange={(minYear) => onChange({ minYear })}
+          onChange={(yearMin) => onChange({ yearMin })}
         />
         <FilterSelect
-          id="marketplace-mileage"
-          label="Mileage"
-          anyLabel="Any mileage"
-          value={filters.maxMileage}
-          options={mileageOptions}
-          onChange={(maxMileage) => onChange({ maxMileage })}
+          id="marketplace-year-max"
+          label="Maximum year"
+          anyLabel="Any maximum year"
+          value={filters.yearMax}
+          options={yearMaxOptions}
+          onChange={(yearMax) => onChange({ yearMax })}
         />
-        <FilterSelect
-          id="marketplace-condition"
-          label="Condition"
-          anyLabel="Any condition"
-          value={filters.condition}
-          options={getConditionOptions(category)}
-          onChange={(condition) => onChange({ condition })}
-        />
+        {category === 'buy' && filters.vehicleType === 'new' ? (
+          <FilterSelect
+            id="marketplace-trim"
+            label="Trim"
+            anyLabel="Any trim"
+            value={filters.trim}
+            options={trimOptions}
+            onChange={(trim) => onChange({ trim })}
+          />
+        ) : (
+          <FilterSelect
+            id="marketplace-location"
+            label="Location"
+            anyLabel="Any location"
+            value={filters.location}
+            options={locationOptions}
+            onChange={(location) => onChange({ location })}
+          />
+        )}
+        {category === 'buy' && (
+          <FilterSelect
+            id="marketplace-vehicle-type"
+            label="New or used"
+            anyLabel="Used and new"
+            value={filters.vehicleType}
+            options={vehicleTypeOptions}
+            onChange={(vehicleType) => onChange({ vehicleType, ...(vehicleType === 'new' ? { location: null } : { trim: null }) })}
+          />
+        )}
       </div>
     </div>
   )

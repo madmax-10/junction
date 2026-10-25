@@ -1,23 +1,28 @@
-import { ArrowsClockwise, Scales, Tag, Wrench } from '@phosphor-icons/react'
+import { User, Wrench } from '@phosphor-icons/react'
 import type { ReactNode } from 'react'
-import type { BodyStyle, StoryChoice, StoryStatus } from '../../types/story.ts'
+import type { RepairMethod, StoryPriceBand, StoryStatus } from '../../types/story.ts'
 
 type StoryOption<TValue extends string> = {
   value: TValue
   label: string
 }
 
-export const choiceOptions: (StoryOption<StoryChoice> & { icon: ReactNode })[] = [
-  { value: 'repair', label: 'Repaired', icon: <Wrench size={14} weight="bold" /> },
-  { value: 'sell', label: 'Sold', icon: <Tag size={14} weight="bold" /> },
-  { value: 'replace', label: 'Replaced', icon: <ArrowsClockwise size={14} weight="bold" /> },
-  { value: 'undecided', label: 'Undecided', icon: <Scales size={14} weight="bold" /> },
+export const methodOptions: (StoryOption<RepairMethod> & { icon: ReactNode })[] = [
+  { value: 'mechanic', label: 'Mechanic', icon: <Wrench size={14} weight="bold" /> },
+  { value: 'self', label: 'Self repair', icon: <User size={14} weight="bold" /> },
 ]
 
-export const bodyStyleOptions: StoryOption<BodyStyle>[] = [
-  { value: 'sedan', label: 'Sedans' },
-  { value: 'suv', label: 'SUVs' },
-  { value: 'truck', label: 'Trucks' },
+export const yearOptions: StoryOption<string>[] = [
+  { value: '2018', label: '2018+' },
+  { value: '2015', label: '2015+' },
+  { value: '2010', label: '2010+' },
+]
+
+export const priceOptions: (StoryOption<StoryPriceBand> & { min: number; max: number })[] = [
+  { value: 'under-5k', label: 'Under $5,000', min: 0, max: 5000 },
+  { value: '5k-10k', label: '$5,000 – $10,000', min: 5000, max: 10000 },
+  { value: '10k-20k', label: '$10,000 – $20,000', min: 10000, max: 20000 },
+  { value: 'over-20k', label: 'Over $20,000', min: 20000, max: Infinity },
 ]
 
 export const statusLabels: Record<StoryStatus, string> = {
@@ -25,10 +30,10 @@ export const statusLabels: Record<StoryStatus, string> = {
   ongoing: 'Ongoing',
 }
 
-export function getChoiceOption(choice: StoryChoice) {
-  const option = choiceOptions.find((item) => item.value === choice)
+export function getMethodOption(method: RepairMethod) {
+  const option = methodOptions.find((item) => item.value === method)
   if (!option) {
-    throw new Error(`Unknown story decision: ${choice}`)
+    throw new Error(`Unknown repair method: ${method}`)
   }
   return option
 }

@@ -58,6 +58,7 @@ The response is `{"events": [...new events only]}`.
 - `author` on tool events is one of `coordinator`, `valuation`, `buyer`, `seller`, `post_gen`, `repair`.
 - `id` is unique in the list. The frontend assigns ids for user messages and the backend assigns ids for everything else.
 - The history is untrusted. A `user_id` inside it is ignored, and old tool calls are never executed again.
+- Image bytes never ride on this request. Extra keys such as `images` are dropped. Photos belong to an issue and are stored only after that issue id exists, under `issues/{issue_type}/{issue_id}/`.
 
 ### Per-turn state keys
 
@@ -109,7 +110,7 @@ Money in `post_data` is stored as a JSON number, rounded to cents
 | --- | --- |
 | `sell` | `make`, `model`, `year`, `trim`, `mileage`, `asking_price`, `condition_details`, `known_damage`, `location`, `contact`, `photos` |
 | `buy` | `min_budget`, `max_budget`, `preferred_makes`, `preferred_models`, `minimum_year`, `maximum_mileage`, `vehicle_type` (`new`/`used`), `fuel_type`, `location`, `contact`, `photos` |
-| `repair` | `make`, `model`, `year`, `trim`, `mileage`, `symptoms`, `method` (`mechanic`/`self`), `work_performed`, `cost`, `mechanic_name`, `owner_reported` (must be `true`), `photos` |
+| `repair` | `make`, `model`, `year`, `trim`, `mileage`, `symptoms`, `method` (`mechanic`/`self`), `work_performed`, `cost`, `mechanic_name`, `owner_reported` (must be `true`), `insurance_settlement` (optional note, 500 characters), `photos` |
 
 Nested objects:
 
@@ -133,4 +134,5 @@ Example sell snapshot:
 ```
 
 A repair post never contains `ai_analysis`. The fix comes only from
-`resolution_details` (`method`, `work_performed`, `cost`, `mechanic_name`).
+`resolution_details` (`method`, `work_performed` or `instructions`, `cost`,
+`mechanic_name`, and an optional `insurance_settlement` note).

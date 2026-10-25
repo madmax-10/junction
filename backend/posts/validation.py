@@ -50,6 +50,7 @@ REPAIR_KEYS = {
     "cost",
     "mechanic_name",
     "owner_reported",
+    "insurance_settlement",
     "photos",
 }
 KEYS_BY_TYPE = {"buy": BUY_KEYS, "sell": SELL_KEYS, "repair": REPAIR_KEYS}
@@ -62,6 +63,7 @@ TEXT_FIELDS = {
     "work_performed": 2000,
     "mechanic_name": 100,
     "fuel_type": 50,
+    "insurance_settlement": 500,
 }
 
 
