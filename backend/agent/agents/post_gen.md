@@ -92,10 +92,12 @@ cleared when it is published.
 
 ## Limitations
 
-- The agent cannot ask the user anything. Contact, mechanic naming and photo
-  choices must come in the coordinator's request, and the coordinator prompt does
-  not yet tell it to pass them. Until it does, the agent drafts without them and
-  reports what is still undecided.
+- The agent cannot ask the user anything. The coordinator prompt tells the
+  coordinator to put the issue type and id, the contact the user chose, whether
+  the mechanic may be named, and the user's approval in the request. If the
+  coordinator leaves a choice out, the agent drafts without it and reports what
+  is still undecided. Photo choices are not in that list, so the coordinator
+  passes them only if it thinks to.
 - The prompt is checked for its rules, but no live Gemini run has been done. The
   tests use scripted fake models, so how well a real model follows the templates
   is not verified.
