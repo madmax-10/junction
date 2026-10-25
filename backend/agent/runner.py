@@ -14,8 +14,13 @@ from google.adk.plugins import BasePlugin
 from google.adk.runners import InMemoryRunner
 from google.genai import types
 
+from agent.agents.buyer import build_buyer_agent
 from agent.agents.coordinator import build_coordinator
 from agent.agents.post_gen import build_post_gen_agent
+from agent.agents.repair import build_repair_agent
+from agent.agents.seller import build_seller_agent
+from agent.agents.valuation import build_valuation_agent
+from agent.config import AGENT_MODEL
 from agent.events import AUTHORS, ENVELOPE_KEYS, validate_events
 from agent.state import build_state
 from agent.tools.result import error_result, tool_result
@@ -151,11 +156,15 @@ def _to_contract_events(adk_events, used_call_ids):
 # ------------------------------------------------------------------ turn ----
 
 def default_specialists(model=None):
-    """The real specialists built so far. Any specialist not listed here is a stub.
-
-    Add each new specialist here when it is finished.
-    """
-    return {"post_gen": build_post_gen_agent(model)}
+    """The real specialists. The coordinator still stubs any name left out of this dict."""
+    chosen = model or AGENT_MODEL
+    return {
+        "valuation": build_valuation_agent(chosen),
+        "buyer": build_buyer_agent(chosen),
+        "seller": build_seller_agent(chosen),
+        "post_gen": build_post_gen_agent(chosen),
+        "repair": build_repair_agent(chosen),
+    }
 
 
 async def run_turn_async(user_id, events, *, specialists=None, model=None):

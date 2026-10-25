@@ -83,9 +83,14 @@ export function MarketplacePage() {
     >
       <div ref={setFadeElement} className="scroll-fade-y @container min-h-0 flex-1 overflow-y-auto overscroll-contain">
         <header className="flex items-center justify-between gap-4 px-5 pt-6 sm:px-8 sm:pt-8">
-          <h1 id="marketplace-title" className="font-heading text-2xl font-extrabold tracking-[-0.02em] sm:text-[1.75rem]">
-            Marketplace
-          </h1>
+          <div>
+            <h1 id="marketplace-title" className="font-heading text-2xl font-extrabold tracking-[-0.02em] sm:text-[1.75rem]">
+              Marketplace
+            </h1>
+            <p className="mt-2 max-w-xl font-body text-sm leading-relaxed text-muted">
+              Sample listings for this demo. They are not verified vehicles for sale.
+            </p>
+          </div>
           <ListYourCarButton />
         </header>
 

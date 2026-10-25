@@ -74,6 +74,9 @@ export function StoriesPage() {
           <h1 id="stories-title" className="font-heading text-2xl font-extrabold tracking-[-0.02em] sm:text-[1.75rem]">
             Community Stories
           </h1>
+          <p className="mt-2 max-w-xl font-body text-sm leading-relaxed text-muted">
+            Sample community records for this demo. They are not verified outcomes.
+          </p>
         </header>
 
         <div className="z-10 border-b @3xl:sticky @3xl:top-0 border-border bg-surface px-5 pt-5 pb-4 sm:px-8">

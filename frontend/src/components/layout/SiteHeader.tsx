@@ -9,9 +9,9 @@ const navLinkClassName =
   'rounded-full px-3 py-2 font-body text-sm font-medium text-text/80 transition-colors duration-200 outline-none hover:text-primary focus-visible:ring-2 focus-visible:ring-primary'
 
 export function SiteHeader() {
-  const { user } = useAuth()
+  const { user, isReady } = useAuth()
   const { pathname } = useLocation()
-  const showSignIn = !user && pathname !== paths.signIn
+  const showSignIn = isReady && !user && pathname !== paths.signIn
 
   return (
     <header className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-6 py-5 sm:px-8 sm:py-6">

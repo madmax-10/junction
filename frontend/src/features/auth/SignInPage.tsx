@@ -1,6 +1,6 @@
 import { AppleLogo, ArrowLeft, CircleNotch, GoogleLogo } from '@phosphor-icons/react'
 import { motion } from 'motion/react'
-import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
+import { useState, type FormEvent, type ReactNode } from 'react'
 import { Link, Navigate, useLocation } from 'react-router'
 import { paths } from '../../app/paths.ts'
 import { SiteHeader } from '../../components/layout/SiteHeader.tsx'
@@ -9,7 +9,8 @@ import { Field } from '../../components/ui/Field.tsx'
 import { PasswordInput } from '../../components/ui/PasswordInput.tsx'
 import { TextInput } from '../../components/ui/TextInput.tsx'
 import { easeOutQuint } from '../../styles/motion.ts'
-import type { AuthProvider, AuthUser, SignInLocationState } from '../../types/auth.ts'
+import { ApiError } from '../../services/api.ts'
+import type { SignInLocationState } from '../../types/auth.ts'
 import { useAuth } from './AuthContext.ts'
 import { AuthRecap } from './AuthRecap.tsx'
 
@@ -37,12 +38,6 @@ const modeCopy: Record<AuthMode, { title: string; description: string; submit: s
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const minPasswordLength = 8
-const mockSignInDelay = 900
-
-function getNameFromEmail(email: string) {
-  const localPart = email.split('@')[0]?.replace(/[._-]+/g, ' ').trim() ?? ''
-  return localPart.replace(/\b\w/g, (letter) => letter.toUpperCase()) || 'Driver'
-}
 
 function describedBy(id: string, error: string | undefined, hasHint = false) {
   if (error) {
@@ -78,7 +73,7 @@ function SocialButton({ icon, label, isPending, disabled, onClick }: SocialButto
 }
 
 export function SignInPage() {
-  const { user, signIn } = useAuth()
+  const { user, isReady, signIn, signUp } = useAuth()
   const location = useLocation()
   const redirectTo = (location.state as SignInLocationState)?.from ?? paths.chat
 
@@ -87,40 +82,29 @@ export function SignInPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [errors, setErrors] = useState<FieldErrors>({})
-  const [pendingProvider, setPendingProvider] = useState<AuthProvider | null>(null)
-  const signInTimer = useRef<number | null>(null)
+  const [notice, setNotice] = useState<string | null>(null)
+  const [isPending, setIsPending] = useState(false)
 
-  useEffect(() => {
-    return () => {
-      if (signInTimer.current !== null) {
-        window.clearTimeout(signInTimer.current)
-      }
-    }
-  }, [])
+  if (!isReady) return null
 
   if (user) {
     return <Navigate to={redirectTo} replace />
   }
 
   const copy = modeCopy[mode]
-  const isPending = pendingProvider !== null
   const isSignUp = mode === 'sign-up'
-
-  function completeSignIn(nextUser: AuthUser) {
-    setPendingProvider(nextUser.provider)
-    signInTimer.current = window.setTimeout(() => signIn(nextUser), mockSignInDelay)
-  }
 
   function switchMode(nextMode: AuthMode) {
     setMode(nextMode)
     setErrors({})
+    setNotice(null)
   }
 
   function clearError(field: FieldName) {
     setErrors((current) => ({ ...current, [field]: undefined }))
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (isPending) {
       return
@@ -137,6 +121,7 @@ export function SignInPage() {
       nextErrors.password = `Use at least ${minPasswordLength} characters.`
     }
     setErrors(nextErrors)
+    setNotice(null)
 
     const firstInvalid = (['name', 'email', 'password'] as const).find((field) => nextErrors[field])
     if (firstInvalid) {
@@ -144,19 +129,32 @@ export function SignInPage() {
       return
     }
 
-    completeSignIn({
-      name: isSignUp ? name.trim() : getNameFromEmail(email.trim()),
-      email: email.trim(),
-      provider: 'email',
-    })
+    setIsPending(true)
+    try {
+      if (isSignUp) {
+        await signUp(name.trim(), email.trim(), password)
+      } else {
+        await signIn(email.trim(), password)
+      }
+    } catch (error) {
+      if (error instanceof ApiError) {
+        setErrors({
+          name: error.fields.name,
+          email: error.fields.email,
+          password: error.fields.password,
+        })
+        if (!error.fields.name && !error.fields.email && !error.fields.password) {
+          setNotice(error.message)
+        }
+      } else {
+        setNotice('Something went wrong. Please try again.')
+      }
+      setIsPending(false)
+    }
   }
 
-  function handleSocialSignIn(provider: Exclude<AuthProvider, 'email'>) {
-    completeSignIn({
-      name: 'Jordan Lee',
-      email: provider === 'google' ? 'jordan.lee@gmail.com' : 'jordan.lee@icloud.com',
-      provider,
-    })
+  function handleSocialSignIn() {
+    setNotice('Only email accounts work right now.')
   }
 
   return (
@@ -222,18 +220,23 @@ export function SignInPage() {
               <SocialButton
                 icon={<GoogleLogo size={18} />}
                 label="Continue with Google"
-                isPending={pendingProvider === 'google'}
+                isPending={false}
                 disabled={isPending}
-                onClick={() => handleSocialSignIn('google')}
+                onClick={handleSocialSignIn}
               />
               <SocialButton
                 icon={<AppleLogo size={18} />}
                 label="Continue with Apple"
-                isPending={pendingProvider === 'apple'}
+                isPending={false}
                 disabled={isPending}
-                onClick={() => handleSocialSignIn('apple')}
+                onClick={handleSocialSignIn}
               />
             </div>
+            {notice && (
+              <p role="alert" className="mt-4 font-body text-sm text-danger">
+                {notice}
+              </p>
+            )}
 
             <div className="my-6 flex items-center gap-3 font-body text-xs text-text/50">
               <span className="h-px flex-1 bg-border" aria-hidden="true" />
@@ -299,10 +302,8 @@ export function SignInPage() {
               </Field>
 
               <Button type="submit" size="lg" aria-busy={isPending} className="mt-1 w-full">
-                {pendingProvider === 'email' && (
-                  <CircleNotch size={18} className="animate-spin" aria-hidden="true" />
-                )}
-                {pendingProvider === 'email' ? 'Just a moment…' : copy.submit}
+                {isPending && <CircleNotch size={18} className="animate-spin" aria-hidden="true" />}
+                {isPending ? 'Just a moment…' : copy.submit}
               </Button>
             </form>
           </section>

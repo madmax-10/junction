@@ -8,12 +8,14 @@ import type {
   SituationSection,
   VehicleInfo,
 } from '../../types/intake.ts'
-import { emptyIntakeDraft, IntakeContext, noFieldsConfirmed } from './IntakeContext.ts'
+import { resetPersistedSituation, type SavedSituation } from '../../services/situation.ts'
+import { emptyIntakeDraft, emptySavedSituation, IntakeContext, noFieldsConfirmed } from './IntakeContext.ts'
 import { fieldsBySection } from './situationFields.ts'
 
 type IntakeState = {
   draft: IntakeDraft
   confirmed: FieldConfirmation
+  saved: SavedSituation
 }
 
 type IntakeAction =
@@ -21,9 +23,10 @@ type IntakeAction =
   | { type: 'updateVehicle'; changes: Partial<VehicleInfo> }
   | { type: 'confirmSections'; sections: SituationSection[] }
   | { type: 'applyConfirmed'; changes: SituationChanges }
+  | { type: 'setSaved'; saved: SavedSituation }
   | { type: 'reset' }
 
-const initialState: IntakeState = { draft: emptyIntakeDraft, confirmed: noFieldsConfirmed }
+const initialState: IntakeState = { draft: emptyIntakeDraft, confirmed: noFieldsConfirmed, saved: emptySavedSituation }
 
 function getChangedKeys<T extends object>(current: T, changes: Partial<T>) {
   return (Object.keys(changes) as (keyof T & string)[]).filter((key) => !Object.is(changes[key], current[key]))
@@ -46,6 +49,7 @@ function intakeReducer(state: IntakeState, action: IntakeAction): IntakeState {
       return {
         draft: { ...state.draft, ...action.changes },
         confirmed: withFields(state.confirmed, changedKeys, false),
+        saved: state.saved,
       }
     }
     case 'updateVehicle': {
@@ -54,6 +58,7 @@ function intakeReducer(state: IntakeState, action: IntakeAction): IntakeState {
       return {
         draft: { ...state.draft, vehicle: { ...state.draft.vehicle, ...action.changes } },
         confirmed: withFields(state.confirmed, changedKeys, false),
+        saved: state.saved,
       }
     }
     case 'confirmSections':
@@ -71,15 +76,18 @@ function intakeReducer(state: IntakeState, action: IntakeAction): IntakeState {
       return {
         draft: { ...state.draft, ...fields, vehicle: { ...state.draft.vehicle, ...vehicle } },
         confirmed: withFields(state.confirmed, confirmedFields, true),
+        saved: state.saved,
       }
     }
+    case 'setSaved':
+      return { ...state, saved: action.saved }
     case 'reset':
       return initialState
   }
 }
 
 export function IntakeProvider({ children }: { children: ReactNode }) {
-  const [{ draft, confirmed }, dispatch] = useReducer(intakeReducer, initialState)
+  const [{ draft, confirmed, saved }, dispatch] = useReducer(intakeReducer, initialState)
 
   const updateDraft = useCallback(
     (changes: Partial<IntakeFields>) => dispatch({ type: 'update', changes }),
@@ -101,11 +109,26 @@ export function IntakeProvider({ children }: { children: ReactNode }) {
     [],
   )
 
-  const resetDraft = useCallback(() => dispatch({ type: 'reset' }), [])
+  const setSaved = useCallback((next: SavedSituation) => dispatch({ type: 'setSaved', saved: next }), [])
+
+  const resetDraft = useCallback(() => {
+    resetPersistedSituation()
+    dispatch({ type: 'reset' })
+  }, [])
 
   const value = useMemo(
-    () => ({ draft, confirmed, updateDraft, updateVehicle, confirmSections, applyConfirmedChanges, resetDraft }),
-    [draft, confirmed, updateDraft, updateVehicle, confirmSections, applyConfirmedChanges, resetDraft],
+    () => ({
+      draft,
+      confirmed,
+      saved,
+      updateDraft,
+      updateVehicle,
+      confirmSections,
+      applyConfirmedChanges,
+      setSaved,
+      resetDraft,
+    }),
+    [draft, confirmed, saved, updateDraft, updateVehicle, confirmSections, applyConfirmedChanges, setSaved, resetDraft],
   )
 
   return <IntakeContext value={value}>{children}</IntakeContext>

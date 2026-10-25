@@ -1,9 +1,7 @@
-export type AuthProvider = 'email' | 'google' | 'apple'
-
 export type AuthUser = {
+  id: string
   name: string
   email: string
-  provider: AuthProvider
 }
 
 export type SignInLocationState = {

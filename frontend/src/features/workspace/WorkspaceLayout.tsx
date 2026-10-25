@@ -6,6 +6,7 @@ import { BrandLink } from '../../components/layout/BrandLink.tsx'
 import { WorkspaceSidebar } from '../../components/layout/WorkspaceSidebar.tsx'
 import { WorkspaceTabBar } from '../../components/layout/WorkspaceTabBar.tsx'
 import type { SituationSection } from '../../types/intake.ts'
+import { SituationSync } from '../intake/SituationSync.tsx'
 import { SituationEditor } from './SituationEditor.tsx'
 import { SituationIsland } from './SituationIsland.tsx'
 import { SituationSummary } from './SituationSummary.tsx'
@@ -21,6 +22,7 @@ export function WorkspaceLayout() {
 
   return (
     <MotionConfig reducedMotion="user">
+      <SituationSync />
       <div className="flex h-svh flex-col bg-background text-text lg:flex-row lg:gap-3 lg:p-3">
         <WorkspaceSidebar />
 
