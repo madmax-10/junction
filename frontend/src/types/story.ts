@@ -73,4 +73,14 @@ export type SampleSituation = {
   description: string
 }
 
+export type ExperienceHighlight = {
+  id: string
+  vehicle: string
+  category: string
+  situation: string
+  decision: string
+  outcome: string
+  reported: string
+}
+
 export type StoryStatus = 'ongoing' | 'resolved'
