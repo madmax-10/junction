@@ -70,18 +70,32 @@ Never hardcode business data throughout UI components.
 Visual direction:
 Premium, calm, human-centered, minimal, trustworthy, and modern.
 
-Colors (Bordeaux & Champagne). Use the tokens in `frontend/src/styles/index.css`; never hardcode hex values in components.
+Colors (Bordeaux + Petrol Blue, two-tone). Use the tokens in `frontend/src/styles/index.css`; never hardcode hex values in components.
+
+Warm side (brand, people, decisions):
 - Background (`background`): #F8F1E8
 - Surface (`surface`): #FFFFFF
-- Primary text and sidebar (`text`): #321B2A. The desktop sidebar is a dark `bg-text` panel with light text.
-- Primary accent, Bordeaux (`primary`): #8E2943. Use for primary buttons, active states, focus rings, and important interactions.
-- Secondary accent, Champagne (`accent`): #D7B97F. Use sparingly for decorative highlights only, never for text on light surfaces.
-- Soft accent (`primary-light`): #F2E2E6. Use for selected/active backgrounds and icon tiles.
+- Primary text (`text`): #321B2A
+- Primary brand, Bordeaux (`primary`, `primary-hover`): #8E2943. Use for primary buttons, primary actions (send, confirm, "Looks right"), active indicators (sidebar active pill, filled chips, checked icon tiles), the user's own chat bubbles, confirmed/saved states, and form focus.
+- Soft Bordeaux (`primary-light`): #F2E2E6. Use for warm icon tiles, community/story content, and the user's own content.
+- Champagne highlight (`accent`): #D7B97F. Use sparingly for decorative highlights only (underlines, quote marks, dots, hairline dividers on dark surfaces, "needs review" markers), never for text on light surfaces.
+
+Cool side (AI, navigation, selection):
+- Deep Navy (`surface-dark`): #173B4B. The desktop sidebar and other dark callout surfaces, with light (`text-background`/`text-surface`) text.
+- Petrol Blue (`secondary`, `secondary-hover`): #236A80. Use for AI-related interfaces (Assistant avatar, typing indicator, AI-suggested details and follow-ups, chat composer focus, story-match explanations like "Why it matches") and secondary interactions (secondary buttons, text actions like "Edit" and "Clear filters", back links, close buttons, header nav link hovers, links to the Assistant). Also use it for step progress (intake "Step X of N" and progress bar, question numbers), positive status indicators (resolved stories, good-condition and highlight checks, best-condition dots), and informational benefit icons.
+- Cool Mist (`secondary-light`): #E9F1F5. Use for selected surfaces (active filters, active tab backgrounds, highlighted list options, checked choice cards), AI surfaces (assistant chat bubbles, AI suggestion panels, match-reason boxes), showcase/recap side panels (landing story preview, sign-in recap), and positive status badges (`Badge tone="secondary"`).
+
+Neutral:
 - Secondary text (`muted`): #705963
 - Borders (`border`): #E9DDE0
 - Error (`danger`): #B3412F
 
-Focus states: `ring-primary` on light surfaces, `ring-primary-light` on the dark sidebar.
+Balancing warm and cool:
+- Selected surfaces pair a Cool Mist background with Bordeaux foreground (`bg-secondary-light text-primary`).
+- AI proposes in Petrol; once the user confirms or saves something, it becomes Bordeaux.
+- Keep Bordeaux as the dominant brand color; Petrol supports it and should not replace primary actions.
+
+Focus states: match the control's color family. `ring-primary` by default on light surfaces, `ring-secondary` on Petrol (AI/secondary) controls, and `ring-secondary-light` with `ring-offset-surface-dark` on the dark sidebar.
 
 Typography:
 - Manrope for headings.

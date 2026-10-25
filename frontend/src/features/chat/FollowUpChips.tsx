@@ -21,11 +21,12 @@ export function FollowUpChips({ questions, onSelect }: FollowUpChipsProps) {
           <button
             type="button"
             onClick={() => onSelect(question)}
-            className="group inline-flex items-center gap-1.5 rounded-full border border-primary/25 bg-surface px-3.5 py-2 text-left font-body text-sm font-medium text-primary transition-[background-color,border-color] duration-200 ease-out outline-none hover:border-primary/60 hover:bg-primary-light focus-visible:ring-2 focus-visible:ring-primary active:scale-[0.98]"
+            className="group inline-flex items-center gap-1.5 rounded-full border border-secondary/25 bg-surface px-3.5 py-2 text-left font-body text-sm font-medium text-secondary transition-[background-color,border-color] duration-200 ease-out outline-none hover:border-secondary/60 hover:bg-secondary-light focus-visible:ring-2 focus-visible:ring-secondary active:scale-[0.98]"
           >
             {question}
             <ArrowUpRight
               size={14}
+              weight="bold"
               className="shrink-0 transition-transform duration-200 ease-out group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
               aria-hidden="true"
             />

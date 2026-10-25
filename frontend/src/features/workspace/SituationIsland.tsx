@@ -94,7 +94,7 @@ function IslandSection({
         <button
           type="button"
           onClick={() => onEdit(section)}
-          className="mt-2 inline-flex items-center gap-1.5 rounded-full font-body text-sm font-medium text-primary outline-none hover:underline focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+          className="mt-2 inline-flex items-center gap-1.5 rounded-full font-body text-sm font-medium text-secondary outline-none hover:underline focus-visible:ring-2 focus-visible:ring-secondary focus-visible:ring-offset-2"
         >
           <Plus size={14} strokeWidth={2} aria-hidden="true" />
           {addLabel}
@@ -115,7 +115,7 @@ function IslandSection({
               <button
                 type="button"
                 onClick={() => onEdit(section)}
-                className="inline-flex h-8 items-center rounded-full px-3 font-body text-xs font-semibold text-primary transition-colors duration-200 outline-none hover:bg-primary-light focus-visible:ring-2 focus-visible:ring-primary"
+                className="inline-flex h-8 items-center rounded-full px-3 font-body text-xs font-semibold text-secondary transition-colors duration-200 outline-none hover:bg-secondary-light focus-visible:ring-2 focus-visible:ring-secondary"
               >
                 Edit
               </button>
@@ -336,7 +336,7 @@ export function SituationIsland({ className = '', onEdit }: SituationIslandProps
               Damage photos you share in the{' '}
               <Link
                 to={paths.chat}
-                className="rounded font-medium text-primary outline-none hover:underline focus-visible:ring-2 focus-visible:ring-primary"
+                className="rounded font-medium text-secondary outline-none hover:underline focus-visible:ring-2 focus-visible:ring-secondary"
               >
                 Assistant
               </Link>{' '}

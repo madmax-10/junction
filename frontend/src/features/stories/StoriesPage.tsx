@@ -109,7 +109,7 @@ export function StoriesPage() {
                   <button
                     type="button"
                     onClick={() => setFilters(emptyStoryFilters)}
-                    className="rounded-full px-2.5 py-1 font-body text-sm font-semibold text-primary transition-colors duration-200 outline-none hover:bg-primary-light focus-visible:ring-2 focus-visible:ring-primary"
+                    className="rounded-full px-2.5 py-1 font-body text-sm font-semibold text-secondary transition-colors duration-200 outline-none hover:bg-secondary-light focus-visible:ring-2 focus-visible:ring-secondary"
                   >
                     Clear filters
                   </button>

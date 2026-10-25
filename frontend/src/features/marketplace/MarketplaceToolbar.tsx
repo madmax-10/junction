@@ -41,8 +41,8 @@ function FilterSelect<TValue extends string | number>({
         }
         className={`h-11 w-full cursor-pointer appearance-none truncate rounded-full border pr-10 pl-4 font-body text-sm font-medium transition-[background-color,border-color,color] duration-200 ease-out outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
           isActive
-            ? 'border-primary/30 bg-primary-light text-primary'
-            : 'border-border bg-surface text-text hover:border-primary/40'
+            ? 'border-secondary/30 bg-secondary-light text-primary'
+            : 'border-border bg-surface text-text hover:border-secondary/40'
         }`}
       >
         <option value="">{anyLabel}</option>

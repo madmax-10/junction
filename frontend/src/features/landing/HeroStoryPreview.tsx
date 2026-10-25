@@ -15,11 +15,11 @@ export function HeroStoryPreview() {
       initial="hidden"
       animate="visible"
       variants={listVariants}
-      className="relative rounded-[2rem] bg-primary-light p-5 sm:p-7"
+      className="relative rounded-[2rem] bg-secondary-light p-5 sm:p-7"
     >
       <motion.figure
         variants={itemVariants}
-        className="flex gap-3 rounded-2xl rounded-bl-md bg-text p-4 text-surface"
+        className="flex gap-3 rounded-2xl rounded-bl-md bg-surface-dark p-4 text-surface"
       >
         <Quotes size={20} className="mt-0.5 shrink-0 text-accent" aria-hidden="true" />
         <div>

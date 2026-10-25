@@ -23,7 +23,7 @@ export function WorkspaceTabBar() {
                 <>
                   <span
                     className={`grid h-7 w-12 place-items-center rounded-full transition-colors duration-200 ${
-                      isActive ? 'bg-primary-light' : ''
+                      isActive ? 'bg-secondary-light' : ''
                     }`}
                     aria-hidden="true"
                   >

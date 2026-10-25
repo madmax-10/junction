@@ -28,7 +28,7 @@ export function AuthRecap({ className = '' }: { className?: string }) {
       initial="hidden"
       animate="visible"
       variants={staggerVariants(0.07, 0.15)}
-      className={`rounded-[1.75rem] bg-primary-light p-6 sm:p-8 ${className}`}
+      className={`rounded-[1.75rem] bg-secondary-light p-6 sm:p-8 ${className}`}
     >
       <motion.p
         variants={fadeUpVariants}
@@ -82,7 +82,7 @@ export function AuthRecap({ className = '' }: { className?: string }) {
           )}
           <Link
             to={paths.intake}
-            className="mt-5 inline-flex items-center gap-1.5 rounded-full font-body text-sm font-semibold text-primary outline-none hover:underline focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+            className="mt-5 inline-flex items-center gap-1.5 rounded-full font-body text-sm font-semibold text-secondary outline-none hover:underline focus-visible:ring-2 focus-visible:ring-secondary focus-visible:ring-offset-2"
           >
             <PencilSimple size={16} aria-hidden="true" />
             Edit answers
@@ -93,7 +93,7 @@ export function AuthRecap({ className = '' }: { className?: string }) {
       <motion.ul variants={fadeUpVariants} className="mt-6 space-y-3">
         {benefits.map((benefit) => (
           <li key={benefit.text} className="flex items-start gap-3 font-body text-sm text-text/80">
-            <span className="mt-px shrink-0 text-primary" aria-hidden="true">
+            <span className="mt-px shrink-0 text-secondary" aria-hidden="true">
               {benefit.icon}
             </span>
             {benefit.text}

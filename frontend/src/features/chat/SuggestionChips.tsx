@@ -74,12 +74,12 @@ export function SuggestionChips({ suggestions, onConfirm, onDismiss }: Suggestio
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       transition={chipTransition}
-      className="w-full max-w-[85%] rounded-2xl border border-primary/15 bg-primary-light/40 p-3 outline-none sm:max-w-[75%]"
+      className="w-full max-w-[85%] rounded-2xl border border-secondary/15 bg-secondary-light/60 p-3 outline-none sm:max-w-[75%]"
     >
       <div className="flex items-center justify-between gap-3">
         <p
           id={`${suggestions[0]?.id}-title`}
-          className="flex items-center gap-1.5 font-body text-xs font-semibold text-primary"
+          className="flex items-center gap-1.5 font-body text-xs font-semibold text-secondary"
         >
           <ListPlus size={16} aria-hidden="true" />
           Add to My Situation?
@@ -88,7 +88,7 @@ export function SuggestionChips({ suggestions, onConfirm, onDismiss }: Suggestio
           <button
             type="button"
             onClick={() => act(() => pendingIds.forEach(onConfirm))}
-            className="rounded-full px-2 py-1 font-body text-xs font-semibold text-primary transition-colors duration-200 outline-none hover:bg-primary-light focus-visible:ring-2 focus-visible:ring-primary"
+            className="rounded-full px-2 py-1 font-body text-xs font-semibold text-secondary transition-colors duration-200 outline-none hover:bg-secondary-light focus-visible:ring-2 focus-visible:ring-secondary"
           >
             Confirm all
           </button>
@@ -113,7 +113,7 @@ export function SuggestionChips({ suggestions, onConfirm, onDismiss }: Suggestio
               ) : (
                 <span
                   title={`From your message: “${suggestion.evidence}”`}
-                  className="inline-flex h-9 items-center gap-1.5 rounded-full border border-dashed border-primary/40 bg-surface pr-1 pl-3 font-body text-sm"
+                  className="inline-flex h-9 items-center gap-1.5 rounded-full border border-dashed border-secondary/40 bg-surface pr-1 pl-3 font-body text-sm"
                 >
                   <span className="text-xs text-text/55">{label}</span>
                   <span className="font-medium">{value}</span>
@@ -131,7 +131,7 @@ export function SuggestionChips({ suggestions, onConfirm, onDismiss }: Suggestio
                     type="button"
                     onClick={() => act(() => onDismiss(suggestion.id))}
                     aria-label={`Dismiss ${label.toLowerCase()}: ${value}`}
-                    className="grid size-7 place-items-center rounded-full text-text/55 transition-colors duration-200 outline-none hover:bg-background hover:text-text focus-visible:ring-2 focus-visible:ring-primary"
+                    className="grid size-7 place-items-center rounded-full text-text/55 transition-colors duration-200 outline-none hover:bg-secondary-light hover:text-text focus-visible:ring-2 focus-visible:ring-secondary"
                   >
                     <X size={14} weight="bold" aria-hidden="true" />
                   </button>

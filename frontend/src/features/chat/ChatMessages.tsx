@@ -67,7 +67,7 @@ export function AssistantMessage({ message, isLatest, showFollowUps, onFollowUp 
       <GuideAvatar />
       <div className="min-w-0 flex-1">
         <span className="sr-only">Guide said:</span>
-        <div className="max-w-xl space-y-3 rounded-3xl rounded-tl-lg bg-background px-4 py-3 font-body text-[0.95rem] leading-relaxed">
+        <div className="max-w-xl space-y-3 rounded-3xl rounded-tl-lg bg-secondary-light px-4 py-3 font-body text-[0.95rem] leading-relaxed">
           {paragraphs.map((paragraph) => (
             <p key={paragraph}>{paragraph}</p>
           ))}

@@ -41,7 +41,7 @@ export function getConditionOptions(category: ListingCategory): MarketplaceOptio
 }
 
 export const conditionDotClassNames: Record<ListingCondition, string> = {
-  excellent: 'bg-primary',
+  excellent: 'bg-secondary',
   good: 'bg-accent',
   fair: 'bg-text/35',
   minor: 'bg-accent',

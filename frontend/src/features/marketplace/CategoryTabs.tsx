@@ -35,7 +35,7 @@ export function CategoryTabs({ category, counts, onChange }: CategoryTabsProps) 
             )}
             <span
               className={`relative hidden size-10 shrink-0 place-items-center rounded-xl transition-colors duration-200 @md:grid ${
-                isActive ? 'bg-primary-light text-primary' : 'bg-surface/70 text-text/50 group-hover:text-muted'
+                isActive ? 'bg-secondary-light text-primary' : 'bg-surface/70 text-text/50 group-hover:text-muted'
               }`}
               aria-hidden="true"
             >

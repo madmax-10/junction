@@ -37,7 +37,7 @@ export function SituationSummary({ onEdit }: { onEdit: () => void }) {
       <button
         type="button"
         onClick={onEdit}
-        className="inline-flex h-8 shrink-0 items-center gap-1 rounded-full px-2.5 font-body text-xs font-semibold text-primary transition-colors duration-200 outline-none hover:bg-primary-light focus-visible:ring-2 focus-visible:ring-primary"
+        className="inline-flex h-8 shrink-0 items-center gap-1 rounded-full px-2.5 font-body text-xs font-semibold text-secondary transition-colors duration-200 outline-none hover:bg-secondary-light focus-visible:ring-2 focus-visible:ring-secondary"
       >
         <PencilLine size={14} strokeWidth={1.75} aria-hidden="true" />
         {hasDetails ? 'Edit details' : 'Add details'}

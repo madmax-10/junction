@@ -32,12 +32,12 @@ export function ChoiceCard({
 
   return (
     <label
-      className={`relative flex h-full cursor-pointer rounded-2xl border bg-surface transition-[border-color,box-shadow,background-color] duration-200 ease-out has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-primary ${
+      className={`relative flex h-full cursor-pointer rounded-2xl border transition-[border-color,box-shadow,background-color] duration-200 ease-out has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-primary ${
         isTile ? 'flex-col gap-3 p-4' : 'items-center gap-4 px-4 py-3.5'
       } ${
         checked
-          ? 'border-primary shadow-card ring-1 ring-primary'
-          : 'border-border hover:border-primary/35 hover:shadow-card'
+          ? 'border-primary bg-secondary-light shadow-card ring-1 ring-primary'
+          : 'border-border bg-surface hover:border-primary/35 hover:shadow-card'
       }`}
     >
       <input

@@ -20,7 +20,7 @@ type StoryMatchListProps = {
 // Only the latest reply keeps its stories open, so earlier turns fold away unless reopened.
 export function StoryMatchList({ id, matches, isLatest }: StoryMatchListProps) {
   const [openOverride, setOpenOverride] = useState<boolean | null>(null)
-  const setFadeElement = useScrollFade<HTMLUListElement>({ axis: 'x' })
+  const setFadeElement = useScrollFade<HTMLUListElement>({ axis: 'x', fadeStart: false })
   const isOpen = openOverride ?? isLatest
   const count = matches.length
   const listId = `${id}-list`
@@ -32,9 +32,9 @@ export function StoryMatchList({ id, matches, isLatest }: StoryMatchListProps) {
         onClick={() => setOpenOverride(!isOpen)}
         aria-expanded={isOpen}
         aria-controls={listId}
-        className={`${statusClassName} group -mx-2 rounded-full px-2 py-1 transition-colors duration-200 outline-none hover:bg-background hover:text-text focus-visible:ring-2 focus-visible:ring-primary`}
+        className={`${statusClassName} group -mx-2 rounded-full px-2 py-1 transition-colors duration-200 outline-none hover:bg-secondary-light hover:text-text focus-visible:ring-2 focus-visible:ring-secondary`}
       >
-        <UsersThree size={16} className="text-primary" aria-hidden="true" />
+        <UsersThree size={16} className="text-secondary" aria-hidden="true" />
         {count} similar {count === 1 ? 'experience' : 'experiences'}
         <CaretDown
           size={12}
@@ -82,7 +82,7 @@ export function StoryMatchList({ id, matches, isLatest }: StoryMatchListProps) {
 export function NoStoryMatches() {
   return (
     <p className={`${statusClassName} mt-3`}>
-      <MagnifyingGlass size={16} className="text-primary" aria-hidden="true" />
+      <MagnifyingGlass size={16} className="text-secondary" aria-hidden="true" />
       No close matches in community stories yet
     </p>
   )

@@ -9,7 +9,7 @@ export function GuideAvatar({ size = 'sm' }: GuideAvatarProps) {
 
   return (
     <span
-      className={`grid shrink-0 place-items-center bg-primary text-surface ${
+      className={`grid shrink-0 place-items-center bg-secondary text-surface ${
         isMedium ? 'size-10 rounded-2xl' : 'size-8 rounded-xl'
       }`}
       aria-hidden="true"

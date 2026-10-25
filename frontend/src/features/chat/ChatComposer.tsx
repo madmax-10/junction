@@ -141,8 +141,8 @@ export function ChatComposer({ isResponding, onSend, textareaRef }: ChatComposer
           onDrop={handleDrop}
           className={`relative rounded-3xl border bg-surface/75 shadow-card-hover backdrop-blur-xl transition-[border-color,box-shadow] duration-200 ease-out ${
             isDragging
-              ? 'border-primary ring-1 ring-primary'
-              : 'border-border focus-within:border-primary focus-within:ring-1 focus-within:ring-primary'
+              ? 'border-secondary ring-1 ring-secondary'
+              : 'border-border focus-within:border-secondary focus-within:ring-1 focus-within:ring-secondary'
           }`}
         >
           <AnimatePresence initial={false}>
@@ -211,7 +211,7 @@ export function ChatComposer({ isResponding, onSend, textareaRef }: ChatComposer
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isAtImageLimit}
-                className="inline-flex h-10 items-center gap-2 rounded-full px-3 font-body text-sm font-medium text-muted transition-colors duration-200 outline-none hover:bg-primary-light hover:text-primary focus-visible:ring-2 focus-visible:ring-primary disabled:pointer-events-none disabled:opacity-40"
+                className="inline-flex h-10 items-center gap-2 rounded-full px-3 font-body text-sm font-medium text-muted transition-colors duration-200 outline-none hover:bg-secondary-light hover:text-secondary focus-visible:ring-2 focus-visible:ring-secondary disabled:pointer-events-none disabled:opacity-40"
               >
                 <ImageSquare size={20} aria-hidden="true" />
                 Add photos
@@ -229,7 +229,7 @@ export function ChatComposer({ isResponding, onSend, textareaRef }: ChatComposer
               aria-label={isResponding ? 'Waiting for reply' : 'Send message'}
               className="grid size-10 place-items-center rounded-full bg-primary text-surface shadow-card transition-[background-color,transform,box-shadow] duration-200 ease-out outline-none hover:bg-primary-hover focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 active:scale-95 disabled:pointer-events-none disabled:bg-text/10 disabled:text-text/40 disabled:shadow-none"
             >
-              <ArrowUp size={18} aria-hidden="true" />
+              <ArrowUp size={18} weight="bold" aria-hidden="true" />
             </button>
           </div>
 
@@ -251,9 +251,9 @@ export function ChatComposer({ isResponding, onSend, textareaRef }: ChatComposer
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={thumbnailTransition}
-                className="pointer-events-none absolute inset-0 grid place-items-center rounded-3xl bg-primary-light/95"
+                className="pointer-events-none absolute inset-0 grid place-items-center rounded-3xl bg-secondary-light/95"
               >
-                <span className="flex items-center gap-2 font-body text-sm font-semibold text-primary">
+                <span className="flex items-center gap-2 font-body text-sm font-semibold text-secondary">
                   <ImageSquare size={20} aria-hidden="true" />
                   Drop photos to add them
                 </span>

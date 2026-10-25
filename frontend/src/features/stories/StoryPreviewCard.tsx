@@ -51,8 +51,8 @@ function MatchedStoryCard({ story, readMoreHref }: { story: StoryPreview; readMo
         </div>
       </dl>
 
-      <div className="mt-3 rounded-xl bg-primary-light/70 px-3 py-2.5 font-body text-xs">
-        <p className="flex items-center gap-1.5 font-semibold text-primary">
+      <div className="mt-3 rounded-xl bg-secondary-light px-3 py-2.5 font-body text-xs">
+        <p className="flex items-center gap-1.5 font-semibold text-secondary">
           <CheckCircle size={14} weight="fill" className="shrink-0" aria-hidden="true" />
           Why it matches you
         </p>
@@ -95,7 +95,7 @@ export function StoryPreviewCard({ story, variant = 'full', readMoreHref }: Stor
             {story.decision}
           </p>
           <p className="mt-2 flex items-center gap-1.5 font-body text-xs text-muted">
-            <CheckCircle size={14} className="shrink-0 text-primary" aria-hidden="true" />
+            <CheckCircle size={14} className="shrink-0 text-secondary" aria-hidden="true" />
             <span className="sr-only">Why it matches:</span>
             {story.matchReasons.join(' · ')}
           </p>
@@ -118,7 +118,7 @@ export function StoryPreviewCard({ story, variant = 'full', readMoreHref }: Stor
             <ul className="flex flex-wrap gap-1.5">
               {story.matchReasons.map((reason) => (
                 <li key={reason}>
-                  <Badge icon={<CheckCircle size={14} className="text-primary" aria-hidden="true" />}>
+                  <Badge icon={<CheckCircle size={14} className="text-secondary" aria-hidden="true" />}>
                     {reason}
                   </Badge>
                 </li>

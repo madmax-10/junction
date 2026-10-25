@@ -22,7 +22,7 @@ const asideClassName = 'font-normal tracking-normal normal-case'
 
 function StatusBadge({ status }: { status: StoryStatus }) {
   return status === 'resolved' ? (
-    <Badge tone="accent" icon={<CheckCircle size={14} weight="fill" aria-hidden="true" />}>
+    <Badge tone="secondary" icon={<CheckCircle size={14} weight="fill" aria-hidden="true" />}>
       {statusLabels.resolved}
     </Badge>
   ) : (

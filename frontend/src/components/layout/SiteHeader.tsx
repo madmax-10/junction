@@ -6,7 +6,7 @@ import { AccountMenu } from './AccountMenu.tsx'
 import { BrandLink } from './BrandLink.tsx'
 
 const navLinkClassName =
-  'rounded-full px-3 py-2 font-body text-sm font-medium text-text/80 transition-colors duration-200 outline-none hover:text-primary focus-visible:ring-2 focus-visible:ring-primary'
+  'rounded-full px-3 py-2 font-body text-sm font-medium text-text/80 transition-colors duration-200 outline-none hover:text-secondary focus-visible:ring-2 focus-visible:ring-secondary'
 
 export function SiteHeader() {
   const { user } = useAuth()

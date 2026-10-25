@@ -13,7 +13,7 @@ export function IntakeQuestion({ number, title, hint, children }: IntakeQuestion
   return (
     <motion.fieldset variants={fadeUpVariants} className="min-w-0">
       <legend className="flex items-baseline gap-3">
-        <span className="font-body text-sm font-semibold text-primary tabular-nums" aria-hidden="true">
+        <span className="font-body text-sm font-semibold text-secondary tabular-nums" aria-hidden="true">
           0{number}
         </span>
         <span className="font-heading text-lg font-bold tracking-tight sm:text-xl">{title}</span>

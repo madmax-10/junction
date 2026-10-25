@@ -251,7 +251,7 @@ export function Combobox({
                     }}
                     onClick={() => select(item.value)}
                     className={`flex cursor-pointer items-center justify-between gap-3 rounded-xl px-3 py-2.5 font-body text-sm transition-colors duration-150 ${
-                      isActive ? 'bg-primary-light/70' : ''
+                      isActive ? 'bg-secondary-light' : ''
                     } ${isSelected ? 'font-medium text-primary' : 'text-text'}`}
                   >
                     {item.isCustom ? (

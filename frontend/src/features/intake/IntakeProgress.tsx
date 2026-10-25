@@ -9,7 +9,7 @@ type IntakeProgressProps = {
 export function IntakeProgress({ currentStep, totalSteps }: IntakeProgressProps) {
   return (
     <div className="flex items-center gap-3">
-      <p className="font-body text-sm font-semibold text-primary">
+      <p className="font-body text-sm font-semibold text-secondary">
         Step {currentStep} of {totalSteps}
       </p>
       <div
@@ -26,7 +26,7 @@ export function IntakeProgress({ currentStep, totalSteps }: IntakeProgressProps)
             <span key={step} className="h-1.5 w-8 overflow-hidden rounded-full bg-text/10">
               {step <= currentStep && (
                 <motion.span
-                  className="block h-full origin-left rounded-full bg-primary"
+                  className="block h-full origin-left rounded-full bg-secondary"
                   initial={{ scaleX: step === currentStep ? 0 : 1 }}
                   animate={{ scaleX: 1 }}
                   transition={{ duration: 0.35, delay: 0.15, ease: easeOutQuint }}

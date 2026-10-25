@@ -8,7 +8,7 @@ const appName = 'Junction'
 
 const toneClassNames = {
   default: 'text-text focus-visible:ring-primary focus-visible:ring-offset-background',
-  inverse: 'text-background focus-visible:ring-primary-light focus-visible:ring-offset-text',
+  inverse: 'text-background focus-visible:ring-secondary-light focus-visible:ring-offset-surface-dark',
 } as const
 
 type BrandLinkProps = {

@@ -57,12 +57,18 @@ export function ChatEmptyState({ onSelectExample }: ChatEmptyStateProps) {
             <button
               type="button"
               onClick={() => onSelectExample(suggestion.text)}
-              className={`group flex h-full w-full items-start gap-3 rounded-2xl border p-3.5 text-left transition-[border-color,box-shadow,transform] duration-200 ease-out outline-none hover:-translate-y-0.5 hover:border-primary/35 hover:shadow-card focus-visible:border-primary focus-visible:ring-1 focus-visible:ring-primary active:translate-y-0 ${
-                suggestion.isOwn ? 'border-primary/30 bg-primary-light/40' : 'border-border bg-surface'
+              className={`group flex h-full w-full items-start gap-3 rounded-2xl border p-3.5 text-left transition-[border-color,box-shadow,transform] duration-200 ease-out outline-none hover:-translate-y-0.5 hover:shadow-card focus-visible:ring-1 active:translate-y-0 ${
+                suggestion.isOwn
+                  ? 'border-primary/30 bg-primary-light/40 hover:border-primary/35 focus-visible:border-primary focus-visible:ring-primary'
+                  : 'border-border bg-surface hover:border-secondary/35 focus-visible:border-secondary focus-visible:ring-secondary'
               }`}
             >
               <span
-                className="grid size-8 shrink-0 place-items-center rounded-xl bg-primary-light text-primary transition-colors duration-200 group-hover:bg-primary group-hover:text-surface"
+                className={`grid size-8 shrink-0 place-items-center rounded-xl transition-colors duration-200 group-hover:text-surface ${
+                  suggestion.isOwn
+                    ? 'bg-primary-light text-primary group-hover:bg-primary'
+                    : 'bg-secondary-light text-secondary group-hover:bg-secondary'
+                }`}
                 aria-hidden="true"
               >
                 {suggestion.icon}
@@ -77,7 +83,10 @@ export function ChatEmptyState({ onSelectExample }: ChatEmptyStateProps) {
               </span>
               <ArrowUpRight
                 size={16}
-                className="mt-0.5 shrink-0 text-primary opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-visible:opacity-100"
+                weight="bold"
+                className={`mt-0.5 shrink-0 opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-visible:opacity-100 ${
+                  suggestion.isOwn ? 'text-primary' : 'text-secondary'
+                }`}
                 aria-hidden="true"
               />
             </button>

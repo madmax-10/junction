@@ -9,13 +9,13 @@ export function TypingIndicator() {
       <GuideAvatar />
       <div
         role="status"
-        className="flex items-center gap-3 rounded-3xl rounded-tl-lg bg-background px-4 py-3"
+        className="flex items-center gap-3 rounded-3xl rounded-tl-lg bg-secondary-light px-4 py-3"
       >
         <span className="flex items-center gap-1" aria-hidden="true">
           {dots.map((dot) => (
             <motion.span
               key={dot}
-              className="size-1.5 rounded-full bg-primary"
+              className="size-1.5 rounded-full bg-secondary"
               animate={{ opacity: [0.3, 1, 0.3], y: [0, -3, 0] }}
               transition={{ duration: 1, repeat: Infinity, delay: dot * 0.15, ease: 'easeInOut' }}
             />

@@ -6,12 +6,16 @@
   --color-text: #321B2A;
   --color-muted: #705963;
   --color-border: #E9DDE0;
+  --color-surface-dark: #173B4B;
   --color-primary: #8E2943;
   --color-primary-light: #F2E2E6;
+  --color-secondary: #236A80;
+  --color-secondary-light: #E9F1F5;
   --color-accent: #D7B97F;
   --color-danger: #B3412F;
 
   --color-primary-hover: color-mix(in oklab, var(--color-primary) 82%, black);
+  --color-secondary-hover: color-mix(in oklab, var(--color-secondary) 82%, black);
 
   --font-sans: "Inter", sans-serif;
   --font-body: "Inter", sans-serif;

@@ -44,7 +44,7 @@ function DamageFlag({ isGood, children }: { isGood: boolean; children: ReactNode
   const Icon = isGood ? CheckCircle : WarningCircle
   return (
     <span className="inline-flex items-center gap-1.5">
-      <Icon size={16} weight="fill" className={isGood ? 'text-primary' : 'text-danger'} aria-hidden="true" />
+      <Icon size={16} weight="fill" className={isGood ? 'text-secondary' : 'text-danger'} aria-hidden="true" />
       {children}
     </span>
   )
@@ -142,7 +142,7 @@ function DetailDialog({ listing, onClose }: { listing: MarketplaceListing; onClo
           type="button"
           onClick={onClose}
           aria-label="Close listing"
-          className="absolute top-4 right-4 z-10 grid size-10 place-items-center rounded-full bg-surface text-text shadow-card transition-colors duration-200 outline-none hover:text-primary focus-visible:ring-2 focus-visible:ring-primary"
+          className="absolute top-4 right-4 z-10 grid size-10 place-items-center rounded-full bg-surface text-text shadow-card transition-colors duration-200 outline-none hover:text-secondary focus-visible:ring-2 focus-visible:ring-secondary"
         >
           <X size={18} weight="bold" aria-hidden="true" />
         </button>
@@ -197,7 +197,7 @@ function DetailDialog({ listing, onClose }: { listing: MarketplaceListing; onClo
                       key={highlight}
                       className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 font-body text-sm"
                     >
-                      <Check size={14} weight="bold" className="text-primary" aria-hidden="true" />
+                      <Check size={14} weight="bold" className="text-secondary" aria-hidden="true" />
                       {highlight}
                     </li>
                   ))}

@@ -65,7 +65,7 @@ function SocialButton({ icon, label, isPending, disabled, onClick }: SocialButto
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="inline-flex h-12 w-full items-center justify-center gap-2.5 rounded-full border border-text/15 bg-surface font-body text-sm font-semibold transition-[border-color,background-color,transform] duration-200 ease-out outline-none hover:border-primary/40 hover:bg-background focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-60"
+      className="inline-flex h-12 w-full items-center justify-center gap-2.5 rounded-full border border-text/15 bg-surface font-body text-sm font-semibold transition-[border-color,background-color,transform] duration-200 ease-out outline-none hover:border-secondary/40 hover:bg-background focus-visible:ring-2 focus-visible:ring-secondary focus-visible:ring-offset-2 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-60"
     >
       {isPending ? (
         <CircleNotch size={18} className="animate-spin" aria-hidden="true" />
@@ -173,7 +173,7 @@ export function SignInPage() {
         >
           <Link
             to={paths.intakeInterests}
-            className="mb-4 inline-flex items-center gap-1.5 rounded-full font-body text-sm font-medium text-muted outline-none hover:text-primary focus-visible:ring-2 focus-visible:ring-primary"
+            className="mb-4 inline-flex items-center gap-1.5 rounded-full font-body text-sm font-medium text-muted outline-none hover:text-secondary focus-visible:ring-2 focus-visible:ring-secondary"
           >
             <ArrowLeft size={16} aria-hidden="true" />
             Back to your answers
