@@ -1,4 +1,5 @@
-import type { StoryPreview } from './story.ts'
+import type { DetailSuggestion } from './extraction.ts'
+import type { StoryMatch, StoryMatchStatus } from './story.ts'
 
 export type ChatImage = {
   id: string
@@ -12,12 +13,14 @@ export type ChatMessage =
       role: 'user'
       text: string
       images: ChatImage[]
+      suggestions: DetailSuggestion[]
     }
   | {
       id: string
       role: 'assistant'
       text: string
-      stories: StoryPreview[]
+      matchStatus: StoryMatchStatus
+      matches: StoryMatch[]
       followUps: string[]
     }
 

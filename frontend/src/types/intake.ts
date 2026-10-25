@@ -20,3 +20,18 @@ export type IntakeDraft = {
   interests: LearningInterest[]
   question: string
 }
+
+export type IntakeFields = Omit<IntakeDraft, 'vehicle'>
+
+export type SituationField = keyof IntakeFields | keyof VehicleInfo
+
+export type SituationSection = 'vehicle' | 'accident' | 'insurance' | 'concerns'
+
+export type SectionStatus = 'confirmed' | 'unconfirmed' | 'missing'
+
+export type FieldConfirmation = Record<SituationField, boolean>
+
+export type SituationChanges = {
+  fields?: Partial<IntakeFields>
+  vehicle?: Partial<VehicleInfo>
+}

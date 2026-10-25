@@ -1,15 +1,25 @@
-import { UsersThree } from '@phosphor-icons/react'
 import type { ChatImage, ChatMessage } from '../../types/chat.ts'
-import { StoryPreviewCard } from '../stories/StoryPreviewCard.tsx'
+import type { DetailSuggestion } from '../../types/extraction.ts'
 import { FollowUpChips } from './FollowUpChips.tsx'
 import { GuideAvatar } from './GuideAvatar.tsx'
+import { NoStoryMatches, StoryMatchList } from './StoryMatchList.tsx'
+import { SuggestionChips } from './SuggestionChips.tsx'
 
 type UserMessageProps = {
   text: string
   images: ChatImage[]
+  suggestions: DetailSuggestion[]
+  onConfirmSuggestion: (suggestionId: string) => void
+  onDismissSuggestion: (suggestionId: string) => void
 }
 
-export function UserMessage({ text, images }: UserMessageProps) {
+export function UserMessage({
+  text,
+  images,
+  suggestions,
+  onConfirmSuggestion,
+  onDismissSuggestion,
+}: UserMessageProps) {
   return (
     <div className="flex flex-col items-end gap-2">
       <span className="sr-only">You said:</span>
@@ -30,6 +40,13 @@ export function UserMessage({ text, images }: UserMessageProps) {
         <p className="max-w-[85%] rounded-3xl rounded-br-lg bg-primary px-4 py-3 font-body text-[0.95rem] leading-relaxed break-words whitespace-pre-wrap text-surface sm:max-w-[75%]">
           {text}
         </p>
+      )}
+      {suggestions.length > 0 && (
+        <SuggestionChips
+          suggestions={suggestions}
+          onConfirm={onConfirmSuggestion}
+          onDismiss={onDismissSuggestion}
+        />
       )}
     </div>
   )
@@ -55,21 +72,8 @@ export function AssistantMessage({ message, showFollowUps, onFollowUp }: Assista
           ))}
         </div>
 
-        {message.stories.length > 0 && (
-          <section aria-label="Similar experiences" className="mt-3 lg:hidden">
-            <p className="flex items-center gap-1.5 font-body text-xs font-medium text-text/60">
-              <UsersThree size={16} className="text-primary" aria-hidden="true" />
-              {message.stories.length} similar experiences
-            </p>
-            <ul className="mt-2 flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2">
-              {message.stories.map((story) => (
-                <li key={story.id} className="w-[16.5rem] shrink-0 snap-start">
-                  <StoryPreviewCard story={story} variant="compact" />
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
+        {message.matchStatus === 'matched' && <StoryMatchList matches={message.matches} />}
+        {message.matchStatus === 'no-match' && <NoStoryMatches />}
 
         {showFollowUps && message.followUps.length > 0 && (
           <FollowUpChips questions={message.followUps} onSelect={onFollowUp} />

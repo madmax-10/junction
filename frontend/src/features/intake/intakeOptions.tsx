@@ -77,6 +77,16 @@ export const situationOptions: IntakeOption<CurrentSituation>[] = [
 
 export const notSureInterest: LearningInterest = 'not-sure'
 
+export function toggleInterest(current: LearningInterest[], interest: LearningInterest) {
+  if (current.includes(interest)) {
+    return current.filter((item) => item !== interest)
+  }
+  if (interest === notSureInterest) {
+    return [notSureInterest]
+  }
+  return [...current.filter((item) => item !== notSureInterest), interest]
+}
+
 export const interestOptions: IntakeOption<LearningInterest>[] = [
   {
     value: 'repaired',

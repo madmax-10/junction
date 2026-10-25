@@ -2,11 +2,12 @@ import { MagnifyingGlass, UsersThree } from '@phosphor-icons/react'
 import { AnimatePresence, motion } from 'motion/react'
 import { Badge } from '../../components/ui/Badge.tsx'
 import { fadeUpVariants, staggerVariants } from '../../styles/motion.ts'
-import type { StoryPreview } from '../../types/story.ts'
+import type { StoryMatch } from '../../types/story.ts'
 import { StoryPreviewCard } from '../stories/StoryPreviewCard.tsx'
+import { toStoryPreview } from '../stories/storyPreview.ts'
 
 type ExperiencePanelProps = {
-  stories: StoryPreview[]
+  matches: StoryMatch[]
   resultsKey: string | null
   isSearching: boolean
 }
@@ -34,8 +35,8 @@ function PlaceholderCards({ isPulsing }: { isPulsing: boolean }) {
   )
 }
 
-export function ExperiencePanel({ stories, resultsKey, isSearching }: ExperiencePanelProps) {
-  const hasStories = stories.length > 0
+export function ExperiencePanel({ matches, resultsKey, isSearching }: ExperiencePanelProps) {
+  const hasStories = matches.length > 0
 
   return (
     <aside
@@ -81,9 +82,9 @@ export function ExperiencePanel({ stories, resultsKey, isSearching }: Experience
               variants={staggerVariants(0.08)}
               className="flex flex-col gap-3"
             >
-              {stories.map((story) => (
-                <motion.li key={story.id} variants={fadeUpVariants}>
-                  <StoryPreviewCard story={story} variant="compact" />
+              {matches.map((match) => (
+                <motion.li key={match.story.id} variants={fadeUpVariants}>
+                  <StoryPreviewCard story={toStoryPreview(match)} variant="compact" />
                 </motion.li>
               ))}
             </motion.ul>

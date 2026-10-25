@@ -1,98 +1,102 @@
-import type { StoryPreview } from '../types/story.ts'
-import { sampleStoryPreviews } from './sampleStories.ts'
+import type { CommunityStory } from '../types/story.ts'
 
 // Synthetic demo content. These are not real people or real outcomes.
 
-const [rearEndRedLight, stopAndGo, totalLossCorolla] = sampleStoryPreviews
-
-const frameDamageRepair: StoryPreview = {
-  id: 'sample-frame-damage-repair',
-  title: 'Frame damage after a side impact',
-  vehicle: '2017 Subaru Outback',
-  decision: 'Repaired it at a certified shop',
-  outcome: 'Drives straight, disclosed the history when selling later',
-  matchReasons: ['Major repair', 'Body shop estimate'],
-  isSample: true,
-}
-
-const negotiatedPayout: StoryPreview = {
-  id: 'sample-negotiated-payout',
-  title: 'Pushed back on a total loss offer',
-  vehicle: '2016 Ford Escape',
-  decision: 'Sent the insurer local listings for the same model',
-  outcome: 'Payout went up by about $1,400',
-  matchReasons: ['Total loss', 'Insurer negotiation'],
-  isSample: true,
-}
-
-const keptTotaledCar: StoryPreview = {
-  id: 'sample-kept-totaled-car',
-  title: 'Kept the car after it was totaled',
-  vehicle: '2012 Toyota Camry',
-  decision: 'Took a lower payout and kept the car',
-  outcome: 'Fixed it at an independent shop for less',
-  matchReasons: ['Total loss', 'Older sedan'],
-  isSample: true,
-}
-
-const soldAsIs: StoryPreview = {
-  id: 'sample-sold-as-is',
-  title: 'Sold a damaged car as-is',
-  vehicle: '2015 Nissan Altima',
-  decision: 'Collected three dealer offers in one day',
-  outcome: 'Took the highest and skipped the repair',
-  matchReasons: ['Selling damaged car', 'Front-end damage'],
-  isSample: true,
-}
-
-const privateSale: StoryPreview = {
-  id: 'sample-private-sale',
-  title: 'Fixed the cosmetics, then sold privately',
-  vehicle: '2018 Hyundai Elantra',
-  decision: 'Paid for a bumper repair before listing',
-  outcome: 'Sold in two weeks for more than trade-in offers',
-  matchReasons: ['Selling damaged car', 'Minor damage'],
-  isSample: true,
-}
-
-const adjusterInWriting: StoryPreview = {
-  id: 'sample-adjuster-in-writing',
-  title: 'Asked the adjuster for everything in writing',
-  vehicle: '2020 Kia Forte',
-  decision: 'Requested the full valuation report',
-  outcome: 'Found two errors in the comparable cars',
-  matchReasons: ['Insurance claim', 'Adjuster valuation'],
-  isSample: true,
-}
-
-const hailRepair: StoryPreview = {
-  id: 'sample-hail-repair',
-  title: 'Hail dents across the roof and hood',
-  vehicle: '2019 Toyota RAV4',
-  decision: 'Paintless dent repair through the claim',
-  outcome: 'Done in four days, no repainting needed',
-  matchReasons: ['Weather damage', 'Hail'],
-  isSample: true,
-}
-
-const floodTotalLoss: StoryPreview = {
-  id: 'sample-flood-total-loss',
-  title: 'Water reached the seats during a flood',
-  vehicle: '2014 Honda Accord',
-  decision: 'Accepted the insurer’s total loss',
-  outcome: 'Put the payout toward a certified used car',
-  matchReasons: ['Weather damage', 'Total loss'],
-  isSample: true,
-}
-
-export const chatTopics = ['repair', 'total-loss', 'sell', 'insurance', 'weather', 'general'] as const
-export type ChatTopic = (typeof chatTopics)[number]
-
-export const experiencesByTopic: Record<ChatTopic, StoryPreview[]> = {
-  repair: [rearEndRedLight, frameDamageRepair, stopAndGo],
-  'total-loss': [negotiatedPayout, totalLossCorolla, keptTotaledCar],
-  sell: [soldAsIs, privateSale, keptTotaledCar],
-  insurance: [adjusterInWriting, stopAndGo, negotiatedPayout],
-  weather: [hailRepair, floodTotalLoss, adjusterInWriting],
-  general: [rearEndRedLight, totalLossCorolla, soldAsIs],
-}
+export const communityStories: CommunityStory[] = [
+  {
+    id: 'sample-rear-end-red-light',
+    title: 'Rear-ended at a red light',
+    vehicle: { year: 2019, make: 'Honda', model: 'Civic', mileage: 42_000 },
+    accident: { type: 'rear-end', damage: ['rear'], severity: 'moderate' },
+    claim: { path: 'other-driver', status: 'repair-estimate' },
+    decision: {
+      kind: 'repaired',
+      summary: 'Had the $4,600 repair done through the other driver’s insurer',
+    },
+    outcome: {
+      summary: 'Back on the road in three weeks, with the rental covered',
+      reportedAfter: '2 months later',
+    },
+    isSample: true,
+  },
+  {
+    id: 'sample-total-loss-corolla',
+    title: 'Rear bumper and trunk crushed',
+    vehicle: { year: 2014, make: 'Toyota', model: 'Corolla', mileage: 148_000 },
+    accident: { type: 'rear-end', damage: ['rear', 'frame'], severity: 'severe' },
+    claim: { path: 'other-driver', status: 'total-loss' },
+    decision: {
+      kind: 'replaced',
+      summary: 'Accepted the total loss and bought a used sedan',
+    },
+    outcome: {
+      summary: 'The $7,900 payout covered most of a similar used car',
+      reportedAfter: '3 months later',
+    },
+    isSample: true,
+  },
+  {
+    id: 'sample-side-impact-frame',
+    title: 'T-boned at an intersection',
+    vehicle: { year: 2017, make: 'Subaru', model: 'Outback', mileage: 88_000 },
+    accident: { type: 'side-impact', damage: ['side', 'frame'], severity: 'severe' },
+    claim: { path: 'own-policy', status: 'repair-estimate' },
+    decision: {
+      kind: 'repaired',
+      summary: 'Had the frame repaired at a certified shop',
+    },
+    outcome: {
+      summary: 'Took six weeks and drives straight, but a later trade-in offer came in low',
+      reportedAfter: '1 year later',
+    },
+    isSample: true,
+  },
+  {
+    id: 'sample-negotiated-payout',
+    title: 'Pushed back on a total loss offer',
+    vehicle: { year: 2016, make: 'Ford', model: 'Escape', mileage: 97_000 },
+    accident: { type: 'front-collision', damage: ['front-end', 'hood', 'airbags'], severity: 'severe' },
+    claim: { path: 'own-policy', status: 'total-loss' },
+    decision: {
+      kind: 'insurance-settlement',
+      summary: 'Sent the insurer listings for similar Escapes nearby',
+    },
+    outcome: {
+      summary: 'The payout rose by about $1,400 after two weeks',
+      reportedAfter: '1 month later',
+    },
+    isSample: true,
+  },
+  {
+    id: 'sample-sold-as-is',
+    title: 'Sold a damaged car as-is',
+    vehicle: { year: 2015, make: 'Nissan', model: 'Altima', mileage: 112_000 },
+    accident: { type: 'front-collision', damage: ['front-end', 'hood'], severity: 'moderate' },
+    claim: { path: 'own-policy', status: 'repair-estimate' },
+    decision: {
+      kind: 'sold',
+      summary: 'Sold it as-is instead of paying for the $5,800 repair',
+    },
+    outcome: {
+      summary: 'Took the best of three dealer offers, $3,200, the same day',
+      reportedAfter: '2 weeks later',
+    },
+    isSample: true,
+  },
+  {
+    id: 'sample-hail-roof',
+    title: 'Hail dents across the roof and hood',
+    vehicle: { year: 2019, make: 'Toyota', model: 'RAV4', mileage: 51_000 },
+    accident: { type: 'weather-damage', damage: ['roof', 'hood'], severity: 'minor' },
+    claim: { path: 'own-policy', status: 'repair-estimate' },
+    decision: {
+      kind: 'repaired',
+      summary: 'Chose paintless dent repair through the claim',
+    },
+    outcome: {
+      summary: 'Done in four days with no repainting, after the deductible',
+      reportedAfter: '3 months later',
+    },
+    isSample: true,
+  },
+]

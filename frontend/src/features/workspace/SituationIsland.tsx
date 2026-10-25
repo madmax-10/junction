@@ -1,47 +1,182 @@
-import { Car, CheckCircle, Gauge, PencilSimple, ShieldCheck, Warning } from '@phosphor-icons/react'
+import {
+  BadgeCheck,
+  Car,
+  Check,
+  CircleDashed,
+  Images,
+  MessagesSquare,
+  PencilLine,
+  Plus,
+  ShieldCheck,
+  TriangleAlert,
+  type LucideIcon,
+} from 'lucide-react'
 import { motion } from 'motion/react'
 import type { ReactNode } from 'react'
 import { Link } from 'react-router'
 import { paths } from '../../app/paths.ts'
+import { Button } from '../../components/ui/Button.tsx'
 import { fadeUpVariants, staggerVariants } from '../../styles/motion.ts'
+import type { SectionStatus, SituationSection } from '../../types/intake.ts'
+import { useChat } from '../chat/ChatContext.ts'
 import { useIntakeDraft } from '../intake/IntakeContext.ts'
-import { formatMileage, getVehicleName } from '../intake/intakeHighlights.ts'
+import { formatMileage } from '../intake/intakeHighlights.ts'
 import { accidentTypeOptions, getOptionLabel, interestOptions, situationOptions } from '../intake/intakeOptions.tsx'
+import { getSectionStatus } from '../intake/situationFields.ts'
 
-type SituationFact = {
-  id: string
-  label: string
-  value: string | null
-  icon: ReactNode
+type SituationIslandProps = {
+  className?: string
+  onEdit: (section: SituationSection | null) => void
 }
 
-const sectionLabelClassName = 'font-body text-xs font-semibold tracking-wide text-text/55 uppercase'
+const maxVisiblePhotos = 8
+const iconStroke = 1.75
 
-export function SituationIsland({ className = '' }: { className?: string }) {
-  const { draft } = useIntakeDraft()
-  const mileage = formatMileage(draft.vehicle.mileage)
+function StatusTag({ status }: { status: SectionStatus }) {
+  if (status === 'confirmed') {
+    return (
+      <span className="inline-flex shrink-0 items-center gap-1 font-body text-[0.7rem] font-semibold text-primary">
+        <BadgeCheck size={14} strokeWidth={2} aria-hidden="true" />
+        Confirmed
+      </span>
+    )
+  }
+  if (status === 'unconfirmed') {
+    return (
+      <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-dashed border-text/25 px-2 py-0.5 font-body text-[0.7rem] font-semibold text-text/65">
+        <CircleDashed size={12} strokeWidth={2} aria-hidden="true" />
+        Unconfirmed
+      </span>
+    )
+  }
+  return <span className="shrink-0 font-body text-[0.7rem] font-medium text-text/45">Not added</span>
+}
+
+function IslandSection({
+  section,
+  title,
+  icon: Icon,
+  status,
+  addLabel,
+  onEdit,
+  onConfirm,
+  children,
+}: {
+  section: SituationSection
+  title: string
+  icon: LucideIcon
+  status: SectionStatus
+  addLabel: string
+  onEdit: (section: SituationSection) => void
+  onConfirm: (section: SituationSection) => void
+  children: ReactNode
+}) {
+  const titleId = `situation-${section}-title`
+
+  return (
+    <motion.section
+      variants={fadeUpVariants}
+      aria-labelledby={titleId}
+      className={`rounded-2xl p-3.5 ${
+        status === 'unconfirmed' ? 'border border-dashed border-text/20 bg-surface' : 'bg-background/70'
+      }`}
+    >
+      <div className="flex items-center justify-between gap-2">
+        <h3 id={titleId} className="flex min-w-0 items-center gap-2 font-body text-sm font-semibold">
+          <Icon size={16} strokeWidth={iconStroke} className="shrink-0 text-primary" aria-hidden="true" />
+          {title}
+        </h3>
+        <StatusTag status={status} />
+      </div>
+
+      {status === 'missing' ? (
+        <button
+          type="button"
+          onClick={() => onEdit(section)}
+          className="mt-2 inline-flex items-center gap-1.5 rounded-full font-body text-sm font-medium text-primary outline-none hover:underline focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+        >
+          <Plus size={14} strokeWidth={2} aria-hidden="true" />
+          {addLabel}
+        </button>
+      ) : (
+        <>
+          <div className="mt-2.5">{children}</div>
+          {status === 'unconfirmed' && (
+            <div className="mt-3 flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => onConfirm(section)}
+                className="inline-flex h-8 items-center gap-1.5 rounded-full bg-primary px-3 font-body text-xs font-semibold text-surface transition-colors duration-200 outline-none hover:bg-primary-hover focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+              >
+                <Check size={14} strokeWidth={2.25} aria-hidden="true" />
+                Looks right
+              </button>
+              <button
+                type="button"
+                onClick={() => onEdit(section)}
+                className="inline-flex h-8 items-center rounded-full px-3 font-body text-xs font-semibold text-primary transition-colors duration-200 outline-none hover:bg-primary-light focus-visible:ring-2 focus-visible:ring-primary"
+              >
+                Edit
+              </button>
+            </div>
+          )}
+        </>
+      )}
+    </motion.section>
+  )
+}
+
+function VehicleDetail({ label, value }: { label: string; value: string | null }) {
+  return (
+    <div className="min-w-0">
+      <dt className="font-body text-[0.7rem] text-text/55">{label}</dt>
+      <dd
+        title={value ?? undefined}
+        className={`truncate font-body text-sm ${value ? 'font-medium' : 'text-text/40'}`}
+      >
+        {value ?? 'Not added'}
+      </dd>
+    </div>
+  )
+}
+
+export function SituationIsland({ className = '', onEdit }: SituationIslandProps) {
+  const { draft, confirmed, confirmSections } = useIntakeDraft()
+  const { messages } = useChat()
+  const { vehicle } = draft
+
+  const mileage = formatMileage(vehicle.mileage)
+  const model = [vehicle.model, vehicle.trim.trim()].filter(Boolean).join(' ') || null
+  const accidentLabel = getOptionLabel(accidentTypeOptions, draft.accidentType)
+  const insuranceLabel = getOptionLabel(situationOptions, draft.situation)
   const details = draft.details.trim()
+  const question = draft.question.trim()
   const interests = draft.interests
     .map((interest) => getOptionLabel(interestOptions, interest))
     .filter((label): label is string => Boolean(label))
+  const photos = messages.flatMap((message) => (message.role === 'user' ? message.images : []))
+  const visiblePhotos = photos.slice(0, maxVisiblePhotos)
+  const hiddenPhotoCount = photos.length - visiblePhotos.length
 
-  const facts: SituationFact[] = [
-    { id: 'vehicle', label: 'Vehicle', value: getVehicleName(draft.vehicle), icon: <Car size={18} /> },
-    { id: 'mileage', label: 'Mileage', value: mileage ? `${mileage} miles` : null, icon: <Gauge size={18} /> },
-    {
-      id: 'accident',
-      label: 'Accident type',
-      value: getOptionLabel(accidentTypeOptions, draft.accidentType),
-      icon: <Warning size={18} />,
-    },
-    {
-      id: 'insurance',
-      label: 'Insurance status',
-      value: getOptionLabel(situationOptions, draft.situation),
-      icon: <ShieldCheck size={18} />,
-    },
+  const statuses: Record<SituationSection, SectionStatus> = {
+    vehicle: getSectionStatus(draft, confirmed, 'vehicle'),
+    accident: getSectionStatus(draft, confirmed, 'accident'),
+    insurance: getSectionStatus(draft, confirmed, 'insurance'),
+    concerns: getSectionStatus(draft, confirmed, 'concerns'),
+  }
+  const statusList = Object.values(statuses)
+  const confirmedCount = statusList.filter((status) => status === 'confirmed').length
+  const unconfirmedCount = statusList.filter((status) => status === 'unconfirmed').length
+  const summary = [
+    `${confirmedCount} of ${statusList.length} confirmed`,
+    unconfirmedCount > 0 ? `${unconfirmedCount} to review` : null,
   ]
-  const hasDetails = facts.some((fact) => fact.value) || details.length > 0 || interests.length > 0
+    .filter(Boolean)
+    .join(' · ')
+
+  function confirmSection(section: SituationSection) {
+    confirmSections([section])
+  }
 
   return (
     <motion.section
@@ -51,67 +186,162 @@ export function SituationIsland({ className = '' }: { className?: string }) {
       variants={staggerVariants(0.05, 0.1)}
       className={`flex min-h-0 flex-col rounded-[1.75rem] border border-text/[0.06] bg-surface shadow-card ${className}`}
     >
-      <header className="flex items-start justify-between gap-3 px-5 pt-5 pb-4">
-        <div className="min-w-0">
+      <header className="px-5 pt-5 pb-4">
+        <div className="flex items-center justify-between gap-3">
           <h2 id="situation-title" className="font-heading text-lg font-bold tracking-tight">
             My Situation
           </h2>
-          <p className="mt-0.5 font-body text-xs text-text/60">Used to match you with similar stories</p>
+          <Button variant="secondary" onClick={() => onEdit(null)} className="shrink-0">
+            <PencilLine size={15} strokeWidth={iconStroke} aria-hidden="true" />
+            Edit details
+          </Button>
         </div>
-        <Link
-          to={paths.intake}
-          aria-label={hasDetails ? 'Edit situation details' : 'Add situation details'}
-          className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full px-3 font-body text-sm font-semibold text-primary transition-colors duration-200 outline-none hover:bg-primary-light focus-visible:ring-2 focus-visible:ring-primary"
-        >
-          <PencilSimple size={16} aria-hidden="true" />
-          {hasDetails ? 'Edit' : 'Add'}
-        </Link>
+        <p className="mt-1.5 font-body text-xs text-text/60">{summary}</p>
+        <div className="mt-2 flex gap-1" aria-hidden="true">
+          {statusList.map((status, index) => (
+            <span
+              key={index}
+              className={`h-1 flex-1 rounded-full transition-colors duration-300 ${
+                status === 'confirmed' ? 'bg-primary' : status === 'unconfirmed' ? 'bg-accent' : 'bg-text/10'
+              }`}
+            />
+          ))}
+        </div>
       </header>
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-5">
-        <dl className="flex flex-col gap-3">
-          {facts.map((fact) => (
-            <motion.div key={fact.id} variants={fadeUpVariants} className="flex items-center gap-3">
-              <span
-                className="grid size-9 shrink-0 place-items-center rounded-xl bg-primary-light text-primary"
-                aria-hidden="true"
-              >
-                {fact.icon}
-              </span>
-              <div className="min-w-0">
-                <dt className="font-body text-xs text-text/55">{fact.label}</dt>
-                <dd
-                  className={`font-body text-sm leading-snug break-words ${
-                    fact.value ? 'font-medium' : 'text-text/45'
-                  }`}
-                >
-                  {fact.value ?? 'Not added yet'}
-                </dd>
-              </div>
-            </motion.div>
-          ))}
-        </dl>
+      <div className="flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto px-5 pb-5">
+        <IslandSection
+          section="vehicle"
+          title="Vehicle"
+          icon={Car}
+          status={statuses.vehicle}
+          addLabel="Add your vehicle"
+          onEdit={onEdit}
+          onConfirm={confirmSection}
+        >
+          <dl className="grid grid-cols-2 gap-x-3 gap-y-2">
+            <VehicleDetail label="Make" value={vehicle.make} />
+            <VehicleDetail label="Model" value={model} />
+            <VehicleDetail label="Year" value={vehicle.year} />
+            <VehicleDetail label="Mileage" value={mileage ? `${mileage} mi` : null} />
+          </dl>
+        </IslandSection>
 
-        {details && (
-          <motion.div variants={fadeUpVariants} className="mt-5 border-t border-text/[0.06] pt-4">
-            <h3 className={sectionLabelClassName}>What happened</h3>
-            <p className="mt-2 line-clamp-4 font-body text-sm leading-relaxed text-text/80">{details}</p>
-          </motion.div>
-        )}
+        <IslandSection
+          section="accident"
+          title="Accident"
+          icon={TriangleAlert}
+          status={statuses.accident}
+          addLabel="Add accident type"
+          onEdit={onEdit}
+          onConfirm={confirmSection}
+        >
+          <p className={`font-body text-sm ${accidentLabel ? 'font-medium' : 'text-text/40'}`}>
+            {accidentLabel ?? 'Type not added'}
+          </p>
+          {details && (
+            <p className="mt-1 line-clamp-3 font-body text-sm leading-snug text-text/70">{details}</p>
+          )}
+        </IslandSection>
 
-        {interests.length > 0 && (
-          <motion.div variants={fadeUpVariants} className="mt-5 border-t border-text/[0.06] pt-4">
-            <h3 className={sectionLabelClassName}>Hoping to hear from</h3>
-            <ul className="mt-2 space-y-1.5">
+        <IslandSection
+          section="insurance"
+          title="Insurance status"
+          icon={ShieldCheck}
+          status={statuses.insurance}
+          addLabel="Add insurance status"
+          onEdit={onEdit}
+          onConfirm={confirmSection}
+        >
+          <p className="font-body text-sm font-medium">{insuranceLabel}</p>
+        </IslandSection>
+
+        <IslandSection
+          section="concerns"
+          title="Main concerns"
+          icon={MessagesSquare}
+          status={statuses.concerns}
+          addLabel="Add what matters to you"
+          onEdit={onEdit}
+          onConfirm={confirmSection}
+        >
+          {interests.length > 0 && (
+            <ul className="space-y-1">
               {interests.map((interest) => (
                 <li key={interest} className="flex items-start gap-2 font-body text-sm leading-snug">
-                  <CheckCircle size={16} className="mt-0.5 shrink-0 text-primary" aria-hidden="true" />
+                  <Check size={14} strokeWidth={2.25} className="mt-0.5 shrink-0 text-primary" aria-hidden="true" />
                   {interest}
                 </li>
               ))}
             </ul>
-          </motion.div>
-        )}
+          )}
+          {question && (
+            <blockquote
+              className={`line-clamp-3 border-l-2 border-primary/30 pl-2.5 font-body text-sm leading-snug text-text/75 ${
+                interests.length > 0 ? 'mt-2.5' : ''
+              }`}
+            >
+              {question}
+            </blockquote>
+          )}
+        </IslandSection>
+
+        <motion.section
+          variants={fadeUpVariants}
+          aria-labelledby="situation-photos-title"
+          className="rounded-2xl bg-background/70 p-3.5"
+        >
+          <div className="flex items-center justify-between gap-2">
+            <h3 id="situation-photos-title" className="flex items-center gap-2 font-body text-sm font-semibold">
+              <Images size={16} strokeWidth={iconStroke} className="shrink-0 text-primary" aria-hidden="true" />
+              Photos
+            </h3>
+            <span className="font-body text-[0.7rem] font-medium text-text/55 tabular-nums">
+              {photos.length > 0 ? `${photos.length} shared` : 'None yet'}
+            </span>
+          </div>
+
+          {photos.length > 0 ? (
+            <ul className="mt-2.5 grid grid-cols-4 gap-1.5">
+              {visiblePhotos.map((photo, index) => {
+                const isLastVisible = index === visiblePhotos.length - 1 && hiddenPhotoCount > 0
+                return (
+                  <li key={photo.id} className="relative">
+                    <a
+                      href={photo.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      aria-label={`Open photo: ${photo.name}`}
+                      className="block overflow-hidden rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1"
+                    >
+                      <img
+                        src={photo.url}
+                        alt=""
+                        className="aspect-square w-full border border-text/[0.06] object-cover transition-transform duration-200 ease-out hover:scale-105"
+                      />
+                      {isLastVisible && (
+                        <span className="absolute inset-0 grid place-items-center rounded-xl bg-text/55 font-body text-xs font-semibold text-surface">
+                          +{hiddenPhotoCount}
+                        </span>
+                      )}
+                    </a>
+                  </li>
+                )
+              })}
+            </ul>
+          ) : (
+            <p className="mt-2 font-body text-sm leading-snug text-text/60">
+              Damage photos you share in the{' '}
+              <Link
+                to={paths.chat}
+                className="rounded font-medium text-primary outline-none hover:underline focus-visible:ring-2 focus-visible:ring-primary"
+              >
+                Assistant
+              </Link>{' '}
+              will appear here.
+            </p>
+          )}
+        </motion.section>
       </div>
     </motion.section>
   )

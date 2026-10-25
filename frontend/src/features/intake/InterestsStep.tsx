@@ -11,29 +11,19 @@ import { IntakeActions } from './IntakeActions.tsx'
 import { useIntakeDraft } from './IntakeContext.ts'
 import { IntakeQuestion } from './IntakeQuestion.tsx'
 import { IntakeStepLayout } from './IntakeStepLayout.tsx'
-import { interestOptions, notSureInterest } from './intakeOptions.tsx'
-
-const questionMaxLength = 400
-
-function toggleInterest(current: LearningInterest[], interest: LearningInterest) {
-  if (current.includes(interest)) {
-    return current.filter((item) => item !== interest)
-  }
-  if (interest === notSureInterest) {
-    return [notSureInterest]
-  }
-  return [...current.filter((item) => item !== notSureInterest), interest]
-}
+import { questionMaxLength } from './intakeLimits.ts'
+import { interestOptions, notSureInterest, toggleInterest } from './intakeOptions.tsx'
 
 export function InterestsStep() {
   const navigate = useNavigate()
   const { user } = useAuth()
-  const { draft, updateDraft } = useIntakeDraft()
+  const { draft, updateDraft, confirmSections } = useIntakeDraft()
   const canSubmit = draft.interests.length > 0
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (canSubmit) {
+      confirmSections(['concerns'])
       navigate(user ? paths.chat : paths.signIn)
     }
   }

@@ -54,7 +54,7 @@ Our competitive advantage is retrieving and presenting relevant human experience
 - React and Vite.
 - Tailwind CSS.
 - Reusable, component-based architecture.
-- Phosphor icons.
+- Phosphor icons. Exception: the workspace "My Situation" panel and its edit sheet use Lucide (`lucide-react`) by request.
 - Motion for React when meaningful animations are needed.
 - Mock data during frontend development.
 - Backend integration will be handled separately.

@@ -38,6 +38,7 @@ export function App() {
             >
               <Route path={paths.chat} element={<ChatPage />} />
               <Route path={paths.stories} element={<WorkspacePlaceholder tab="stories" />} />
+              <Route path={paths.story} element={<WorkspacePlaceholder tab="stories" />} />
               <Route path={paths.marketplace} element={<WorkspacePlaceholder tab="marketplace" />} />
               <Route path={paths.myStory} element={<WorkspacePlaceholder tab="my-story" />} />
             </Route>

@@ -11,7 +11,7 @@ import { TypingIndicator } from './TypingIndicator.tsx'
 const messageTransition = { duration: 0.35, ease: easeOutQuint }
 
 export function ChatPage() {
-  const { messages, isResponding, sendMessage, resetChat } = useChat()
+  const { messages, isResponding, sendMessage, confirmSuggestion, dismissSuggestion, resetChat } = useChat()
   const latestReply = useLatestReply()
   const shouldReduceMotion = useReducedMotion()
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -69,7 +69,13 @@ export function ChatPage() {
                 transition={messageTransition}
               >
                 {message.role === 'user' ? (
-                  <UserMessage text={message.text} images={message.images} />
+                  <UserMessage
+                    text={message.text}
+                    images={message.images}
+                    suggestions={message.suggestions}
+                    onConfirmSuggestion={(suggestionId) => confirmSuggestion(message.id, suggestionId)}
+                    onDismissSuggestion={(suggestionId) => dismissSuggestion(message.id, suggestionId)}
+                  />
                 ) : (
                   <AssistantMessage
                     message={message}

@@ -1,11 +1,9 @@
-import type { StoryPreview } from '../types/story.ts'
-import { experiencesByTopic, type ChatTopic } from './communityExperiences.ts'
+import type { StoryMatchStatus } from '../types/story.ts'
 
-// Canned replies for the chat preview. Nothing here is generated or analyzed.
+// Canned replies for the chat preview. They introduce retrieved stories and never advise a decision.
 
 type MockReply = {
   text: string
-  stories: StoryPreview[]
   followUps: string[]
 }
 
@@ -14,7 +12,11 @@ type MockReplyInput = {
   imageCount: number
   isFirstReply: boolean
   vehicleName: string | null
+  matchStatus: StoryMatchStatus
+  matchCount: number
 }
+
+type ChatTopic = 'repair' | 'total-loss' | 'sell' | 'insurance' | 'weather' | 'general'
 
 const topicPatterns: [ChatTopic, RegExp][] = [
   ['total-loss', /total(ed)?\b|total loss|write[- ]?off|salvage|payout/i],
@@ -24,64 +26,64 @@ const topicPatterns: [ChatTopic, RegExp][] = [
   ['repair', /repair|estimate|body shop|fix|bumper|frame|dent|rear[- ]?end|scratch/i],
 ]
 
-const replies: Record<ChatTopic, Omit<MockReply, 'stories'>> = {
-  repair: {
-    text: 'A repair estimate is a solid starting point. People in a similar spot usually weighed three things: the estimate against what the car is worth, whether the damage reached the frame, and how long they planned to keep the car.\n\nHere are a few owners whose situations look close to yours.',
-    followUps: [
-      'Is it worth repairing if the estimate is close to the car’s value?',
-      'How did people choose a body shop?',
-      'Did anyone get a second estimate?',
-    ],
-  },
-  'total-loss': {
-    text: 'A total loss call can feel sudden. Many people in this spot compared the insurer’s offer with local listings for the same model, year, and mileage before they accepted.\n\nThese owners went through it and shared how it turned out.',
-    followUps: [
-      'How did people negotiate a higher payout?',
-      'Can I keep my car after a total loss?',
-      'What did people replace their car with?',
-    ],
-  },
-  sell: {
-    text: 'Selling a damaged car is more common than it sounds. Most people chose between selling as-is to a dealer, selling privately, or trading it in toward something new.\n\nHere’s how a few of those choices played out.',
-    followUps: [
-      'Did people get more selling privately?',
-      'Should I repair before selling?',
-      'How do instant cash offers compare?',
-    ],
-  },
-  insurance: {
-    text: 'Insurance conversations go smoother when you know what others ran into. A common thread: people who kept records and asked for the valuation in writing felt more in control.\n\nThese experiences might help you prepare.',
-    followUps: [
-      'What should I ask the adjuster?',
-      'Did anyone dispute an offer?',
-      'How long did settlements take?',
-    ],
-  },
-  weather: {
-    text: 'Weather damage often goes through a different part of your policy than a collision, so the path can look different. Here’s what owners with hail, flood, and storm damage shared.',
-    followUps: [
-      'Did paintless dent repair work for hail?',
-      'What happens to flood-damaged cars?',
-      'Did a weather claim raise anyone’s premium?',
-    ],
-  },
-  general: {
-    text: 'Thanks for sharing that. To find people whose experience matches yours, it helps to know what kind of accident it was and where things stand, like whether you have a repair estimate or a total loss decision.\n\nIn the meantime, here are a few experiences that come up often.',
-    followUps: [
-      'I have a repair estimate',
-      'My insurer declared a total loss',
-      'I’m thinking about selling my car',
-    ],
-  },
+const followUpsByTopic: Record<ChatTopic, string[]> = {
+  repair: [
+    'Is it worth repairing if the estimate is close to the car’s value?',
+    'How did people choose a body shop?',
+    'Did anyone get a second estimate?',
+  ],
+  'total-loss': [
+    'How did people negotiate a higher payout?',
+    'Can I keep my car after a total loss?',
+    'What did people replace their car with?',
+  ],
+  sell: ['Did people get more selling privately?', 'Should I repair before selling?', 'How do instant cash offers compare?'],
+  insurance: ['What should I ask the adjuster?', 'Did anyone dispute an offer?', 'How long did settlements take?'],
+  weather: [
+    'Did paintless dent repair work for hail?',
+    'What happens to flood-damaged cars?',
+    'Did a weather claim raise anyone’s premium?',
+  ],
+  general: ['I have a repair estimate', 'My insurer declared a total loss', 'I’m thinking about selling my car'],
 }
+
+const countWords = ['no', 'one', 'two', 'three', 'four', 'five']
+
+const noMatchText =
+  'I couldn’t find a community story close enough to your situation, so I won’t show ones that don’t fit.\n\nIf you share the type of accident, where your car was damaged, or where things stand with insurance, I can look again.'
+
+const unavailableText = 'I couldn’t reach the community stories just now. Please try sending that again in a moment.'
 
 function detectTopic(text: string): ChatTopic {
   return topicPatterns.find(([, pattern]) => pattern.test(text))?.[0] ?? 'general'
 }
 
-export function createMockReply({ text, imageCount, isFirstReply, vehicleName }: MockReplyInput): MockReply {
-  const topic = detectTopic(text)
-  const reply = replies[topic]
+function introduceMatches(count: number) {
+  if (count === 1) {
+    return 'I found one owner whose situation overlaps with yours. Here’s what they decided and what they reported afterward.'
+  }
+  return `Here are ${countWords[count] ?? count} owners whose situations overlap with yours, with what each decided and what they reported afterward.`
+}
+
+function getReplyBody(matchStatus: StoryMatchStatus, matchCount: number) {
+  if (matchStatus === 'matched') return introduceMatches(matchCount)
+  if (matchStatus === 'no-match') return noMatchText
+  return unavailableText
+}
+
+function getFollowUps(matchStatus: StoryMatchStatus, text: string) {
+  if (matchStatus === 'unavailable') return []
+  return followUpsByTopic[matchStatus === 'no-match' ? 'general' : detectTopic(text)]
+}
+
+export function createMockReply({
+  text,
+  imageCount,
+  isFirstReply,
+  vehicleName,
+  matchStatus,
+  matchCount,
+}: MockReplyInput): MockReply {
   const intro: string[] = []
 
   if (imageCount > 0) {
@@ -97,8 +99,7 @@ export function createMockReply({ text, imageCount, isFirstReply, vehicleName }:
   const normalizedText = text.trim().toLowerCase()
 
   return {
-    text: [...intro, reply.text].join('\n\n'),
-    stories: experiencesByTopic[topic],
-    followUps: reply.followUps.filter((followUp) => followUp.toLowerCase() !== normalizedText),
+    text: [...intro, getReplyBody(matchStatus, matchCount)].join('\n\n'),
+    followUps: getFollowUps(matchStatus, text).filter((followUp) => followUp.toLowerCase() !== normalizedText),
   }
 }

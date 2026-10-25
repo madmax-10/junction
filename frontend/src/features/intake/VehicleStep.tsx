@@ -12,12 +12,11 @@ import { useIntakeDraft } from './IntakeContext.ts'
 import { IntakeQuestion } from './IntakeQuestion.tsx'
 import { IntakeStepLayout } from './IntakeStepLayout.tsx'
 import { formatMileage } from './intakeHighlights.ts'
-
-const mileageMaxDigits = 7
+import { sanitizeMileage, trimMaxLength } from './intakeLimits.ts'
 
 export function VehicleStep() {
   const navigate = useNavigate()
-  const { draft, updateVehicle } = useIntakeDraft()
+  const { draft, updateVehicle, confirmSections } = useIntakeDraft()
   const { vehicle } = draft
   const modelInputRef = useRef<HTMLInputElement>(null)
   const shouldFocusModel = useRef(false)
@@ -41,6 +40,7 @@ export function VehicleStep() {
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (canContinue) {
+      confirmSections(['vehicle'])
       navigate(paths.intakeInterests)
     }
   }
@@ -102,7 +102,7 @@ export function VehicleStep() {
               <TextInput
                 id="vehicle-trim"
                 value={vehicle.trim}
-                maxLength={40}
+                maxLength={trimMaxLength}
                 autoComplete="off"
                 onChange={(event) => updateVehicle({ trim: event.target.value })}
                 placeholder="e.g. EX, SE, Limited"
@@ -121,14 +121,7 @@ export function VehicleStep() {
                 suffix="miles"
                 placeholder="e.g. 48,000"
                 value={formatMileage(vehicle.mileage)}
-                onChange={(event) =>
-                  updateVehicle({
-                    mileage: event.target.value
-                      .replace(/\D/g, '')
-                      .replace(/^0+(?=\d)/, '')
-                      .slice(0, mileageMaxDigits),
-                  })
-                }
+                onChange={(event) => updateVehicle({ mileage: sanitizeMileage(event.target.value) })}
                 aria-describedby="vehicle-mileage-hint"
               />
             </Field>

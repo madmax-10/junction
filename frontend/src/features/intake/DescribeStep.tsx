@@ -10,18 +10,18 @@ import { IntakeActions } from './IntakeActions.tsx'
 import { useIntakeDraft } from './IntakeContext.ts'
 import { IntakeQuestion } from './IntakeQuestion.tsx'
 import { IntakeStepLayout } from './IntakeStepLayout.tsx'
+import { detailsMaxLength } from './intakeLimits.ts'
 import { accidentTypeOptions, situationOptions } from './intakeOptions.tsx'
-
-const detailsMaxLength = 600
 
 export function DescribeStep() {
   const navigate = useNavigate()
-  const { draft, updateDraft } = useIntakeDraft()
+  const { draft, updateDraft, confirmSections } = useIntakeDraft()
   const canContinue = draft.accidentType !== null && draft.situation !== null
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (canContinue) {
+      confirmSections(['accident', 'insurance'])
       navigate(paths.intakeVehicle)
     }
   }

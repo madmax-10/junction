@@ -1,10 +1,20 @@
 import { createContext, useContext } from 'react'
-import type { IntakeDraft, VehicleInfo } from '../../types/intake.ts'
+import type {
+  FieldConfirmation,
+  IntakeDraft,
+  IntakeFields,
+  SituationChanges,
+  SituationSection,
+  VehicleInfo,
+} from '../../types/intake.ts'
 
 export type IntakeContextValue = {
   draft: IntakeDraft
-  updateDraft: (changes: Partial<Omit<IntakeDraft, 'vehicle'>>) => void
+  confirmed: FieldConfirmation
+  updateDraft: (changes: Partial<IntakeFields>) => void
   updateVehicle: (changes: Partial<VehicleInfo>) => void
+  confirmSections: (sections: SituationSection[]) => void
+  applyConfirmedChanges: (changes: SituationChanges) => void
   resetDraft: () => void
 }
 
@@ -21,6 +31,21 @@ export const emptyIntakeDraft: IntakeDraft = {
   },
   interests: [],
   question: '',
+}
+
+export const situationSections: SituationSection[] = ['vehicle', 'accident', 'insurance', 'concerns']
+
+export const noFieldsConfirmed: FieldConfirmation = {
+  make: false,
+  model: false,
+  year: false,
+  mileage: false,
+  trim: false,
+  accidentType: false,
+  details: false,
+  situation: false,
+  interests: false,
+  question: false,
 }
 
 export const IntakeContext = createContext<IntakeContextValue | null>(null)
