@@ -427,3 +427,60 @@ class ApproveAndPublishTests(TestCase):
                      "response": tools.approve_and_publish_post(self.post_id, context)}
         state = build_state(self.user.id, [saved, published])
         self.assertNotIn("draft_post_id", state)
+
+
+class EveryPostTypeTests(TestCase):
+    """The same rules hold for sell, buy and repair."""
+
+    def setUp(self):
+        self.user = make_user("owner@example.com")
+        self.stranger = make_user("other@example.com")
+        self.context = context_for(self.user)
+        self.makers = {"sell": make_sell, "buy": make_buy, "repair": make_repair}
+
+    def test_another_users_issue_is_refused(self):
+        for issue_type, make in self.makers.items():
+            theirs = make(self.stranger)
+            with self.subTest(issue_type=issue_type):
+                result = tools.save_post_draft(issue_type, str(theirs.id), "t", "c", self.context)
+                self.assertEqual(result["error"], "Issue not found.")
+        self.assertEqual(Post.objects.count(), 0)
+
+    def test_unknown_post_data_keys_are_rejected(self):
+        for issue_type, make in self.makers.items():
+            issue = make(self.user)
+            with self.subTest(issue_type=issue_type):
+                result = tools.save_post_draft(
+                    issue_type, str(issue.id), "t", "c", self.context, {"ai_analysis": "x"}
+                )
+                self.assertEqual(result["status"], "error")
+                self.assertIn("Unknown fields: ai_analysis", result["error"])
+        self.assertEqual(Post.objects.count(), 0)
+
+    def test_published_posts_cannot_be_edited_or_given_photos(self):
+        for issue_type, make in self.makers.items():
+            issue = make(self.user)
+            saved = tools.save_post_draft(issue_type, str(issue.id), "t", "c", self.context)
+            post_id = saved["ids"]["post_id"]
+            tools.approve_and_publish_post(post_id, context_for(self.user, draft_post_id=post_id))
+            with self.subTest(issue_type=issue_type):
+                for result in (
+                    tools.update_post_draft(post_id, self.context, title="new"),
+                    tools.select_post_images(post_id, [], self.context),
+                ):
+                    self.assertEqual(result["error"], "Only drafts can be edited.")
+                self.assertEqual(Post.objects.get(pk=post_id).title, "t")
+
+    def test_a_repair_cannot_drop_or_disprove_owner_reported(self):
+        issue = make_repair(self.user)
+        result = tools.save_post_draft(
+            "repair", str(issue.id), "t", "c", self.context, {"owner_reported": False}
+        )
+        self.assertEqual(result["status"], "error")
+        saved = tools.save_post_draft("repair", str(issue.id), "t", "c", self.context)
+        post_id = saved["ids"]["post_id"]
+        tools.update_post_draft(post_id, self.context, post_data={"cost": 200})
+        self.assertTrue(Post.objects.get(pk=post_id).post_data["owner_reported"])
+        refused = tools.update_post_draft(post_id, self.context, post_data={"owner_reported": False})
+        self.assertEqual(refused["status"], "error")
+        self.assertTrue(Post.objects.get(pk=post_id).post_data["owner_reported"])
