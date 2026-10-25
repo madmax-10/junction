@@ -48,12 +48,13 @@ Our competitive advantage is retrieving and presenting relevant human experience
 
 9. Public posting and sharing contact details require separate explicit user consent.
 
+
 # Technology
 
 - React and Vite.
 - Tailwind CSS.
 - Reusable, component-based architecture.
-- Lucide icons.
+- Phosphor icons.
 - Motion for React when meaningful animations are needed.
 - Mock data during frontend development.
 - Backend integration will be handled separately.
@@ -148,6 +149,8 @@ Do not independently implement future features.
 Do not modify backend code.
 
 Do not create additional documentation unless requested.
+
+Never open browser and click, take screenshots to test, let user test in their localhost browser.
 
 Wait for the next instruction after completing each task.
 

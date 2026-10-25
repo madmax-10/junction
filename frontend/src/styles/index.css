@@ -1,0 +1,41 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background: #F5F7F6;
+  --color-surface: #FFFFFF;
+  --color-primary: #127A78;
+  --color-primary-light: #D9EDE9;
+  --color-text: #15313D;
+  --color-accent: #EA936D;
+
+  --color-primary-hover: color-mix(in oklab, var(--color-primary) 85%, black);
+
+  --font-sans: "Inter", sans-serif;
+  --font-body: "Inter", sans-serif;
+  --font-heading: "Manrope", sans-serif;
+
+  --shadow-card: 0 1px 2px rgb(21 49 61 / 0.04), 0 12px 32px -16px rgb(21 49 61 / 0.18);
+  --shadow-card-hover: 0 1px 2px rgb(21 49 61 / 0.05), 0 20px 40px -18px rgb(21 49 61 / 0.28);
+}
+
+@layer base {
+  html {
+    background-color: var(--color-background);
+    color: var(--color-text);
+  }
+
+  body {
+    margin: 0;
+    min-height: 100svh;
+    font-family: var(--font-body);
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-heading);
+  }
+}
