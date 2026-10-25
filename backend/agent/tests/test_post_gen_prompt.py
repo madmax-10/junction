@@ -51,5 +51,19 @@ class PostGenPromptTests(unittest.TestCase):
         self.assertIn("never pass one to a tool", PROMPT)
 
 
+class CoordinatorHandoffTests(unittest.TestCase):
+    """post_gen can only act on what the coordinator puts in its request."""
+
+    def test_coordinator_passes_the_owners_choices_to_post_gen(self):
+        try:
+            from agent.prompts.coordinator import COORDINATOR_INSTRUCTION
+        except ModuleNotFoundError:
+            from backend.agent.prompts.coordinator import COORDINATOR_INSTRUCTION
+        self.assertIn("post_gen only sees the request you write", COORDINATOR_INSTRUCTION)
+        self.assertIn("which contact details the user chose to publish", COORDINATOR_INSTRUCTION)
+        self.assertIn("agreed to name the mechanic", COORDINATOR_INSTRUCTION)
+        self.assertIn("clearly approved the exact draft", COORDINATOR_INSTRUCTION)
+
+
 if __name__ == "__main__":
     unittest.main()
