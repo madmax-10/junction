@@ -26,7 +26,7 @@ class ChatViewTests(APITestCase):
 
     def use_model(self, model):
         """Make the view use the fake model instead of a real one."""
-        patcher = mock.patch("agent.views.run_turn", lambda uid, ev: run_turn(uid, ev, model=model))
+        patcher = mock.patch("agent.views.run_turn", lambda uid, ev, **kwargs: run_turn(uid, ev, model=model, **kwargs))
         patcher.start()
         self.addCleanup(patcher.stop)
 
@@ -93,7 +93,7 @@ class RequestValidationTests(ChatViewTests):
 
 class TurnTests(ChatViewTests):
     def setUp(self):
-        self.client.force_authenticate(self.user)
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {RefreshToken.for_user(self.user).access_token}")
 
     def test_returns_only_the_new_events(self):
         self.use_model(scripted(call("get_user_context"), say("You have no cars yet.")))

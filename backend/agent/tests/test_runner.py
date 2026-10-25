@@ -12,6 +12,7 @@ from accounts.models import User
 from agent.events import EventsError, validate_events
 from agent.runner import FALLBACK_REPLY, run_turn
 from agent.tests.fakes import call, say, scripted
+from agent.agents.stubs import make_stub
 from agent.tools.result import tool_result
 from vehicles.models import UsedCar
 
@@ -156,7 +157,7 @@ class ToolTurnTests(RunnerTestCase):
 class SpecialistTurnTests(RunnerTestCase):
     def test_stub_specialist_answer_is_stored_as_an_envelope(self):
         model = scripted(call("valuation", request="Value my Civic"), say("I can't price it yet."))
-        new = self.run_turn([user_message("Value my Civic")], model)
+        new = self.run_turn([user_message("Value my Civic")], model, specialists={"valuation": make_stub("valuation")})
 
         self.assertEqual([e["kind"] for e in new], ["tool_call", "tool_response", "message"])
         self.assertEqual(new[0]["name"], "valuation")
