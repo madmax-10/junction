@@ -33,3 +33,5 @@ htmlcov/
 # OS and editors
 .DS_Store
 .idea/
+
+graphify-out/
