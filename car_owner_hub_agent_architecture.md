@@ -64,8 +64,8 @@ Wrap Agents 2–6 as `AgentTool`s on Agent 1 rather than as transfer sub-agents,
  │  PostgreSQL      │ │  Media storage   │ │ Meta Model   │ │ SerpApi     │
  │  users ·         │ │  issues/{type}/  │ │ API (Muse)   │ │ Google Maps │
  │  new_cars ·      │ │   {issue_id}/    │ │ Spark: read  │ │ engine —    │
- │  used_cars ·     │ │  posts/          │ │  images      │ │ nearby      │
- │  buy/sell/repair │ │   {post_id}/     │ │              │ │ repair      │
+ │  used_cars ·     │ │                  │ │  images      │ │ nearby      │
+ │  buy/sell/repair │ │                  │ │              │ │ repair      │
  │  _issues · posts │ │                  │ │              │ │ centers     │
  └──────────────────┘ └──────────────────┘ └──────────────┘ └─────────────┘
 ```
@@ -192,15 +192,13 @@ MEDIA_ROOT/
 │   ├── buy/{buy_issue_id}/{uuid}.jpg        # private: cars the buyer likes
 │   ├── sell/{sell_issue_id}/{uuid}.jpg      # private: seller's car photos
 │   └── repair/{repair_issue_id}/{uuid}.jpg  # private: symptom photos
-└── posts/{post_id}/
-    └── {uuid}.jpg                           # copied from the issue folder at approval
 ```
 
 - **Naming:** `{uuid}.{ext}` filenames, so uploads never collide or reveal original file names. Allowed types: JPEG, PNG, WebP; size cap (e.g. 10 MB) and count cap (e.g. 10 per issue) enforced on upload.
 - **Private issue images:** served only through an authenticated Django view that checks the caller owns the issue; never from a public `MEDIA_URL`.
-- **Published post images:** at approval, the owner picks which issue photos to show; the backend copies them into `posts/{post_id}/`. This keeps the post a frozen snapshot, so later changes to the issue folder do not change what readers see. Files under `posts/{post_id}/` are public only while `posts.status = published`.
+- **Published post images:** photos stay in the issue folder; posts never get their own copy. The owner picks which issue photos to show, and the post only references them as relative paths in `post_data.photos` (e.g. `issues/repair/{issue_id}/{filename}`). A post photo is served only when that path is listed in `post_data.photos`; anonymous callers can load it only while `posts.status = published`, and the owner can load it on their own draft. Replacing or deleting the issue file changes what readers see, because there is one copy.
 - **Deletes:** deleting an issue deletes its folder in the same service call; archiving a post hides its folder from public access.
-- **Service:** one `issue_media_service` with `save(issue_type, issue_id, file)`, `list(issue_type, issue_id)`, `copy_to_post(issue_type, issue_id, post_id, filenames)` and `delete_folder(...)`. Swapping the local disk for object storage later (same key layout) needs no agent changes.
+- **Service:** one `issue_media_service` with `save(issue_type, issue_id, file)`, `list(issue_type, issue_id)` and `delete_folder(...)`. Swapping the local disk for object storage later (same key layout) needs no agent changes.
 
 | Endpoint | Purpose |
 | --- | --- |
@@ -208,7 +206,7 @@ MEDIA_ROOT/
 | `GET /api/issues/{type}/{id}/images/` | List the owned issue's images |
 | `GET /api/issues/{type}/{id}/images/{filename}` | Serve one private image (owner only) |
 | `DELETE /api/issues/{type}/{id}/images/{filename}` | Remove one image |
-| `GET /api/posts/{id}/images/` | List images of a published post (public) |
+| `GET /api/posts/{id}/photos/{filename}/` | Serve one photo listed in the post's `post_data.photos` (public while published; owner on drafts) |
 
 ## Agent 1 — Coordinator (Intent & Recommendation)
 
@@ -292,7 +290,7 @@ Agent 5 turns one issue into a private `posts` draft (`issue_type` + `issue_id`)
 | `get_issue_context(issue_type, issue_id)` | Reads the owned issue + its `used_cars` row | Source facts: description, preferences, condition, symptoms, `resolution_details` |
 | `save_post_draft(issue_type, issue_id, title, content, post_data)` | Writes `posts` (`status = draft`); service validates the type/ID pair and ownership | Agent writes the text; backend validates the `post_data` schema per type |
 | `update_post_draft(post_id, title?, content?, post_data?)` | Updates own draft | Apply the owner's edits |
-| `select_post_images(post_id, filenames)` | Copies chosen files from the issue folder to `posts/{post_id}/` | Owner picks which photos go public |
+| `select_post_images(post_id, filenames)` | Writes the chosen issue-folder paths into the draft's `post_data.photos`; no files are copied | Owner picks which photos the post references |
 | `approve_and_publish_post(post_id)` | Sets `approved_at`, then `status = published`, in one transaction | Only after explicit approval in the current turn; idempotent |
 
 **`post_data` per type**
@@ -346,7 +344,7 @@ Every write tool maps to an existing planned DRF endpoint, so the chat and the w
 | `get_post_mechanics` | `posts` (published repair only) | `post_search_service` |
 | `find_nearby_mechanics` | — (not stored) | New service: `serp_client` (SerpApi Google Maps) |
 | `analyze_vehicle_photo`, `assess_car_photos`, `identify_car_from_photo` | Issue image folder + issue JSON fields | `issue_media_service` + `muse_client` (Muse Spark) |
-| `select_post_images` | `posts/{post_id}/` folder | `issue_media_service.copy_to_post` |
+| `select_post_images` | `posts.post_data.photos` (paths into the issue folder) | `PATCH /api/posts/{id}/` |
 
 ## Implementation rules
 
