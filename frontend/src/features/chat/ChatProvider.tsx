@@ -12,7 +12,7 @@ import {
   writeChatEvents,
   type ChatEvent,
 } from '../../services/chatTurns.ts'
-import { photoTarget, syncSituation, uploadIssuePhotos } from '../../services/situation.ts'
+import { photoTarget, syncSituation, uploadChatPhotos, uploadIssuePhotos } from '../../services/situation.ts'
 import type { ChatImage, ChatMessage } from '../../types/chat.ts'
 import type { DetailSuggestion, SuggestionStatus } from '../../types/extraction.ts'
 import { getDetailChanges, isDetailSaved } from '../intake/extractedDetails.ts'
@@ -119,9 +119,16 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 
           const target = photoTarget(nextSaved)
           let storedPhotos = 0
-          if (images.length > 0 && target) {
-            await uploadIssuePhotos(target, images)
-            storedPhotos = images.length
+          const photoNotes: string[] = []
+          if (images.length > 0) {
+            if (target) {
+              await uploadIssuePhotos(target, images)
+              storedPhotos = images.length
+            }
+            const chatPhotos = await uploadChatPhotos(images)
+            if (chatPhotos.length > 0) {
+              photoNotes.push(`photo image_ids (read with read_image): ${chatPhotos.join(', ')}`)
+            }
           }
 
           if (!stillCurrent()) return
@@ -138,7 +145,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
               nextSaved,
               getVehicleName(draftRef.current.vehicle),
               isFirst,
-              hiddenNote ? [hiddenNote] : [],
+              [...photoNotes, ...(hiddenNote ? [hiddenNote] : [])],
             ),
           }
           const history = [...eventsRef.current, userEvent]

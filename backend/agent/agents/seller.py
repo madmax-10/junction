@@ -13,6 +13,7 @@ from agent.services.seller_vehicle_service import get_vehicle_details as get_veh
 from agent.services.seller_issue_service import create_or_update_sell_issue as create_or_update_sell_issue_service
 from agent.services.seller_price_service import recommend_asking_price as recommend_asking_price_service
 from agent.services.seller_buyer_match_service import find_and_rank_buyers as find_and_rank_buyers_service
+from agent.services.image_reading_service import read_image as read_image_service
 from agent.tools.result import error_result
 from agent.schemas import SellerReply
 
@@ -102,15 +103,38 @@ async def find_and_rank_buyers(sell_issue_id: str, tool_context: ToolContext, li
         return error_result("Unable to search public buyer interests.")
 
 
+async def read_image(image_id: str, purpose: str, tool_context: ToolContext) -> dict:
+    """Read one uploaded photo of this user's sell issue with an image model.
+
+    Output is evidence "observed in image", not a diagnosis or confirmed fact.
+
+    Args:
+        image_id: Photo filename from the issue's photo list (for example "<issue_id>_1.jpg").
+            Never a file path or URL.
+        purpose: One of warning_light, damage, vehicle_condition, vin, odometer, part.
+        tool_context: ADK-injected trusted identity context, not a model argument.
+    """
+    try:
+        user = await sync_to_async(get_authenticated_user, thread_sensitive=True)(tool_context)
+        return await sync_to_async(read_image_service, thread_sensitive=True)(
+            image_id, purpose, "sell", user=user,
+        )
+    except (NotAuthenticated, PermissionDenied):
+        return error_result("Trusted authentication context is required.")
+    except (APIException, DjangoValidationError, ValueError, DatabaseError):
+        return error_result("Unable to read the image.")
+
+
 def build_seller_agent(model) -> LlmAgent:
     """Build one genuine specialist with the repository's caller-supplied model."""
     return LlmAgent(
         name="seller", model=model, output_schema=SellerReply,
         description="Seller specialist for any make: owned vehicle details, private SellIssue management, supported price guidance and published buyer-interest matches.",
-        tools=[get_vehicle_details, create_or_update_sell_issue, recommend_asking_price, find_and_rank_buyers],
+        tools=[get_vehicle_details, create_or_update_sell_issue, recommend_asking_price, find_and_rank_buyers, read_image],
         disallow_transfer_to_parent=True, disallow_transfer_to_peers=True,
         instruction=(
             "You are Agent 4, the Seller specialist under the Coordinator. "
+            "Use read_image on the owner's uploaded damage or condition photos (image_id is the photo filename). Its output is observed-in-image evidence, not a diagnosis; do not copy it into the Sell issue without the owner's confirmation, and never pass paths or URLs. "
             "Help owners of any make prepare to sell their identified vehicle. Ask for missing essential information "
             "through the Coordinator. Never assume ownership, invent vehicle details or fabricate IDs. "
             "Use get_vehicle_details for authorized stored vehicle facts. If the intended car is ambiguous, "

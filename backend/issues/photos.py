@@ -1,4 +1,5 @@
 import re
+import uuid
 import shutil
 from io import BytesIO
 from pathlib import Path
@@ -73,13 +74,10 @@ def _next_index(directory, issue_id):
     return highest + 1
 
 
-def save_photo(issue, uploaded):
+def _validated_image(uploaded):
+    """Return (bytes, extension) for an uploaded JPEG/PNG/WebP, or raise ValidationError."""
     if uploaded.size and uploaded.size > MAX_BYTES:
         raise serializers.ValidationError({"file": "Photo must be 5 MB or smaller."})
-    directory = photo_directory(issue.issue_type, issue.id)
-    existing = [path for path in directory.iterdir() if path.is_file()] if directory.exists() else []
-    if len(existing) >= MAX_PHOTOS:
-        raise serializers.ValidationError({"file": f"An issue can have at most {MAX_PHOTOS} photos."})
     uploaded.seek(0)
     content = uploaded.read()
     if len(content) > MAX_BYTES:
@@ -92,6 +90,15 @@ def save_photo(issue, uploaded):
     extension = FORMAT_EXTENSIONS.get(image.format)
     if extension is None:
         raise serializers.ValidationError({"file": "Photo must be a JPEG, PNG, or WebP image."})
+    return content, extension
+
+
+def save_photo(issue, uploaded):
+    directory = photo_directory(issue.issue_type, issue.id)
+    existing = [path for path in directory.iterdir() if path.is_file()] if directory.exists() else []
+    if len(existing) >= MAX_PHOTOS:
+        raise serializers.ValidationError({"file": f"An issue can have at most {MAX_PHOTOS} photos."})
+    content, extension = _validated_image(uploaded)
     directory.mkdir(parents=True, exist_ok=True)
     filename = f"{issue.id}_{_next_index(directory, issue.id)}.{extension}"
     (directory / filename).write_bytes(content)
@@ -99,6 +106,33 @@ def save_photo(issue, uploaded):
         "filename": filename,
         "path": relative_photo_path(issue.issue_type, issue.id, filename),
     }
+
+
+# Chat photos are staged per user so the assistant can read a photo before any issue exists.
+CHAT_PHOTO_NAME = re.compile(r"^chat_[0-9a-f]{32}\.(jpg|png|webp)$")
+MAX_CHAT_PHOTOS = 50
+
+
+def chat_photo_directory(user_id):
+    return Path(settings.MEDIA_ROOT) / "chat" / str(user_id)
+
+
+def save_chat_photo(user, uploaded):
+    directory = chat_photo_directory(user.id)
+    if directory.exists() and sum(1 for path in directory.iterdir() if path.is_file()) >= MAX_CHAT_PHOTOS:
+        raise serializers.ValidationError({"file": "Too many staged chat photos."})
+    content, extension = _validated_image(uploaded)
+    directory.mkdir(parents=True, exist_ok=True)
+    filename = f"chat_{uuid.uuid4().hex}.{extension}"
+    (directory / filename).write_bytes(content)
+    return {"filename": filename}
+
+
+def chat_photo_file(user_id, filename):
+    if not isinstance(filename, str) or CHAT_PHOTO_NAME.match(filename) is None:
+        return None
+    path = chat_photo_directory(user_id) / filename
+    return path if path.is_file() else None
 
 
 def photo_file(issue_type, issue_id, filename):
