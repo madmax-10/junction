@@ -44,7 +44,7 @@ function StatusTag({ status }: { status: SectionStatus }) {
   }
   if (status === 'unconfirmed') {
     return (
-      <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-dashed border-text/25 px-2 py-0.5 font-body text-[0.7rem] font-semibold text-text/65">
+      <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-dashed border-text/25 px-2 py-0.5 font-body text-[0.7rem] font-semibold text-muted">
         <CircleDashed size={12} strokeWidth={2} aria-hidden="true" />
         Unconfirmed
       </span>
@@ -186,7 +186,7 @@ export function SituationIsland({ className = '', onEdit }: SituationIslandProps
       initial="hidden"
       animate="visible"
       variants={staggerVariants(0.05, 0.1)}
-      className={`flex min-h-0 flex-col rounded-[1.75rem] border border-text/[0.06] bg-surface shadow-card ${className}`}
+      className={`flex min-h-0 flex-col rounded-[1.75rem] border border-border bg-surface shadow-card ${className}`}
     >
       <header className="px-5 pt-5 pb-4">
         <div className="flex items-center justify-between gap-3">
@@ -198,7 +198,7 @@ export function SituationIsland({ className = '', onEdit }: SituationIslandProps
             Edit details
           </Button>
         </div>
-        <p className="mt-1.5 font-body text-xs text-text/60">{summary}</p>
+        <p className="mt-1.5 font-body text-xs text-muted">{summary}</p>
         <div className="mt-2 flex gap-1" aria-hidden="true">
           {statusList.map((status, index) => (
             <span
@@ -242,7 +242,7 @@ export function SituationIsland({ className = '', onEdit }: SituationIslandProps
             {accidentLabel ?? 'Not added yet'}
           </p>
           {details && (
-            <p className="mt-1 line-clamp-3 font-body text-sm leading-snug text-text/70">{details}</p>
+            <p className="mt-1 line-clamp-3 font-body text-sm leading-snug text-muted">{details}</p>
           )}
         </IslandSection>
 
@@ -319,7 +319,7 @@ export function SituationIsland({ className = '', onEdit }: SituationIslandProps
                       <img
                         src={photo.url}
                         alt=""
-                        className="aspect-square w-full border border-text/[0.06] object-cover transition-transform duration-200 ease-out hover:scale-105"
+                        className="aspect-square w-full border border-border object-cover transition-transform duration-200 ease-out hover:scale-105"
                       />
                       {isLastVisible && (
                         <span className="absolute inset-0 grid place-items-center rounded-xl bg-text/55 font-body text-xs font-semibold text-surface">
@@ -332,7 +332,7 @@ export function SituationIsland({ className = '', onEdit }: SituationIslandProps
               })}
             </ul>
           ) : (
-            <p className="mt-2 font-body text-sm leading-snug text-text/60">
+            <p className="mt-2 font-body text-sm leading-snug text-muted">
               Damage photos you share in the{' '}
               <Link
                 to={paths.chat}

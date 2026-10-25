@@ -21,7 +21,7 @@ function LoadingCards() {
   return (
     <ul aria-hidden="true" className="grid gap-4 @2xl:grid-cols-2">
       {placeholderCards.map((card) => (
-        <li key={card} className="rounded-2xl border border-text/[0.06] p-5 motion-safe:animate-pulse">
+        <li key={card} className="rounded-2xl border border-border p-5 motion-safe:animate-pulse">
           <div className="h-3 w-1/3 rounded-full bg-text/[0.06]" />
           <div className="mt-4 h-4 w-2/3 rounded-full bg-text/[0.08]" />
           <div className="mt-2.5 h-3 w-1/2 rounded-full bg-text/[0.06]" />
@@ -67,7 +67,7 @@ export function StoriesPage() {
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={pageTransition}
-      className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.75rem] border border-text/[0.06] bg-surface shadow-card"
+      className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.75rem] border border-border bg-surface shadow-card"
     >
       <div ref={setFadeElement} className="scroll-fade-y @container min-h-0 flex-1 overflow-y-auto overscroll-contain">
         <header className="px-5 pt-6 sm:px-8 sm:pt-8">
@@ -76,7 +76,7 @@ export function StoriesPage() {
           </h1>
         </header>
 
-        <div className="z-10 border-b @3xl:sticky @3xl:top-0 border-text/[0.06] bg-surface px-5 pt-5 pb-4 sm:px-8">
+        <div className="z-10 border-b @3xl:sticky @3xl:top-0 border-border bg-surface px-5 pt-5 pb-4 sm:px-8">
           <StoryToolbar filters={filters} choiceCounts={choiceCounts} onChange={updateFilters} />
         </div>
 
@@ -100,7 +100,7 @@ export function StoriesPage() {
           {status === 'ready' && (
             <>
               <div className="mb-4 flex min-h-8 items-center justify-between gap-3">
-                <p aria-live="polite" className="font-body text-sm text-text/60">
+                <p aria-live="polite" className="font-body text-sm text-muted">
                   {isFiltered
                     ? `Showing ${visibleStories.length} of ${stories.length} stories`
                     : `${stories.length} stories`}

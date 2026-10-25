@@ -17,7 +17,7 @@ export function IntakeQuestion({ number, title, hint, children }: IntakeQuestion
           0{number}
         </span>
         <span className="font-heading text-lg font-bold tracking-tight sm:text-xl">{title}</span>
-        {hint && <span className="font-body text-sm text-text/60">{hint}</span>}
+        {hint && <span className="font-body text-sm text-muted">{hint}</span>}
       </legend>
       <div className="mt-4">{children}</div>
     </motion.fieldset>

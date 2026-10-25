@@ -9,7 +9,7 @@ type ChatHeaderProps = {
 
 export function ChatHeader({ hasMessages, onReset }: ChatHeaderProps) {
   return (
-    <header className="flex items-center justify-between gap-3 border-b border-text/[0.06] px-4 py-3 sm:px-6">
+    <header className="flex items-center justify-between gap-3 border-b border-border px-4 py-3 sm:px-6">
       <div className="flex min-w-0 items-center gap-3">
         <GuideAvatar size="md" />
         <h1 id="chat-title" className="min-w-0 truncate font-heading text-base font-bold tracking-tight">

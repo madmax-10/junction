@@ -10,15 +10,15 @@ type StoryPreviewCardProps = {
 }
 
 const cardClassName =
-  'relative rounded-2xl border border-text/[0.06] bg-surface shadow-card transition-shadow duration-300 ease-out hover:shadow-card-hover'
+  'relative rounded-2xl border border-border bg-surface shadow-card transition-shadow duration-300 ease-out hover:shadow-card-hover'
 
-const termClassName = 'text-xs font-medium tracking-wide text-text/60 uppercase'
+const termClassName = 'text-xs font-medium tracking-wide text-muted uppercase'
 
 function StoryHeader({ story, subtitle }: { story: StoryPreview; subtitle: string }) {
   return (
     <header className="min-w-0">
       <h3 className="font-heading text-base font-bold leading-snug tracking-tight">{story.title}</h3>
-      <p className="mt-1 flex items-center gap-1.5 font-body text-sm text-text/70">
+      <p className="mt-1 flex items-center gap-1.5 font-body text-sm text-muted">
         <Car size={16} className="shrink-0 text-primary" aria-hidden="true" />
         {subtitle}
       </p>
@@ -35,7 +35,7 @@ function MatchedStoryCard({ story, readMoreHref }: { story: StoryPreview; readMo
     >
       <StoryHeader story={story} subtitle={subtitle} />
 
-      <dl className="mt-3 space-y-2.5 border-t border-text/[0.06] pt-3 font-body text-sm">
+      <dl className="mt-3 space-y-2.5 border-t border-border pt-3 font-body text-sm">
         <div>
           <dt className={termClassName}>What they decided</dt>
           <dd className="mt-0.5 leading-snug">{story.decision}</dd>
@@ -91,10 +91,10 @@ export function StoryPreviewCard({ story, variant = 'full', readMoreHref }: Stor
       {isCompact ? (
         <>
           <p className="mt-2.5 font-body text-sm leading-snug">
-            <span className="text-text/60">What they did: </span>
+            <span className="text-muted">What they did: </span>
             {story.decision}
           </p>
-          <p className="mt-2 flex items-center gap-1.5 font-body text-xs text-text/70">
+          <p className="mt-2 flex items-center gap-1.5 font-body text-xs text-muted">
             <CheckCircle size={14} className="shrink-0 text-primary" aria-hidden="true" />
             <span className="sr-only">Why it matches:</span>
             {story.matchReasons.join(' · ')}
@@ -102,7 +102,7 @@ export function StoryPreviewCard({ story, variant = 'full', readMoreHref }: Stor
         </>
       ) : (
         <>
-          <dl className="mt-3.5 grid gap-3 border-t border-text/[0.06] pt-3.5 font-body text-sm sm:grid-cols-2 sm:gap-5">
+          <dl className="mt-3.5 grid gap-3 border-t border-border pt-3.5 font-body text-sm sm:grid-cols-2 sm:gap-5">
             <div>
               <dt className={termClassName}>What they did</dt>
               <dd className="mt-1 leading-snug">{story.decision}</dd>
@@ -114,7 +114,7 @@ export function StoryPreviewCard({ story, variant = 'full', readMoreHref }: Stor
           </dl>
 
           <div className="mt-3.5 flex flex-wrap items-center gap-2">
-            <span className="font-body text-xs font-medium text-text/60">Why it matches</span>
+            <span className="font-body text-xs font-medium text-muted">Why it matches</span>
             <ul className="flex flex-wrap gap-1.5">
               {story.matchReasons.map((reason) => (
                 <li key={reason}>

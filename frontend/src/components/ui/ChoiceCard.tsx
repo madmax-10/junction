@@ -37,7 +37,7 @@ export function ChoiceCard({
       } ${
         checked
           ? 'border-primary shadow-card ring-1 ring-primary'
-          : 'border-text/10 hover:border-primary/35 hover:shadow-card'
+          : 'border-border hover:border-primary/35 hover:shadow-card'
       }`}
     >
       <input
@@ -62,7 +62,7 @@ export function ChoiceCard({
         <span className="block font-heading text-[0.95rem] font-bold leading-snug tracking-tight">
           {label}
         </span>
-        <span className="mt-0.5 block font-body text-sm leading-snug text-text/65">
+        <span className="mt-0.5 block font-body text-sm leading-snug text-muted">
           {description}
         </span>
       </span>

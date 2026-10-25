@@ -70,14 +70,18 @@ Never hardcode business data throughout UI components.
 Visual direction:
 Premium, calm, human-centered, minimal, trustworthy, and modern.
 
-Colors:
-- Primary text: #0E2A23
-- Primary accent: #054D3A
-- Light accent: #DCEBE8
-- Neutral: #D0D3D6 (page background is a light tint of it)
-- Highlight accent: mid-tone mix of #054D3A and #DCEBE8
-- Error: #B3412F
-- Surface: #FFFFFF
+Colors (Bordeaux & Champagne). Use the tokens in `frontend/src/styles/index.css`; never hardcode hex values in components.
+- Background (`background`): #F8F1E8
+- Surface (`surface`): #FFFFFF
+- Primary text and sidebar (`text`): #321B2A. The desktop sidebar is a dark `bg-text` panel with light text.
+- Primary accent, Bordeaux (`primary`): #8E2943. Use for primary buttons, active states, focus rings, and important interactions.
+- Secondary accent, Champagne (`accent`): #D7B97F. Use sparingly for decorative highlights only, never for text on light surfaces.
+- Soft accent (`primary-light`): #F2E2E6. Use for selected/active backgrounds and icon tiles.
+- Secondary text (`muted`): #705963
+- Borders (`border`): #E9DDE0
+- Error (`danger`): #B3412F
+
+Focus states: `ring-primary` on light surfaces, `ring-primary-light` on the dark sidebar.
 
 Typography:
 - Manrope for headings.

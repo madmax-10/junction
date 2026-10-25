@@ -8,7 +8,7 @@ import type { StoryMatch } from '../../types/story.ts'
 import { StoryPreviewCard } from '../stories/StoryPreviewCard.tsx'
 import { toStoryPreview } from '../stories/storyPreview.ts'
 
-const statusClassName = 'flex items-center gap-1.5 font-body text-xs font-medium text-text/60'
+const statusClassName = 'flex items-center gap-1.5 font-body text-xs font-medium text-muted'
 const collapseTransition = { duration: 0.3, ease: easeOutQuint }
 
 type StoryMatchListProps = {

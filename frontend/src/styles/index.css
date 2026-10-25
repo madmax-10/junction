@@ -1,23 +1,24 @@
 @import "tailwindcss";
 
 @theme {
-  --color-neutral: #D0D3D6;
-  --color-background: color-mix(in oklab, var(--color-neutral) 45%, white);
+  --color-background: #F8F1E8;
   --color-surface: #FFFFFF;
-  --color-primary: #054D3A;
-  --color-primary-light: #DCEBE8;
-  --color-text: #0E2A23;
-  --color-accent: color-mix(in oklab, var(--color-primary) 55%, var(--color-primary-light));
+  --color-text: #321B2A;
+  --color-muted: #705963;
+  --color-border: #E9DDE0;
+  --color-primary: #8E2943;
+  --color-primary-light: #F2E2E6;
+  --color-accent: #D7B97F;
   --color-danger: #B3412F;
 
-  --color-primary-hover: color-mix(in oklab, var(--color-primary) 80%, black);
+  --color-primary-hover: color-mix(in oklab, var(--color-primary) 82%, black);
 
   --font-sans: "Inter", sans-serif;
   --font-body: "Inter", sans-serif;
   --font-heading: "Manrope", sans-serif;
 
-  --shadow-card: 0 1px 2px rgb(14 42 35 / 0.05), 0 12px 32px -16px rgb(14 42 35 / 0.2);
-  --shadow-card-hover: 0 1px 2px rgb(14 42 35 / 0.06), 0 20px 40px -18px rgb(14 42 35 / 0.3);
+  --shadow-card: 0 1px 2px rgb(50 27 42 / 0.05), 0 12px 32px -16px rgb(50 27 42 / 0.2);
+  --shadow-card-hover: 0 1px 2px rgb(50 27 42 / 0.06), 0 20px 40px -18px rgb(50 27 42 / 0.3);
 }
 
 @property --fade-start {

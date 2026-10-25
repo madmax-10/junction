@@ -26,7 +26,7 @@ export function Field({ id, label, optional = false, hint, error, children }: Fi
         </p>
       ) : (
         hint && (
-          <p id={`${id}-hint`} className="mt-2 font-body text-xs text-text/60">
+          <p id={`${id}-hint`} className="mt-2 font-body text-xs text-muted">
             {hint}
           </p>
         )

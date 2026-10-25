@@ -21,7 +21,7 @@ export function TypingIndicator() {
             />
           ))}
         </span>
-        <span className="font-body text-sm text-text/60">Looking through experiences…</span>
+        <span className="font-body text-sm text-muted">Looking through experiences…</span>
       </div>
     </div>
   )

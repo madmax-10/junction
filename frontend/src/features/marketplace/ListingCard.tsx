@@ -16,7 +16,7 @@ export function ListingCard({ listing, onOpen }: ListingCardProps) {
   return (
     <article
       aria-labelledby={titleId}
-      className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-text/[0.06] bg-surface shadow-card transition-[box-shadow,transform] duration-300 ease-out hover:-translate-y-0.5 hover:shadow-card-hover has-[button:focus-visible]:ring-2 has-[button:focus-visible]:ring-primary has-[button:focus-visible]:ring-offset-2 motion-reduce:hover:translate-y-0"
+      className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-card transition-[box-shadow,transform] duration-300 ease-out hover:-translate-y-0.5 hover:shadow-card-hover has-[button:focus-visible]:ring-2 has-[button:focus-visible]:ring-primary has-[button:focus-visible]:ring-offset-2 motion-reduce:hover:translate-y-0"
     >
       <div className="relative aspect-[16/10] overflow-hidden bg-background">
         <img
@@ -38,7 +38,7 @@ export function ListingCard({ listing, onOpen }: ListingCardProps) {
             {getVehicleName(listing)}
           </button>
         </h2>
-        <p className="mt-0.5 truncate font-body text-sm text-text/60">
+        <p className="mt-0.5 truncate font-body text-sm text-muted">
           {vehicle.trim} · {vehicle.bodyStyle}
         </p>
 
@@ -46,7 +46,7 @@ export function ListingCard({ listing, onOpen }: ListingCardProps) {
           {formatPrice(listing.price)}
         </p>
 
-        <ul className="mt-4 flex flex-wrap gap-x-4 gap-y-1.5 border-t border-text/[0.06] pt-4 font-body text-sm text-text/70">
+        <ul className="mt-4 flex flex-wrap gap-x-4 gap-y-1.5 border-t border-border pt-4 font-body text-sm text-muted">
           <li className="flex items-center gap-1.5">
             <Gauge size={16} className="shrink-0 text-primary" aria-hidden="true" />
             <span className="sr-only">Mileage: </span>
@@ -62,7 +62,7 @@ export function ListingCard({ listing, onOpen }: ListingCardProps) {
         <div className="mt-auto flex min-w-0 items-center gap-2 pt-4">
           <ConditionTag condition={listing.condition} />
           {damage && (
-            <p className="truncate font-body text-xs text-text/60">
+            <p className="truncate font-body text-xs text-muted">
               <span className="sr-only">Damaged areas: </span>
               {damage.areas.join(', ')}
             </p>

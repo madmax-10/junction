@@ -173,7 +173,7 @@ export function SignInPage() {
         >
           <Link
             to={paths.intakeInterests}
-            className="mb-4 inline-flex items-center gap-1.5 rounded-full font-body text-sm font-medium text-text/70 outline-none hover:text-primary focus-visible:ring-2 focus-visible:ring-primary"
+            className="mb-4 inline-flex items-center gap-1.5 rounded-full font-body text-sm font-medium text-muted outline-none hover:text-primary focus-visible:ring-2 focus-visible:ring-primary"
           >
             <ArrowLeft size={16} aria-hidden="true" />
             Back to your answers
@@ -181,7 +181,7 @@ export function SignInPage() {
 
           <section
             aria-labelledby="auth-title"
-            className="rounded-[1.75rem] border border-text/[0.06] bg-surface p-6 shadow-card sm:p-8"
+            className="rounded-[1.75rem] border border-border bg-surface p-6 shadow-card sm:p-8"
           >
             <div role="group" aria-label="Account options" className="grid grid-cols-2 rounded-full bg-background p-1">
               {modes.map((option) => {
@@ -216,7 +216,7 @@ export function SignInPage() {
             >
               {copy.title}
             </h1>
-            <p className="mt-2 font-body text-sm leading-relaxed text-text/65">{copy.description}</p>
+            <p className="mt-2 font-body text-sm leading-relaxed text-muted">{copy.description}</p>
 
             <div className="mt-6 grid gap-3">
               <SocialButton
@@ -236,9 +236,9 @@ export function SignInPage() {
             </div>
 
             <div className="my-6 flex items-center gap-3 font-body text-xs text-text/50">
-              <span className="h-px flex-1 bg-text/10" aria-hidden="true" />
+              <span className="h-px flex-1 bg-border" aria-hidden="true" />
               or use your email
-              <span className="h-px flex-1 bg-text/10" aria-hidden="true" />
+              <span className="h-px flex-1 bg-border" aria-hidden="true" />
             </div>
 
             <form onSubmit={handleSubmit} noValidate className="grid gap-5">

@@ -71,7 +71,7 @@ export function LandingPage() {
                 aria-hidden="true"
               />
             </ButtonLink>
-            <p className="flex items-center gap-2 font-body text-sm whitespace-nowrap text-text/70">
+            <p className="flex items-center gap-2 font-body text-sm whitespace-nowrap text-muted">
               <LockSimple size={16} className="shrink-0 text-primary" aria-hidden="true" />
               Private unless you choose to share
             </p>

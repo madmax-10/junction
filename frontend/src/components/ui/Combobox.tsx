@@ -228,7 +228,7 @@ export function Combobox({
             exit={{ opacity: 0, y: -4, scale: 0.98 }}
             transition={{ duration: 0.16, ease: 'easeOut' }}
             onPointerDown={(event) => event.preventDefault()}
-            className="absolute inset-x-0 top-full z-30 mt-2 origin-top overflow-hidden rounded-2xl border border-text/[0.08] bg-surface shadow-card-hover"
+            className="absolute inset-x-0 top-full z-30 mt-2 origin-top overflow-hidden rounded-2xl border border-border bg-surface shadow-card-hover"
           >
             <ul
               ref={setListElement}
@@ -270,7 +270,7 @@ export function Combobox({
               })}
             </ul>
             {items.length === 0 && (
-              <p className="px-4 pt-1 pb-4 font-body text-sm text-text/60">{emptyMessage}</p>
+              <p className="px-4 pt-1 pb-4 font-body text-sm text-muted">{emptyMessage}</p>
             )}
           </motion.div>
         )}

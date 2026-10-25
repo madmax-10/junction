@@ -25,7 +25,7 @@ function LoadingCards() {
   return (
     <ul aria-hidden="true" className={gridClassName}>
       {placeholderCards.map((card) => (
-        <li key={card} className="overflow-hidden rounded-2xl border border-text/[0.06] motion-safe:animate-pulse">
+        <li key={card} className="overflow-hidden rounded-2xl border border-border motion-safe:animate-pulse">
           <div className="aspect-[16/10] bg-text/[0.06]" />
           <div className="p-5">
             <div className="h-4 w-2/3 rounded-full bg-text/[0.08]" />
@@ -76,7 +76,7 @@ export function MarketplacePage() {
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={pageTransition}
-      className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.75rem] border border-text/[0.06] bg-surface shadow-card"
+      className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.75rem] border border-border bg-surface shadow-card"
     >
       <div ref={setFadeElement} className="scroll-fade-y @container min-h-0 flex-1 overflow-y-auto overscroll-contain">
         <header className="flex items-center justify-between gap-4 px-5 pt-6 sm:px-8 sm:pt-8">
@@ -90,7 +90,7 @@ export function MarketplacePage() {
           <CategoryTabs category={category} counts={categoryCounts} onChange={changeCategory} />
         </div>
 
-        <div className="z-10 border-b border-text/[0.06] bg-surface px-5 pt-4 pb-4 @3xl:sticky @3xl:top-0 sm:px-8">
+        <div className="z-10 border-b border-border bg-surface px-5 pt-4 pb-4 @3xl:sticky @3xl:top-0 sm:px-8">
           <MarketplaceToolbar category={category} filters={filters} onChange={updateFilters} />
         </div>
 
@@ -114,7 +114,7 @@ export function MarketplacePage() {
           {status === 'ready' && (
             <>
               <div className="mb-4 flex min-h-8 items-center justify-between gap-3">
-                <p aria-live="polite" className="font-body text-sm text-text/60">
+                <p aria-live="polite" className="font-body text-sm text-muted">
                   {isFiltered
                     ? `Showing ${visibleListings.length} of ${categoryTotal} listings`
                     : `${categoryTotal} listings`}

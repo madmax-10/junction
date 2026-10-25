@@ -21,7 +21,7 @@ export function StatusMessage({ icon, title, description, action }: StatusMessag
         {icon}
       </span>
       <h2 className="mt-4 font-heading text-lg font-bold tracking-tight">{title}</h2>
-      <p className="mt-1 max-w-sm font-body text-sm leading-relaxed text-text/65">{description}</p>
+      <p className="mt-1 max-w-sm font-body text-sm leading-relaxed text-muted">{description}</p>
       <div className="mt-5">{action}</div>
     </motion.div>
   )

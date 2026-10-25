@@ -47,10 +47,10 @@ export function ListYourCarButton() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -6, scale: 0.98, transition: { duration: 0.15 } }}
             transition={{ duration: 0.25, ease: easeOutQuint }}
-            className="absolute top-full left-0 z-30 mt-2 w-72 origin-top-left rounded-2xl border border-text/[0.06] bg-surface p-4 shadow-card-hover sm:right-0 sm:left-auto sm:origin-top-right"
+            className="absolute top-full left-0 z-30 mt-2 w-72 origin-top-left rounded-2xl border border-border bg-surface p-4 shadow-card-hover sm:right-0 sm:left-auto sm:origin-top-right"
           >
             <p className="font-heading text-sm font-bold tracking-tight">Selling opens soon</p>
-            <p className="mt-1 font-body text-sm leading-relaxed text-text/65">
+            <p className="mt-1 font-body text-sm leading-relaxed text-muted">
               You’ll be able to list a replacement or damaged car here, and choose what buyers can see before it goes
               live.
             </p>

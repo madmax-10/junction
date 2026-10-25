@@ -35,7 +35,7 @@ export function ChatEmptyState({ onSelectExample }: ChatEmptyStateProps) {
       >
         {firstName ? `Hi ${firstName}, what would you like to know?` : 'What would you like to know?'}
       </motion.h2>
-      <motion.p variants={fadeUpVariants} className="mt-1.5 max-w-lg font-body text-sm leading-relaxed text-text/65">
+      <motion.p variants={fadeUpVariants} className="mt-1.5 max-w-lg font-body text-sm leading-relaxed text-muted">
         Ask about your situation or add photos of the damage. I’ll find people who went through
         something similar.
       </motion.p>
@@ -58,7 +58,7 @@ export function ChatEmptyState({ onSelectExample }: ChatEmptyStateProps) {
               type="button"
               onClick={() => onSelectExample(suggestion.text)}
               className={`group flex h-full w-full items-start gap-3 rounded-2xl border p-3.5 text-left transition-[border-color,box-shadow,transform] duration-200 ease-out outline-none hover:-translate-y-0.5 hover:border-primary/35 hover:shadow-card focus-visible:border-primary focus-visible:ring-1 focus-visible:ring-primary active:translate-y-0 ${
-                suggestion.isOwn ? 'border-primary/30 bg-primary-light/40' : 'border-text/10 bg-surface'
+                suggestion.isOwn ? 'border-primary/30 bg-primary-light/40' : 'border-border bg-surface'
               }`}
             >
               <span

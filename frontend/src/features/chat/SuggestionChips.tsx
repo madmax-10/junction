@@ -44,7 +44,7 @@ export function SuggestionChips({ suggestions, onConfirm, onDismiss }: Suggestio
         initial={{ opacity: 0, y: 4 }}
         animate={{ opacity: 1, y: 0 }}
         transition={chipTransition}
-        className="flex max-w-[85%] items-start gap-1.5 font-body text-xs text-text/60 outline-none sm:max-w-[75%]"
+        className="flex max-w-[85%] items-start gap-1.5 font-body text-xs text-muted outline-none sm:max-w-[75%]"
       >
         <CheckCircle size={14} weight="fill" className="mt-px shrink-0 text-primary" aria-hidden="true" />
         <p>

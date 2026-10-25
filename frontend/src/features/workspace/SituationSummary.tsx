@@ -15,7 +15,7 @@ export function SituationSummary({ onEdit }: { onEdit: () => void }) {
   return (
     <section
       aria-label="My situation"
-      className="flex items-center gap-2.5 rounded-2xl border border-text/[0.06] bg-surface py-2 pr-2 pl-3.5 shadow-card lg:hidden"
+      className="flex items-center gap-2.5 rounded-2xl border border-border bg-surface py-2 pr-2 pl-3.5 shadow-card lg:hidden"
     >
       <StatusIcon
         size={16}
@@ -26,12 +26,12 @@ export function SituationSummary({ onEdit }: { onEdit: () => void }) {
       <p className="min-w-0 flex-1 truncate font-body text-xs">
         {hasDetails ? (
           <>
-            <span className="text-text/60">My situation: </span>
+            <span className="text-muted">My situation: </span>
             <span className="font-medium">{highlights.join(' · ')}</span>
             {!isFullyConfirmed && <span className="text-text/55"> · needs review</span>}
           </>
         ) : (
-          <span className="text-text/65">Add your car and what happened for closer matches</span>
+          <span className="text-muted">Add your car and what happened for closer matches</span>
         )}
       </p>
       <button

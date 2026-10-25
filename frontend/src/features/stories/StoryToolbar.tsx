@@ -29,7 +29,7 @@ function SegmentButton({
       aria-pressed={isActive}
       onClick={onClick}
       className={`relative h-9 flex-1 rounded-full px-3 font-body text-sm font-medium whitespace-nowrap transition-colors duration-200 outline-none focus-visible:ring-2 focus-visible:ring-primary @3xl:flex-none ${
-        isActive ? 'text-primary' : 'text-text/65 hover:text-text'
+        isActive ? 'text-primary' : 'text-muted hover:text-text'
       }`}
     >
       {isActive && (
@@ -64,7 +64,7 @@ function ChoiceChip({
       className={`inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full border px-3.5 font-body text-sm font-medium transition-[background-color,border-color,color] duration-200 ease-out outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 active:scale-[0.98] ${
         isActive
           ? 'border-primary bg-primary text-surface'
-          : 'border-text/10 bg-surface text-text hover:border-primary/40 hover:text-primary'
+          : 'border-border bg-surface text-text hover:border-primary/40 hover:text-primary'
       }`}
     >
       {children}

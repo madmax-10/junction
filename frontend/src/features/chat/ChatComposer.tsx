@@ -131,18 +131,18 @@ export function ChatComposer({ isResponding, onSend, textareaRef }: ChatComposer
   return (
     <form
       onSubmit={handleSubmit}
-      className="border-t border-text/[0.06] bg-surface px-3 pt-3 pb-3 sm:px-6 sm:pt-4 sm:pb-5"
+      className="pointer-events-none px-3 pt-3 pb-3 sm:px-6 sm:pt-4 sm:pb-5"
     >
-      <div className="mx-auto max-w-2xl">
+      <div className="pointer-events-auto mx-auto max-w-2xl">
         <div
           onDragEnter={handleDragOver}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
-          className={`relative rounded-3xl border bg-surface shadow-card transition-[border-color,box-shadow] duration-200 ease-out ${
+          className={`relative rounded-3xl border bg-surface/75 shadow-card-hover backdrop-blur-xl transition-[border-color,box-shadow] duration-200 ease-out ${
             isDragging
               ? 'border-primary ring-1 ring-primary'
-              : 'border-text/10 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary'
+              : 'border-border focus-within:border-primary focus-within:ring-1 focus-within:ring-primary'
           }`}
         >
           <AnimatePresence initial={false}>
@@ -171,7 +171,7 @@ export function ChatComposer({ isResponding, onSend, textareaRef }: ChatComposer
                       <img
                         src={attachment.url}
                         alt={`Photo ${index + 1}: ${attachment.name}`}
-                        className="size-full rounded-xl border border-text/[0.06] object-cover"
+                        className="size-full rounded-xl border border-border object-cover"
                       />
                       <button
                         type="button"
@@ -211,7 +211,7 @@ export function ChatComposer({ isResponding, onSend, textareaRef }: ChatComposer
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isAtImageLimit}
-                className="inline-flex h-10 items-center gap-2 rounded-full px-3 font-body text-sm font-medium text-text/70 transition-colors duration-200 outline-none hover:bg-primary-light hover:text-primary focus-visible:ring-2 focus-visible:ring-primary disabled:pointer-events-none disabled:opacity-40"
+                className="inline-flex h-10 items-center gap-2 rounded-full px-3 font-body text-sm font-medium text-muted transition-colors duration-200 outline-none hover:bg-primary-light hover:text-primary focus-visible:ring-2 focus-visible:ring-primary disabled:pointer-events-none disabled:opacity-40"
               >
                 <ImageSquare size={20} aria-hidden="true" />
                 Add photos
@@ -262,15 +262,8 @@ export function ChatComposer({ isResponding, onSend, textareaRef }: ChatComposer
           </AnimatePresence>
         </div>
 
-        <p id="chat-input-hint" aria-live="polite" className="mt-2 px-2 font-body text-xs">
-          {error ? (
-            <span className="text-danger">{error}</span>
-          ) : (
-            <span className="text-text/50">
-              <span className="hidden sm:inline">Enter to send, Shift + Enter for a new line. </span>
-              Photos stay private to this conversation.
-            </span>
-          )}
+        <p id="chat-input-hint" aria-live="polite" className="mt-2 px-2 font-body text-xs text-danger empty:mt-0">
+          {error}
         </p>
       </div>
     </form>

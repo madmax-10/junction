@@ -5,7 +5,7 @@ export function WorkspaceTabBar() {
   return (
     <nav
       aria-label="Workspace"
-      className="mx-3 mt-3 mb-[max(0.75rem,env(safe-area-inset-bottom))] rounded-[1.5rem] border border-text/[0.06] bg-surface px-1.5 py-1.5 shadow-card lg:hidden"
+      className="mx-3 mt-3 mb-[max(0.75rem,env(safe-area-inset-bottom))] rounded-[1.5rem] border border-border bg-surface px-1.5 py-1.5 shadow-card lg:hidden"
     >
       <ul className="grid grid-cols-4">
         {workspaceNavItems.map(({ id, to, label, shortLabel, icon: Icon }) => (
@@ -15,7 +15,7 @@ export function WorkspaceTabBar() {
               aria-label={label}
               className={({ isActive }) =>
                 `group flex flex-col items-center gap-0.5 rounded-2xl py-1 font-body text-[0.7rem] font-medium transition-colors duration-200 outline-none focus-visible:ring-2 focus-visible:ring-primary ${
-                  isActive ? 'text-primary' : 'text-text/60 hover:text-text'
+                  isActive ? 'text-primary' : 'text-muted hover:text-text'
                 }`
               }
             >

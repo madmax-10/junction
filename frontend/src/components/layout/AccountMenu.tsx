@@ -90,7 +90,7 @@ export function AccountMenu({ placement = 'below' }: AccountMenuProps) {
         aria-expanded={isOpen}
         aria-controls="account-menu"
         aria-label={`Account menu for ${user.name}`}
-        className="grid size-10 place-items-center rounded-full bg-text font-heading text-sm font-bold text-surface transition-shadow duration-200 outline-none hover:shadow-card-hover focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+        className="grid size-10 place-items-center rounded-full bg-primary font-heading text-sm font-bold text-surface transition-[background-color,box-shadow] duration-200 outline-none hover:bg-primary-hover hover:shadow-card-hover focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
       >
         {getInitials(user.name)}
       </button>
@@ -105,13 +105,13 @@ export function AccountMenu({ placement = 'below' }: AccountMenuProps) {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: offsetY, scale: 0.97 }}
             transition={{ duration: 0.16, ease: 'easeOut' }}
-            className={`absolute z-40 w-64 ${placementClassNames[placement]} rounded-2xl border border-text/[0.06] bg-surface p-2 shadow-card-hover`}
+            className={`absolute z-40 w-64 ${placementClassNames[placement]} rounded-2xl border border-border bg-surface p-2 shadow-card-hover`}
           >
             <div className="px-3 py-2.5">
               <p className="truncate font-body text-sm font-semibold">{user.name}</p>
-              <p className="truncate font-body text-xs text-text/60">{user.email}</p>
+              <p className="truncate font-body text-xs text-muted">{user.email}</p>
             </div>
-            <div className="my-1 h-px bg-text/[0.06]" aria-hidden="true" />
+            <div className="my-1 h-px bg-border" aria-hidden="true" />
             <button
               type="button"
               role="menuitem"

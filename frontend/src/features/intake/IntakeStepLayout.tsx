@@ -39,7 +39,7 @@ export function IntakeStepLayout({ step, title, description, children }: IntakeS
         </motion.p>
         <motion.p
           variants={fadeUpVariants}
-          className="mt-6 flex items-center gap-2 font-body text-sm text-text/70"
+          className="mt-6 flex items-center gap-2 font-body text-sm text-muted"
         >
           <LockSimple size={16} className="shrink-0 text-primary" aria-hidden="true" />
           Private unless you choose to share

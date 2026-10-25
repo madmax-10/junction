@@ -46,7 +46,7 @@ function EditorSection({
     <section
       id={`edit-section-${section}`}
       aria-labelledby={titleId}
-      className="scroll-mt-4 border-t border-text/[0.06] py-6 first:border-t-0 first:pt-2"
+      className="scroll-mt-4 border-t border-border py-6 first:border-t-0 first:pt-2"
     >
       <h3 id={titleId} className="flex items-center gap-2 font-heading text-base font-bold tracking-tight">
         <span className="grid size-8 place-items-center rounded-xl bg-primary-light text-primary" aria-hidden="true">
@@ -145,14 +145,14 @@ function EditorSheet({ focusSection, onClose }: Omit<SituationEditorProps, 'isOp
         animate={{ opacity: 1, x: 0 }}
         exit={{ opacity: 0, x: 40 }}
         transition={sheetTransition}
-        className="relative m-3 flex w-full max-w-[34rem] flex-col overflow-hidden rounded-[1.75rem] border border-text/[0.06] bg-surface shadow-card-hover"
+        className="relative m-3 flex w-full max-w-[34rem] flex-col overflow-hidden rounded-[1.75rem] border border-border bg-surface shadow-card-hover"
       >
-        <header className="flex items-start justify-between gap-4 border-b border-text/[0.06] px-6 pt-5 pb-4">
+        <header className="flex items-start justify-between gap-4 border-b border-border px-6 pt-5 pb-4">
           <div>
             <h2 id="edit-situation-title" className="font-heading text-xl font-extrabold tracking-[-0.02em]">
               Edit details
             </h2>
-            <p id="edit-situation-description" className="mt-1 font-body text-sm text-text/65">
+            <p id="edit-situation-description" className="mt-1 font-body text-sm text-muted">
               Keep your situation up to date so the stories you see stay relevant.
             </p>
           </div>
@@ -160,7 +160,7 @@ function EditorSheet({ focusSection, onClose }: Omit<SituationEditorProps, 'isOp
             type="button"
             onClick={onClose}
             aria-label="Close without saving"
-            className="grid size-10 shrink-0 place-items-center rounded-full text-text/60 transition-colors duration-200 outline-none hover:bg-background hover:text-text focus-visible:ring-2 focus-visible:ring-primary"
+            className="grid size-10 shrink-0 place-items-center rounded-full text-muted transition-colors duration-200 outline-none hover:bg-background hover:text-text focus-visible:ring-2 focus-visible:ring-primary"
           >
             <X size={20} strokeWidth={1.75} aria-hidden="true" />
           </button>
@@ -312,8 +312,8 @@ function EditorSheet({ focusSection, onClose }: Omit<SituationEditorProps, 'isOp
             </EditorSection>
           </div>
 
-          <footer className="flex flex-col-reverse gap-3 border-t border-text/[0.06] px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
-            <p className="font-body text-xs text-text/60">Saving marks these details as confirmed by you.</p>
+          <footer className="flex flex-col-reverse gap-3 border-t border-border px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
+            <p className="font-body text-xs text-muted">Saving marks these details as confirmed by you.</p>
             <div className="flex gap-2">
               <Button variant="secondary" onClick={onClose} className="flex-1 sm:flex-none">
                 Cancel

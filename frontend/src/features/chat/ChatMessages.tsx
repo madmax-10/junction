@@ -30,7 +30,7 @@ export function UserMessage({
               <img
                 src={image.url}
                 alt={`Your photo ${index + 1} of ${images.length}`}
-                className="size-24 rounded-2xl border border-text/[0.06] object-cover shadow-card sm:size-28"
+                className="size-24 rounded-2xl border border-border object-cover shadow-card sm:size-28"
               />
             </li>
           ))}

@@ -14,7 +14,7 @@ export function IntakeActions({ backTo, canContinue, incompleteHint }: IntakeAct
   return (
     <motion.div
       variants={fadeUpVariants}
-      className="flex flex-col-reverse gap-4 border-t border-text/10 pt-6 sm:flex-row sm:items-center sm:justify-between"
+      className="flex flex-col-reverse gap-4 border-t border-border pt-6 sm:flex-row sm:items-center sm:justify-between"
     >
       <ButtonLink to={backTo} variant="secondary" size="lg">
         <ArrowLeft size={18} aria-hidden="true" />
@@ -31,7 +31,7 @@ export function IntakeActions({ backTo, canContinue, incompleteHint }: IntakeAct
         </Button>
         <p
           id="continue-hint"
-          className={`font-body text-xs text-text/60 sm:text-right ${canContinue ? 'sr-only' : ''}`}
+          className={`font-body text-xs text-muted sm:text-right ${canContinue ? 'sr-only' : ''}`}
           aria-live="polite"
         >
           {canContinue ? 'Ready to continue' : incompleteHint}

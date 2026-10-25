@@ -1,14 +1,11 @@
 import { MotionConfig } from 'motion/react'
 import { useState } from 'react'
-import { Outlet, useMatch } from 'react-router'
-import { paths } from '../../app/paths.ts'
+import { Outlet } from 'react-router'
 import { AccountMenu } from '../../components/layout/AccountMenu.tsx'
 import { BrandLink } from '../../components/layout/BrandLink.tsx'
 import { WorkspaceSidebar } from '../../components/layout/WorkspaceSidebar.tsx'
 import { WorkspaceTabBar } from '../../components/layout/WorkspaceTabBar.tsx'
 import type { SituationSection } from '../../types/intake.ts'
-import { useChat, useLatestReply } from '../chat/ChatContext.ts'
-import { ExperiencePanel } from '../chat/ExperiencePanel.tsx'
 import { SituationEditor } from './SituationEditor.tsx'
 import { SituationIsland } from './SituationIsland.tsx'
 import { SituationSummary } from './SituationSummary.tsx'
@@ -16,9 +13,6 @@ import { SituationSummary } from './SituationSummary.tsx'
 type EditorState = { section: SituationSection | null } | null
 
 export function WorkspaceLayout() {
-  const { isResponding } = useChat()
-  const latestReply = useLatestReply()
-  const isAssistant = useMatch(paths.chat) !== null
   const [editor, setEditor] = useState<EditorState>(null)
 
   function openEditor(section: SituationSection | null = null) {
@@ -43,14 +37,7 @@ export function WorkspaceLayout() {
         </div>
 
         <div className="hidden w-[20rem] shrink-0 flex-col gap-3 lg:flex xl:w-[22rem]">
-          <SituationIsland className={isAssistant ? 'max-h-[60%] shrink-0' : ''} onEdit={openEditor} />
-          {isAssistant && (
-            <ExperiencePanel
-              matches={latestReply?.matches ?? []}
-              resultsKey={latestReply?.id ?? null}
-              isSearching={isResponding}
-            />
-          )}
+          <SituationIsland className="flex-1" onEdit={openEditor} />
         </div>
 
         <WorkspaceTabBar />

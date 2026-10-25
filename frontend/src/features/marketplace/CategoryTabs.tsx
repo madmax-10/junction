@@ -22,7 +22,7 @@ export function CategoryTabs({ category, counts, onChange }: CategoryTabsProps) 
             aria-pressed={isActive}
             onClick={() => onChange(option.value)}
             className={`group relative flex min-w-0 items-center gap-3 rounded-2xl px-3 py-2.5 text-left transition-colors duration-200 outline-none focus-visible:ring-2 focus-visible:ring-primary sm:px-4 sm:py-3 ${
-              isActive ? 'text-text' : 'text-text/65 hover:text-text'
+              isActive ? 'text-text' : 'text-muted hover:text-text'
             }`}
           >
             {isActive && (
@@ -35,7 +35,7 @@ export function CategoryTabs({ category, counts, onChange }: CategoryTabsProps) 
             )}
             <span
               className={`relative hidden size-10 shrink-0 place-items-center rounded-xl transition-colors duration-200 @md:grid ${
-                isActive ? 'bg-primary-light text-primary' : 'bg-surface/70 text-text/50 group-hover:text-text/70'
+                isActive ? 'bg-primary-light text-primary' : 'bg-surface/70 text-text/50 group-hover:text-muted'
               }`}
               aria-hidden="true"
             >
@@ -50,7 +50,7 @@ export function CategoryTabs({ category, counts, onChange }: CategoryTabsProps) 
                   <span className="sr-only"> listings)</span>
                 </span>
               </span>
-              <span className="mt-0.5 hidden truncate font-body text-xs text-text/60 @xl:block">{option.description}</span>
+              <span className="mt-0.5 hidden truncate font-body text-xs text-muted @xl:block">{option.description}</span>
             </span>
           </button>
         )

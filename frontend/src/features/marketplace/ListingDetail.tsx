@@ -16,7 +16,7 @@ type ListingDetailProps = {
 
 const focusableSelector = 'a[href], button:not([disabled]), input:not([disabled]), textarea:not([disabled])'
 const panelTransition = { duration: 0.3, ease: easeOutQuint }
-const termClassName = 'font-body text-xs font-medium tracking-wide text-text/60 uppercase'
+const termClassName = 'font-body text-xs font-medium tracking-wide text-muted uppercase'
 
 function DetailSection({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -135,7 +135,7 @@ function DetailDialog({ listing, onClose }: { listing: MarketplaceListing; onClo
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: 16, scale: 0.98, transition: { duration: 0.2 } }}
         transition={panelTransition}
-        className="relative flex max-h-full w-full max-w-[46rem] flex-col overflow-hidden rounded-[1.75rem] border border-text/[0.06] bg-surface shadow-card-hover"
+        className="relative flex max-h-full w-full max-w-[46rem] flex-col overflow-hidden rounded-[1.75rem] border border-border bg-surface shadow-card-hover"
       >
         <button
           ref={closeButtonRef}
@@ -158,7 +158,7 @@ function DetailDialog({ listing, onClose }: { listing: MarketplaceListing; onClo
                 <h2 id={titleId} className="font-heading text-2xl font-extrabold tracking-[-0.02em]">
                   {getVehicleName(listing)}
                 </h2>
-                <p className="mt-0.5 font-body text-sm text-text/60">
+                <p className="mt-0.5 font-body text-sm text-muted">
                   {vehicle.trim} · {vehicle.bodyStyle}
                 </p>
               </div>
@@ -167,7 +167,7 @@ function DetailDialog({ listing, onClose }: { listing: MarketplaceListing; onClo
               </p>
             </header>
 
-            <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 font-body text-sm text-text/70">
+            <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 font-body text-sm text-muted">
               <ConditionTag condition={listing.condition} />
               <span className="inline-flex items-center gap-1.5">
                 <MapPin size={16} className="text-primary" aria-hidden="true" />
@@ -179,7 +179,7 @@ function DetailDialog({ listing, onClose }: { listing: MarketplaceListing; onClo
               </span>
             </div>
 
-            <div className="mt-6 space-y-6 border-t border-text/[0.06] pt-6">
+            <div className="mt-6 space-y-6 border-t border-border pt-6">
               <DetailSection title="From the seller">
                 <p className="font-body text-sm leading-relaxed text-text/85">{listing.description}</p>
               </DetailSection>
@@ -195,7 +195,7 @@ function DetailDialog({ listing, onClose }: { listing: MarketplaceListing; onClo
                   {listing.highlights.map((highlight) => (
                     <li
                       key={highlight}
-                      className="inline-flex items-center gap-1.5 rounded-full border border-text/10 px-3 py-1.5 font-body text-sm"
+                      className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 font-body text-sm"
                     >
                       <Check size={14} weight="bold" className="text-primary" aria-hidden="true" />
                       {highlight}

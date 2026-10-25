@@ -17,7 +17,7 @@ const currencyFormat = new Intl.NumberFormat('en-US', { style: 'currency', curre
 const numberFormat = new Intl.NumberFormat('en-US')
 const detailsTransition = { duration: 0.3, ease: easeOutQuint }
 
-const termClassName = 'font-body text-xs font-medium tracking-wide text-text/60 uppercase'
+const termClassName = 'font-body text-xs font-medium tracking-wide text-muted uppercase'
 const asideClassName = 'font-normal tracking-normal normal-case'
 
 function StatusBadge({ status }: { status: StoryStatus }) {
@@ -35,7 +35,7 @@ function StoryDetails({ story }: { story: CommunityStory }) {
 
   return (
     <>
-      <div className="mt-4 grid gap-5 border-t border-text/[0.06] pt-4 @2xl:grid-cols-2 @2xl:gap-8">
+      <div className="mt-4 grid gap-5 border-t border-border pt-4 @2xl:grid-cols-2 @2xl:gap-8">
         <div className="space-y-5">
           <section>
             <h3 className={termClassName}>What they decided</h3>
@@ -49,9 +49,9 @@ function StoryDetails({ story }: { story: CommunityStory }) {
                 {costs.map((cost) => (
                   <div
                     key={cost.label}
-                    className="flex items-baseline justify-between gap-4 border-b border-dashed border-text/10 py-1.5 last:border-b-0"
+                    className="flex items-baseline justify-between gap-4 border-b border-dashed border-border py-1.5 last:border-b-0"
                   >
-                    <dt className="text-text/70">{cost.label}</dt>
+                    <dt className="text-muted">{cost.label}</dt>
                     <dd className="font-medium tabular-nums">{currencyFormat.format(cost.amount)}</dd>
                   </div>
                 ))}
@@ -95,11 +95,11 @@ export function CommunityStoryCard({ story, isExpanded, onToggle }: CommunitySto
       ref={articleRef}
       aria-labelledby={titleId}
       className={`flex h-full scroll-mt-4 flex-col @3xl:scroll-mt-40 rounded-2xl border bg-surface p-5 shadow-card transition-[box-shadow,border-color] duration-300 ease-out hover:shadow-card-hover ${
-        isExpanded ? 'border-primary/20' : 'border-text/[0.06]'
+        isExpanded ? 'border-primary/20' : 'border-border'
       }`}
     >
       <div className="flex items-center justify-between gap-3">
-        <p className="flex min-w-0 items-center gap-2 font-body text-xs text-text/60">
+        <p className="flex min-w-0 items-center gap-2 font-body text-xs text-muted">
           <span className="grid size-6 shrink-0 place-items-center rounded-full bg-primary-light text-primary" aria-hidden="true">
             <User size={13} weight="bold" />
           </span>
@@ -112,7 +112,7 @@ export function CommunityStoryCard({ story, isExpanded, onToggle }: CommunitySto
         <h2 id={titleId} className="font-heading text-lg leading-snug font-bold tracking-tight">
           {story.title}
         </h2>
-        <p className="mt-1 flex items-center gap-1.5 font-body text-sm text-text/70">
+        <p className="mt-1 flex items-center gap-1.5 font-body text-sm text-muted">
           <Car size={16} className="shrink-0 text-primary" aria-hidden="true" />
           {getVehicleName(story)} · {numberFormat.format(story.vehicle.mileage)} mi
         </p>
