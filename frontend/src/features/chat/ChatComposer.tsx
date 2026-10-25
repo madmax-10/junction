@@ -27,6 +27,7 @@ const thumbnailTransition = { duration: 0.2, ease: 'easeOut' } as const
 
 type ChatComposerProps = {
   isResponding: boolean
+  disabled?: boolean
   onSend: (text: string, images: ChatImage[]) => void
   textareaRef: RefObject<HTMLTextAreaElement | null>
 }
@@ -35,7 +36,7 @@ function hasDraggedFiles(event: DragEvent<HTMLElement>) {
   return event.dataTransfer.types.includes('Files')
 }
 
-export function ChatComposer({ isResponding, onSend, textareaRef }: ChatComposerProps) {
+export function ChatComposer({ isResponding, disabled = false, onSend, textareaRef }: ChatComposerProps) {
   const [text, setText] = useState('')
   const [isDragging, setIsDragging] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -57,7 +58,7 @@ export function ChatComposer({ isResponding, onSend, textareaRef }: ChatComposer
   )
 
   const hasContent = text.trim().length > 0 || attachments.length > 0
-  const canSend = hasContent && !isResponding
+  const canSend = hasContent && !isResponding && !disabled
   const isAtImageLimit = attachments.length >= maxImages
 
   useLayoutEffect(() => {
@@ -205,7 +206,8 @@ export function ChatComposer({ isResponding, onSend, textareaRef }: ChatComposer
             onChange={(event) => setText(event.target.value)}
             onKeyDown={handleKeyDown}
             onPaste={handlePaste}
-            placeholder="Describe what happened…"
+            disabled={disabled}
+            placeholder={disabled ? 'Add your vehicle and what happened to start…' : 'Describe what happened…'}
             aria-describedby="chat-input-hint"
             className="scroll-fade-y block w-full resize-none bg-transparent px-4 pt-3.5 pb-1 [--fade-size:1.25rem] font-body text-[0.95rem] leading-relaxed outline-none placeholder:text-text/45"
           />
@@ -215,7 +217,7 @@ export function ChatComposer({ isResponding, onSend, textareaRef }: ChatComposer
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                disabled={isAtImageLimit}
+                disabled={isAtImageLimit || disabled}
                 className="inline-flex h-10 items-center gap-2 rounded-full px-3 font-body text-sm font-medium text-muted transition-colors duration-200 outline-none hover:bg-secondary-light hover:text-secondary focus-visible:ring-2 focus-visible:ring-secondary disabled:pointer-events-none disabled:opacity-40"
               >
                 <ImageSquare size={20} aria-hidden="true" />

@@ -4,6 +4,7 @@ import type { ChatImage, ChatMessage } from '../../types/chat.ts'
 export type ChatContextValue = {
   messages: ChatMessage[]
   isResponding: boolean
+  isRestoring: boolean
   sendMessage: (text: string, images?: ChatImage[]) => void
   confirmSuggestion: (messageId: string, suggestionId: string) => void
   dismissSuggestion: (messageId: string, suggestionId: string) => void
