@@ -4,14 +4,25 @@
 		{
 			"label": "Run frontend",
 			"type": "shell",
-			"command": "npm --prefix frontend start -- --host 127.0.0.1",
+			"command": "npm",
+			"args": ["start", "--", "--host", "127.0.0.1"],
+			"options": {
+				"cwd": "${workspaceFolder}/frontend",
+				"env": {
+					"PATH": "${env:HOME}/.local/share/nodejs/node-v24.22.1-darwin-arm64/bin:${env:PATH}"
+				}
+			},
 			"isBackground": true,
 			"problemMatcher": []
 		},
 		{
 			"label": "Run backend",
 			"type": "shell",
-			"command": "/Users/sanishshrestha/Documents/hackTexas1/.venv-dev/bin/python backend/manage.py runserver 127.0.0.1:8000",
+			"command": "${workspaceFolder}/.venv-dev/bin/python",
+			"args": ["manage.py", "runserver", "127.0.0.1:8000"],
+			"options": {
+				"cwd": "${workspaceFolder}/backend"
+			},
 			"isBackground": true,
 			"problemMatcher": []
 		}
