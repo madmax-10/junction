@@ -93,6 +93,8 @@ def _build_repair_snapshot(issue):
         data["cost"] = details["cost"]
     if details.get("mechanic_name"):
         data["mechanic_name"] = details["mechanic_name"]
+    if details.get("location"):
+        data["location"] = details["location"]
     return data
 
 

@@ -12,6 +12,7 @@ from agent.services.repair_issue_service import create_repair_issue as create_re
 from agent.services.repair_diagnosis_service import save_diagnosis as save_diagnosis_service
 from agent.services.repair_search_service import search_similar_repairs as search_similar_repairs_service
 from agent.services.repair_cost_service import estimate_repair_cost as estimate_repair_cost_service
+from agent.services.repair_mechanic_service import find_mechanics_in_city as find_mechanics_in_city_service
 from agent.services.repair_mechanic_service import find_nearby_mechanics as find_nearby_mechanics_service
 from agent.services.repair_resolution_service import record_resolution as record_resolution_service
 from agent.tools.result import error_result
@@ -60,18 +61,22 @@ async def save_diagnosis(
         return error_result("Unable to save repair diagnosis.")
 
 
-async def search_similar_repairs(repair_issue_id: str, tool_context: ToolContext, limit: int = 5) -> dict:
+async def search_similar_repairs(
+    repair_issue_id: str, tool_context: ToolContext, limit: int = 5, location: str | None = None,
+) -> dict:
     """Find published owner anecdotes for an owned issue; preserve uncertainty.
 
     Args:
         repair_issue_id: Existing owned private Repair issue UUID.
         tool_context: ADK-injected trusted identity context.
         limit: Maximum results, 1–10; validation and ranking remain service-owned.
+        location: City the owner stated (for example "New York"); only experiences from
+            that city are returned. Omit when the owner has not named a city.
     """
     try:
         user = await sync_to_async(get_authenticated_user, thread_sensitive=True)(tool_context)
         return await sync_to_async(search_similar_repairs_service, thread_sensitive=True)(
-            repair_issue_id, limit=limit, user=user,
+            repair_issue_id, limit=limit, location=location, user=user,
         )
     except (NotAuthenticated, PermissionDenied):
         return error_result("Trusted authentication context is required.")
@@ -120,6 +125,28 @@ async def find_nearby_mechanics(
         return error_result("Unable to find nearby mechanics.")
 
 
+async def find_mechanics_in_city(repair_issue_id: str, city: str, tool_context: ToolContext, limit: int = 5) -> dict:
+    """Find real repair businesses in a city the owner named; no coordinates needed.
+
+    Use after search_similar_repairs(location=city) reports no local experiences.
+
+    Args:
+        repair_issue_id: Existing owned private Repair issue UUID.
+        city: City the owner stated, such as "New York" or "Berlin, Germany".
+        tool_context: ADK-injected trusted identity context.
+        limit: Maximum businesses 1–10; default 5.
+    """
+    try:
+        user = await sync_to_async(get_authenticated_user, thread_sensitive=True)(tool_context)
+        return await sync_to_async(find_mechanics_in_city_service, thread_sensitive=True)(
+            repair_issue_id, city, limit=limit, user=user,
+        )
+    except (NotAuthenticated, PermissionDenied):
+        return error_result("Trusted authentication context is required.")
+    except (APIException, DjangoValidationError, ValueError, DatabaseError):
+        return error_result("Unable to find mechanics in that city.")
+
+
 async def record_resolution(repair_issue_id: str, resolution_details: dict, tool_context: ToolContext) -> dict:
     """Store an actual owner outcome only when explicitly requested; never publish.
 
@@ -149,7 +176,7 @@ def build_repair_agent(model) -> LlmAgent:
         name="repair", model=model, output_schema=RepairReply,
         description="Repair specialist for any make: private reports and owner outcomes, uncertain analysis, public experiences, supported costs and nearby businesses.",
         tools=[create_repair_issue, save_diagnosis, search_similar_repairs,
-               estimate_repair_cost, find_nearby_mechanics, record_resolution],
+               estimate_repair_cost, find_nearby_mechanics, find_mechanics_in_city, record_resolution],
         disallow_transfer_to_parent=True, disallow_transfer_to_peers=True,
         instruction=(
             "You are Agent 6, the Repair specialist under the Coordinator. "
@@ -168,13 +195,19 @@ def build_repair_agent(model) -> LlmAgent:
             "Use estimate_repair_cost for pricing evidence. Its current insufficient_data means reliable "
             "currency and complete-repair pricing evidence is unavailable. Preserve it; never invent costs, "
             "fallback ranges, labor rates or totals from partial parts/labor expenses. "
+            "When the owner names a city, first call search_similar_repairs with location set to that city and "
+            "present those local experiences. If it reports data.location.local_matches_found false, say no "
+            "experiences from that city exist yet, then call find_mechanics_in_city with the same city and "
+            "present those businesses. Never invent local experiences. "
             "Use find_nearby_mechanics only with explicitly supplied or authorized location coordinates. "
-            "Do not infer location from IP, profile or vehicle information, geocode cities/ZIPs yourself, "
-            "or store location automatically. Request approved coordinates through the Coordinator. "
-            "Return actual Google Places results and errors. A missing API key is a configuration error, "
+            "Do not infer location from IP, profile or vehicle information, guess coordinates yourself, "
+            "or store location automatically. "
+            "Return actual business-search results and errors. A missing API key is a configuration error, "
             "not permission to invent businesses. Do not claim live connectivity from mocked tests. "
             "Never invent ratings, appointments, prices, distances or manufacturer certification. Google distance "
             "preference is not driving time or an independent endorsement or repair-capability guarantee. "
+            "When recording a mechanic outcome, put the owner's city (city level only, never a street address) "
+            "in resolution_details.location if they have stated it; leave it out otherwise. "
             "Use record_resolution only when the owner clearly requests storing an actual reported outcome, "
             "with explicit resolved/unresolved/unsure status and the supported nested resolution_details. "
             "A repair attempt must not automatically become resolved. Preserve idempotency and conflict errors. "

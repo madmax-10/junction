@@ -40,17 +40,18 @@ class RepairAgentConfigurationTests(SimpleTestCase):
         self.assertEqual(agent.model, AGENT_MODEL)
         self.assertTrue(agent.description)
 
-    def test_exactly_six_tools_and_no_model_identity_parameters(self):
+    def test_exactly_seven_tools_and_no_model_identity_parameters(self):
         expected = {
             "create_repair_issue": ({"used_car_id", "description"}, {"used_car_id", "description"}),
             "save_diagnosis": ({"repair_issue_id", "symptoms", "ai_analysis"}, {"repair_issue_id", "symptoms", "ai_analysis"}),
-            "search_similar_repairs": ({"repair_issue_id", "limit"}, {"repair_issue_id"}),
+            "search_similar_repairs": ({"repair_issue_id", "limit", "location"}, {"repair_issue_id"}),
             "estimate_repair_cost": ({"repair_issue_id"}, {"repair_issue_id"}),
             "find_nearby_mechanics": ({"repair_issue_id", "latitude", "longitude", "radius_meters", "limit"}, {"repair_issue_id", "latitude", "longitude"}),
+            "find_mechanics_in_city": ({"repair_issue_id", "city", "limit"}, {"repair_issue_id", "city"}),
             "record_resolution": ({"repair_issue_id", "resolution_details"}, {"repair_issue_id", "resolution_details"}),
         }
         tools = async_to_sync(repair.build_repair_agent(AGENT_MODEL).canonical_tools)()
-        self.assertEqual(len(tools), 6)
+        self.assertEqual(len(tools), 7)
         self.assertEqual({tool.name for tool in tools}, set(expected))
         for tool in tools:
             with self.subTest(tool=tool.name):
@@ -95,6 +96,9 @@ class RepairAgentToolTests(TestCase):
     def setUp(self):
         self.sessions = InMemorySessionService()
         self.context = self.trusted_context()
+        env = patch.dict("os.environ", {"SERPAPI_API_KEY": ""})
+        env.start()
+        self.addCleanup(env.stop)
         for target in ("socket.socket.connect", "google.adk.models.google_llm.Gemini.generate_content_async"):
             blocker = patch(target, side_effect=AssertionError("No external/model calls"))
             blocker.start()
@@ -115,7 +119,7 @@ class RepairAgentToolTests(TestCase):
             (repair.save_diagnosis, {"repair_issue_id": issue_id, "symptoms": {"confirmed": ["Brakes grinding"]},
                                      "ai_analysis": {"possibilities": [{"cause": "Pads", "uncertainty": "Needs inspection"}]}},
              (issue_id, {"confirmed": ["Brakes grinding"]}, {"possibilities": [{"cause": "Pads", "uncertainty": "Needs inspection"}]}), {}),
-            (repair.search_similar_repairs, {"repair_issue_id": issue_id}, (issue_id,), {"limit": 5}),
+            (repair.search_similar_repairs, {"repair_issue_id": issue_id}, (issue_id,), {"limit": 5, "location": None}),
             (repair.estimate_repair_cost, {"repair_issue_id": issue_id}, (issue_id,), {}),
             (repair.find_nearby_mechanics, {"repair_issue_id": issue_id, "latitude": 30.2672, "longitude": -97.7431},
              (issue_id, 30.2672, -97.7431), {"radius_meters": 10000, "limit": 5}),

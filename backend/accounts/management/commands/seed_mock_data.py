@@ -519,6 +519,8 @@ def _repair_post_data(issue, car):
         data["work_performed"] = details["work_performed"]
     if details.get("mechanic_name"):
         data["mechanic_name"] = details["mechanic_name"]
+    if details.get("location"):
+        data["location"] = details["location"]
     if details.get("cost") is not None:
         data["cost"] = details["cost"]
     if details.get("insurance_settlement"):

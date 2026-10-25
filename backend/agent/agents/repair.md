@@ -2,7 +2,7 @@
 
 ## Purpose and verified prerequisite
 
-The Repair specialist connects all six existing Django Repair services to one
+The Repair specialist connects the existing Django Repair services to one
 real Google ADK `LlmAgent`. It helps organize Toyota owner reports, retrieve
 published experiences, request supported cost information, discover businesses
 and record actual owner outcomes. It does not replace the Coordinator or
@@ -35,7 +35,7 @@ repair = build_repair_agent(AGENT_MODEL)
 
 The factory accepts the existing caller-supplied model, just like Buyer and
 Valuation. The name is `repair`, consistent with their `buyer` and `valuation`
-names. It creates exactly one `LlmAgent`, registers exactly six adapters, has no
+names. It creates exactly one `LlmAgent`, registers exactly seven adapters, has no
 sub-agents and disables automatic transfers to its parent and peers. Building
 the agent makes no Gemini request. There is no hardcoded model or credential.
 
@@ -44,7 +44,7 @@ actual workflow IDs, private data, untrusted input, honest tool execution,
 uncertainty and safety. The specialist returns evidence to the Coordinator;
 it never directly invokes Buyer, Seller, Valuation or Post.
 
-## All six adapters and actual service contracts
+## All seven adapters and actual service contracts
 
 All adapters are asynchronous, accept an ADK-injected `ToolContext`, and resolve
 trusted identity with the shared bridge. Imported services use `*_service`
@@ -54,12 +54,13 @@ aliases so adapter names cannot accidentally recurse into themselves.
 | --- | --- | --- | --- |
 | `create_repair_issue` | `used_car_id`, meaningful `description` | [Task 6.1](../services/repair_issue_service.py) | Create one private owned report |
 | `save_diagnosis` | `repair_issue_id`, `symptoms`, `ai_analysis` | [Task 6.2](../services/repair_diagnosis_service.py) | Replace two private JSON fields |
-| `search_similar_repairs` | `repair_issue_id`, optional `limit=5` | [Task 6.3](../services/repair_search_service.py) | Read approved published Repair snapshots |
+| `search_similar_repairs` | `repair_issue_id`, optional `limit=5`, optional `location` (a city the owner named) | [Task 6.3](../services/repair_search_service.py) | Read approved published Repair snapshots |
 | `estimate_repair_cost` | `repair_issue_id` | [Task 6.4](../services/repair_cost_service.py) | Read authorized context; currently insufficient evidence |
-| `find_nearby_mechanics` | `repair_issue_id`, `latitude`, `longitude`, optional `radius_meters=10000`, `limit=5` | [Task 6.5](../services/repair_mechanic_service.py) | Authorized real Places API request |
+| `find_nearby_mechanics` | `repair_issue_id`, `latitude`, `longitude`, optional `radius_meters=10000`, `limit=5` | [Task 6.5](../services/repair_mechanic_service.py) | Authorized Google Places request; falls back to SerpApi Google Maps when Places fails, is unconfigured or finds nothing |
+| `find_mechanics_in_city` | `repair_issue_id`, `city`, optional `limit=5` | `find_mechanics_in_city` in [Task 6.5](../services/repair_mechanic_service.py) | SerpApi Google Maps search for "car repair in {city}"; no coordinates needed |
 | `record_resolution` | `repair_issue_id`, `resolution_details` payload | [Task 6.6](../services/repair_resolution_service.py) | Record private owner outcome |
 
-The factory plus these six adapters are the only seven production functions.
+The factory plus these seven adapters are the only eight production functions.
 There is no adapter helper, duplicate algorithm, ORM access or session mutation
 in this module. Every adapter returns the service result unchanged. Its only
 other responsibilities are trusted identity resolution, async-to-sync routing
@@ -292,3 +293,21 @@ are compared byte for byte with HEAD through read-only Git objects. Native Git
 status/diff/check/stat remain unavailable due to the known Apple developer-tools
 limitation; final native review is left to local Terminal. No prior services or
 agents are modified, dependencies installed, or files staged/committed/pushed.
+
+
+## City flow (location-aware recommendations)
+
+When the owner names a city, the agent follows this order:
+
+1. `search_similar_repairs(location=city)` returns only published experiences
+   whose public `location` contains that city (case-insensitive, text before the
+   first comma). The result's `data.location` reports `requested` and
+   `local_matches_found`.
+2. If `local_matches_found` is false, the agent says no experiences from that
+   city exist yet and calls `find_mechanics_in_city(city=...)`, which asks SerpApi
+   for real businesses. Only the city text leaves the server.
+3. `find_nearby_mechanics` is still used when the owner supplies coordinates.
+
+Experiences carry a city only when the owner recorded `resolution_details.location`
+on a mechanic outcome and agreed to share it when drafting the post. Requires
+`SERPAPI_API_KEY`. Tests set it empty so no real request is made.

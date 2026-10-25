@@ -23,7 +23,7 @@ verified the dependency without relying on the unavailable Apple Git launcher.
 ## Signature, inputs and authentication
 
 ```python
-search_similar_repairs(repair_issue_id, limit=5, *, user=None)
+search_similar_repairs(repair_issue_id, limit=5, location=None, *, user=None)
 ```
 
 `repair_issue_id` accepts an existing UUID or UUID string. `limit` must be a
@@ -207,3 +207,15 @@ object inspection verified the committed Task 6.2 dependency; local Terminal
 review is still needed for native final status/diff output. No system tools or
 dependencies were installed. No files were staged, committed, pushed, merged,
 rebased or reset, and no teammate-owned code was modified.
+
+
+## Optional city filter
+
+`location` is a nonblank string up to 255 characters (for example `"New York"` or
+`"Austin, TX"`); anything else returns an `error` envelope. Only the text before
+the first comma is used, compared case-insensitively as a substring of each
+post's public `location`. With `location`, only matching posts are returned,
+each with its `location`, and `data.location` is
+`{"requested": "<city>", "local_matches_found": <bool>}`. No match yields
+`no_results` so the caller can fall back to a live business search. Posts without
+a `location` never match a city filter.

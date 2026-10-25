@@ -73,6 +73,7 @@ def make_repair(user, resolved=True):
         resolution_details={
             "method": "mechanic",
             "mechanic_name": "Lone Star Auto Repair",
+            "location": "Austin, TX",
             "work_performed": "Replaced the battery",
             "cost": 180.5,
         }
@@ -238,6 +239,7 @@ class SavePostDraftTests(TestCase):
         data = Post.objects.get().post_data
         self.assertTrue(data["owner_reported"])
         self.assertEqual(data["mechanic_name"], "Lone Star Auto Repair")
+        self.assertEqual(data["location"], "Austin, TX")
         self.assertEqual(data["work_performed"], "Replaced the battery")
         self.assertNotIn("alternator", json.dumps(data))
         self.assertEqual(result["data"]["post_data"]["cost"], "180.5")
