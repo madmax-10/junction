@@ -12,7 +12,7 @@ from django.test import TestCase
 from django.test.utils import CaptureQueriesContext
 
 from accounts.models import User
-from agent.services.repair_mechanic_service import find_nearby_mechanics
+from agent.services.repair_mechanic_service import find_mechanics_in_city, find_nearby_mechanics
 from issues.models import RepairIssue
 from vehicles.models import UsedCar
 
@@ -28,7 +28,7 @@ class RepairMechanicServiceTests(TestCase):
         cls.foreign = RepairIssue.objects.create(user=cls.other, used_car=cls.car, description="PRIVATE")
 
     def setUp(self):
-        self.env = patch.dict("os.environ", {"GOOGLE_PLACES_API_KEY": "unit-test-placeholder"})
+        self.env = patch.dict("os.environ", {"GOOGLE_PLACES_API_KEY": "unit-test-placeholder", "SERPAPI_API_KEY": ""})
         self.env.start()
         self.addCleanup(self.env.stop)
         self.http = patch("agent.services.repair_mechanic_service.httpx.post")
@@ -226,3 +226,86 @@ class RepairMechanicServiceTests(TestCase):
         with patch.object(RepairIssue.objects, "filter", side_effect=DatabaseError("PRIVATE")):
             self.assertEqual(self.search()["error"], "Mechanic search is unavailable.")
         self.post.assert_not_called()
+
+
+class SerpApiFallbackTests(TestCase):
+    """Google Places failing or finding nothing falls back to SerpApi (mocked; no real requests)."""
+
+    setUpTestData = classmethod(RepairMechanicServiceTests.setUpTestData.__func__)
+    search = RepairMechanicServiceTests.search
+
+    def setUp(self):
+        RepairMechanicServiceTests.setUp(self)
+        env = patch.dict("os.environ", {"SERPAPI_API_KEY": "serp-test-placeholder"})
+        env.start()
+        self.addCleanup(env.stop)
+        get = patch("agent.services.repair_mechanic_service.httpx.get")
+        self.get = get.start()
+        self.addCleanup(get.stop)
+        self.get.return_value = httpx.Response(200, json={"local_results": [
+            {"place_id": "far", "title": "Far Garage", "gps_coordinates": {"latitude": 31.5, "longitude": -97.74}},
+            {"place_id": "near-b", "title": "Near B", "address": "B St", "phone": "555-0102", "rating": 4.5,
+             "reviews": 12, "gps_coordinates": {"latitude": 30.27, "longitude": -97.74}},
+            {"place_id": "near-a", "title": "Near A", "gps_coordinates": {"latitude": 30.268, "longitude": -97.743}},
+            {"title": "No id", "gps_coordinates": {"latitude": 30.27, "longitude": -97.74}},
+        ]})
+
+    def test_no_fallback_when_places_has_results(self):
+        self.assertEqual(self.search()["provenance"], "google_places")
+        self.get.assert_not_called()
+
+    def test_fallback_when_places_empty_or_failing(self):
+        for response in (httpx.Response(200, json={"places": []}), httpx.Response(429, text="x")):
+            self.post.return_value = response
+            result = self.search()
+            self.assertEqual(result["status"], "ok")
+            self.assertEqual(result["provenance"], "serpapi_google_maps")
+            # Sorted by distance, out-of-radius and id-less records dropped.
+            self.assertEqual([m["place_id"] for m in result["data"]["mechanics"]], ["near-a", "near-b"])
+            self.assertEqual(result["data"]["mechanics"][1]["rating"], "4.5")
+            self.assertEqual(json.loads(json.dumps(result)), result)
+        _, kwargs = self.get.call_args
+        self.assertEqual(kwargs["params"]["engine"], "google_maps")
+        self.assertEqual(kwargs["params"]["ll"], "@30.2672,-97.7431,13z")
+
+    def test_fallback_when_places_not_configured(self):
+        with patch.dict("os.environ", {"GOOGLE_PLACES_API_KEY": ""}):
+            self.assertEqual(self.search()["provenance"], "serpapi_google_maps")
+        self.post.assert_not_called()
+
+    def test_original_error_kept_when_serpapi_also_fails(self):
+        self.post.return_value = httpx.Response(429, text="x")
+        self.get.return_value = httpx.Response(200, json={"error": "Invalid API key."})
+        self.assertEqual(self.search()["error"], "Google Places rate limit reached.")
+
+
+class CityMechanicSearchTests(SerpApiFallbackTests):
+    """find_mechanics_in_city sends only the city to SerpApi."""
+
+    test_no_fallback_when_places_has_results = None
+    test_fallback_when_places_empty_or_failing = None
+    test_fallback_when_places_not_configured = None
+    test_original_error_kept_when_serpapi_also_fails = None
+
+    def city(self, **kwargs):
+        args = {"repair_issue_id": self.issue.pk, "city": "New York", "user": self.user}
+        args.update(kwargs)
+        return find_mechanics_in_city(**args)
+
+    def test_city_search_uses_query_and_keeps_serpapi_order(self):
+        result = self.city()
+        self.assertEqual(result["status"], "ok")
+        self.assertEqual(result["provenance"], "serpapi_google_maps")
+        _, kwargs = self.get.call_args
+        self.assertEqual(kwargs["params"]["q"], "car repair in New York")
+        self.assertNotIn("ll", kwargs["params"])
+        self.assertEqual([m["place_id"] for m in result["data"]["mechanics"]], ["far", "near-b", "near-a"])
+        self.assertNotIn("distance_meters", result["data"]["mechanics"][0])
+        self.post.assert_not_called()
+
+    def test_city_search_validation_and_ownership(self):
+        for bad in ("  ", 5, "x" * 101):
+            self.assertEqual(self.city(city=bad)["status"], "error")
+        self.assertEqual(self.city(limit=0)["status"], "error")
+        self.assertEqual(self.city(user=self.other)["error"], "Repair issue not found.")
+        self.get.assert_not_called()

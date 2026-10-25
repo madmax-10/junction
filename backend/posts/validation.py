@@ -51,6 +51,7 @@ REPAIR_KEYS = {
     "mechanic_name",
     "owner_reported",
     "insurance_settlement",
+    "location",
     "photos",
 }
 KEYS_BY_TYPE = {"buy": BUY_KEYS, "sell": SELL_KEYS, "repair": REPAIR_KEYS}

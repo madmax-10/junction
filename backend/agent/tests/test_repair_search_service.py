@@ -54,6 +54,24 @@ class RepairSearchServiceTests(TestCase):
         self.assertEqual(match["provenance"], "community_owner_experience")
         self.assertEqual(match["keyword_score"], 17)
 
+    def test_location_filters_to_that_city(self):
+        ny = self.post(post_data={**self.post().post_data, "location": "New York, NY"})
+        self.post(post_data={**ny.post_data, "location": "Austin, TX"})
+        result = self.search(location="new york")
+        self.assertEqual([m["post_id"] for m in result["data"]["matches"]], [str(ny.id)])
+        self.assertEqual(result["data"]["matches"][0]["location"], "New York, NY")
+        self.assertEqual(result["data"]["location"], {"requested": "new york", "local_matches_found": True})
+
+    def test_location_without_local_experiences_signals_fallback(self):
+        self.post(post_data={**self.post().post_data, "location": "Austin, TX"})
+        result = self.search(location="Berlin")
+        self.assertEqual(result["status"], "no_results")
+        self.assertEqual(result["data"]["location"], {"requested": "Berlin", "local_matches_found": False})
+
+    def test_invalid_location_rejected(self):
+        for value in ("  ", 5, "x" * 256):
+            self.assertEqual(self.search(location=value)["status"], "error")
+
     def test_nonpublic_and_nonrepair_excluded(self):
         for status in ("draft", "approved", "archived", "rejected", "unpublished"):
             self.post(status=status)

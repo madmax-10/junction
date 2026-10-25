@@ -70,17 +70,14 @@ Contact appears only if the request says the owner chose it, and goes into
 - The "Fixed by" line appears only if the owner agreed to name the mechanic. The
   coordinator is told to ask once: "Want to mention who fixed it and where?"
 
-**Option A:** the shop or mechanic name goes in the existing `mechanic_name`
-field (100 characters at most), and the place appears only in the post text.
-`post_data` for repairs has no field for a shop name or location, and unknown
-keys are rejected, so structured storage would need a schema change.
-
-**Limitation:** Agent 6's mechanic search can match a mechanic by name but cannot
-filter published repair posts by city. **Option B** would add `shop_name` and
-`location` to `REPAIR_KEYS` in `posts/validation.py`, `shop_name` to
-`MECHANIC_RESOLUTION_KEYS` in `common/validators.py`, and copy both in
-`_build_repair_snapshot`. That touches the frozen contract, so it needs the team's
-agreement and is not done here.
+**City on the post:** the shop or mechanic name goes in `mechanic_name` (100
+characters at most). If the owner agreed to share where it happened, the city
+(city level only, never a street address) also goes in `post_data.location`, copied
+from `resolution_details.location` by `_build_repair_snapshot`. `location` is in
+`REPAIR_KEYS` (`posts/validation.py`), and mechanic resolutions already accepted it
+(`common/validators.py`). Agent 6's `search_similar_repairs(location=...)` filters
+published repair posts on it. Self repairs cannot store a location, and posts
+published before this change have none.
 
 ## Approval
 

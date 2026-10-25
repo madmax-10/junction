@@ -230,3 +230,24 @@ Mocked success proves request/response handling, not that a deployed key, billin
 permissions or real Google data work. An authorized live check with a configured
 key and user-authorized coordinates remains necessary before claiming live
 integration verification.
+
+
+## SerpApi fallback and city search (update)
+
+The sections above describe the Google Places path, which is still tried first
+when `GOOGLE_PLACES_API_KEY` is set.
+
+- **Fallback:** if Places fails, is not configured, or returns no businesses, and
+  `SERPAPI_API_KEY` is set, `find_nearby_mechanics` queries SerpApi's
+  `google_maps` engine (`q="car repair"`, `ll=@lat,lng,<zoom>z`). Zoom is derived
+  from `radius_meters`; results outside the radius are dropped and the rest are
+  sorted by straight-line distance (`distance_meters`). If SerpApi also fails, the
+  original Places result or error is returned. Provenance is `serpapi_google_maps`.
+- **City search:** `find_mechanics_in_city(repair_issue_id, city, limit=5, *, user=None)`
+  uses the same authorization, then sends only `q="car repair in {city}"` to
+  SerpApi. Results keep SerpApi's order and have no distance.
+- **Fields:** SerpApi results add `phone`, `rating` and `review_count` when
+  present. A result needs a place ID, title and valid coordinates. Maps links are
+  built from the place ID. HTTP 200 with an `error` key is treated as a failure.
+- **Limitations are unchanged:** listings are not endorsed or manufacturer-certified,
+  and distance is not driving time. Tests mock all HTTP; live use needs a real key.

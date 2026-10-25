@@ -14,11 +14,15 @@ from posts.models import Post
 from posts.validation import normalize_post_data
 
 
-def search_similar_repairs(repair_issue_id, limit=5, *, user=None):
+def search_similar_repairs(repair_issue_id, limit=5, location=None, *, user=None):
     """Search at most 500 approved public snapshots; never infer a diagnosis.
 
     Trusted server code supplies request.user or the shared authenticated ADK
     bridge's user. Keyword scores express text overlap, not mechanical certainty.
+
+    When location (a city the owner stated) is given, only experiences whose public
+    location contains that city are returned; data["location"]["local_matches_found"]
+    tells the caller whether to fall back to a live business search for that city.
     """
     try:
         if (
@@ -40,6 +44,10 @@ def search_similar_repairs(repair_issue_id, limit=5, *, user=None):
             return error_result("Repair issue not found.")
         if isinstance(limit, bool) or not isinstance(limit, int) or not 1 <= limit <= 10:
             return error_result("limit must be an integer between 1 and 10.")
+        if location is not None:
+            if not isinstance(location, str) or not location.strip() or len(location) > 255:
+                return error_result("location must be a nonblank string up to 255 characters.")
+            city = location.split(",")[0].strip().casefold()
         criteria = RepairIssueSerializer(issue, data={
             "symptoms": issue.symptoms, "ai_analysis": issue.ai_analysis,
         }, partial=True)
@@ -69,11 +77,13 @@ def search_similar_repairs(repair_issue_id, limit=5, *, user=None):
             # source issue details, internal analysis or arbitrary extra keys.
             public = {key: raw[key] for key in (
                 "make", "model", "symptoms", "method", "work_performed", "cost",
-                "insurance_settlement", "owner_reported",
+                "insurance_settlement", "owner_reported", "location",
             ) if key in raw}
             try:
                 public = normalize_post_data("repair", post["issue_id"], public, publishing=True)
             except (ValidationError, ValueError, TypeError):
+                continue
+            if location is not None and city not in str(public.get("location", "")).casefold():
                 continue
             public_symptoms = public.get("symptoms") or {}
             reported = " ".join(public_symptoms.get("confirmed", []) + public_symptoms.get("inferred", []))
@@ -110,6 +120,7 @@ def search_similar_repairs(repair_issue_id, limit=5, *, user=None):
                     if key in public
                 },
                 "reasons": reasons, "keyword_score": score,
+                **({"location": public["location"]} if "location" in public else {}),
                 "provenance": "community_owner_experience",
             }
             ranked.append((-score, str(post["id"]), match))
@@ -117,7 +128,10 @@ def search_similar_repairs(repair_issue_id, limit=5, *, user=None):
         matches = [item[2] for item in ranked[:limit]]
         return tool_result(
             "ok" if matches else "no_results",
-            data={"matches": matches, "result_count": len(matches), "limitations": [
+            data={"matches": matches, "result_count": len(matches),
+                  **({"location": {"requested": location.strip(), "local_matches_found": bool(matches)}}
+                     if location is not None else {}),
+                  "limitations": [
                 "Community owner experiences are anecdotes, not verified mechanical diagnoses.",
                 "Keyword overlap does not establish the same fault or vehicle compatibility.",
                 "These results do not establish that a vehicle is safe to drive, especially with "
