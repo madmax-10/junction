@@ -5,7 +5,8 @@ export type ChatContextValue = {
   messages: ChatMessage[]
   isResponding: boolean
   isRestoring: boolean
-  sendMessage: (text: string, images?: ChatImage[]) => void
+  // `hiddenNote` reaches the assistant but is not shown in the conversation.
+  sendMessage: (text: string, images?: ChatImage[], hiddenNote?: string) => void
   confirmSuggestion: (messageId: string, suggestionId: string) => void
   dismissSuggestion: (messageId: string, suggestionId: string) => void
   resetChat: () => void

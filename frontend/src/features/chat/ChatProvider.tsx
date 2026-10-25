@@ -4,7 +4,10 @@ import {
   buildUserEventText,
   matchesFromEvents,
   messagesFromEvents,
+  postFromEvents,
   readChatEvents,
+  repairOutcomeFromEvents,
+  replyText,
   writeChatEvents,
   type ChatEvent,
 } from '../../services/chatTurns.ts'
@@ -78,7 +81,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   }, [userId])
 
   const sendMessage = useCallback(
-    (text: string, images: ChatImage[] = []) => {
+    (text: string, images: ChatImage[] = [], hiddenNote?: string) => {
       const trimmedText = text.trim()
       if ((!trimmedText && images.length === 0) || pendingReplyId.current !== null) {
         return
@@ -123,6 +126,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
               nextSaved,
               getVehicleName(draftRef.current.vehicle),
               isFirst,
+              hiddenNote ? [hiddenNote] : [],
             ),
           }
           const history = [...eventsRef.current, userEvent]
@@ -139,21 +143,22 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           eventsRef.current = [...history, ...created]
           writeChatEvents(eventsRef.current)
           const { matchStatus, matches } = await matchesFromEvents(created)
-          const replyText = created
-            .flatMap((event) => (event.kind === 'message' && event.role === 'assistant' ? [event.text] : []))
-            .join('\n\n')
-            .trim()
+          const post = postFromEvents(created)
+          const repairOutcome = post ? undefined : repairOutcomeFromEvents(created)
+          const replies = created.flatMap((event) =>
+            event.kind === 'message' && event.role === 'assistant' ? [event.text] : [],
+          )
           setMessages((current) => [
             ...current,
             {
               id: `${messageId}-reply`,
               role: 'assistant',
-              text: replyText || (matches.length > 0
-                ? 'Published experiences that matched your records are below.'
-                : 'I don’t have a reply for that yet. Please try again.'),
+              text: replyText(replies, matches.length, post),
               matchStatus: matches.length > 0 ? 'matched' : matchStatus,
               matches,
               followUps: [],
+              ...(post ? { post } : {}),
+              ...(repairOutcome ? { repairOutcome } : {}),
             },
           ])
         } catch (error) {

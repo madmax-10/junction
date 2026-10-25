@@ -193,6 +193,24 @@ export async function api<T>(path: string, options: RequestOptions = {}): Promis
   return (text ? JSON.parse(text) : undefined) as T
 }
 
+export async function apiBlob(path: string, retry = true): Promise<Blob> {
+  const headers = new Headers()
+  const access = getAccessToken()
+  if (access) headers.set('Authorization', `Bearer ${access}`)
+  let response: Response
+  try {
+    response = await fetch(resolveUrl(path), { headers })
+  } catch {
+    throw new ApiError('Could not reach the server. Check that it is running and try again.', 0)
+  }
+  if (response.status === 401 && retry) {
+    if (await refreshAccess()) return apiBlob(path, false)
+    throw new ApiError('Your session expired. Sign in again.', 401)
+  }
+  if (!response.ok) throw new ApiError('Could not load the file.', response.status)
+  return response.blob()
+}
+
 export type Page<T> = {
   count: number
   next: string | null

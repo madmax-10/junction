@@ -1,7 +1,10 @@
 import type { ChatImage, ChatMessage } from '../types/chat.ts'
+import type { PostDraft } from '../types/post.ts'
+import type { RepairOutcomePrompt } from '../types/repair.ts'
 import type { StoryMatch, StoryMatchStatus } from '../types/story.ts'
 import { chatEventsKey, readStoredJson, writeStoredJson } from './api.ts'
-import { getPost, toCommunityStory } from './posts.ts'
+import { getPost, toCommunityStory, toPostDraft } from './posts.ts'
+import { toOutcomeStatus, toRepairResolution } from './repairOutcome.ts'
 import type { SavedSituation } from './situation.ts'
 
 export type ToolEnvelope = {
@@ -23,6 +26,13 @@ const searchTools = new Set([
   'search_and_rank_used',
   'find_and_rank_buyers',
   'calculate_value_range',
+])
+
+const postTools = new Set([
+  'save_post_draft',
+  'update_post_draft',
+  'select_post_images',
+  'approve_and_publish_post',
 ])
 
 const situationMarker = '\n<<saved-records>>\n'
@@ -63,6 +73,7 @@ export function buildUserEventText(
   saved: SavedSituation,
   vehicleName: string | null,
   isFirst: boolean,
+  extraNotes: string[] = [],
 ) {
   const lines = [text.trim()]
   const notes: string[] = []
@@ -78,8 +89,67 @@ export function buildUserEventText(
   if (imageCount > 0) {
     notes.push(imageCount === 1 ? 'I added a photo to my saved issue.' : `I added ${imageCount} photos to my saved issue.`)
   }
+  notes.push(...extraNotes)
   if (notes.length === 0) return lines.filter(Boolean).join('\n') || 'I added a photo.'
   return [...lines.filter(Boolean), situationMarker.trim(), ...notes].join('\n')
+}
+
+// The last post the agent saved, edited or published in these events, as the tool returned it.
+export function postFromEvents(events: ChatEvent[]): PostDraft | undefined {
+  for (let index = events.length - 1; index >= 0; index -= 1) {
+    const event = events[index]
+    if (event.kind !== 'tool_response' || !postTools.has(event.name) || event.response?.status !== 'ok') continue
+    const post = toPostDraft(event.response.data)
+    if (post) return post
+  }
+  return undefined
+}
+
+function stringArg(args: Record<string, unknown> | undefined, key: string) {
+  const value = args?.[key]
+  return typeof value === 'string' && value ? value : undefined
+}
+
+// A turn that tried to record a repair outcome, or to draft a repair post before the outcome was saved.
+export function repairOutcomeFromEvents(events: ChatEvent[]): RepairOutcomePrompt | undefined {
+  const calls = new Map<string, Record<string, unknown>>()
+  let found: RepairOutcomePrompt | undefined
+  for (const event of events) {
+    if (event.kind === 'tool_call') {
+      calls.set(event.call_id, event.args ?? {})
+      continue
+    }
+    if (event.kind !== 'tool_response') continue
+    const args = calls.get(event.call_id)
+    const response = event.response
+    if (event.name === 'record_resolution') {
+      const issueId = stringArg(args, 'repair_issue_id')
+      if (!issueId) continue
+      const payload = args?.resolution_details
+      const attempt = typeof payload === 'object' && payload !== null ? (payload as Record<string, unknown>) : {}
+      found = {
+        issueId,
+        status: toOutcomeStatus(attempt.status),
+        resolution: toRepairResolution(attempt.resolution_details),
+      }
+    } else if (event.name === 'save_post_draft' && response?.status !== 'ok' && stringArg(args, 'issue_type') === 'repair') {
+      const issueId = stringArg(args, 'issue_id')
+      if (issueId) found = { issueId }
+    } else if (event.name === 'get_issue_context' && response?.status === 'ok') {
+      const data = response.data as Record<string, unknown> | null
+      const issueId = stringArg(args, 'issue_id')
+      if (issueId && data?.issue_type === 'repair' && data.status !== 'resolved') found = { issueId }
+    }
+  }
+  return found
+}
+
+export function replyText(replies: string[], matchCount: number, post: PostDraft | undefined) {
+  const text = replies.join('\n\n').trim()
+  if (text) return text
+  if (matchCount > 0) return 'Published experiences that matched your records are below.'
+  if (post) return post.status === 'published' ? 'Your post is live.' : 'Here’s the post I drafted for you. Review it below.'
+  return 'I don’t have a reply for that yet. Please try again.'
 }
 
 type RankedId = { id: string; reasons: string[]; score: number }
@@ -184,16 +254,17 @@ export async function messagesFromEvents(events: ChatEvent[], imagesFor = new Ma
     })
     if (turn.replies.length === 0 && turn.tools.length === 0) continue
     const { matchStatus, matches } = await matchesFromEvents(turn.tools)
-    const text = turn.replies.join('\n\n').trim() || (matches.length > 0
-      ? 'Published experiences that matched your records are below.'
-      : 'I don’t have a reply for that yet. Please try again.')
+    const post = postFromEvents(turn.tools)
+    const repairOutcome = post ? undefined : repairOutcomeFromEvents(turn.tools)
     messages.push({
       id: `${turn.user.id}-reply`,
       role: 'assistant',
-      text,
+      text: replyText(turn.replies, matches.length, post),
       matchStatus: matches.length > 0 ? 'matched' : matchStatus,
       matches,
       followUps: [],
+      ...(post ? { post } : {}),
+      ...(repairOutcome ? { repairOutcome } : {}),
     })
   }
   return messages

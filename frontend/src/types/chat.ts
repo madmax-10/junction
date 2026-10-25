@@ -1,4 +1,6 @@
 import type { DetailSuggestion } from './extraction.ts'
+import type { PostDraft } from './post.ts'
+import type { RepairOutcomePrompt } from './repair.ts'
 import type { StoryMatch, StoryMatchStatus } from './story.ts'
 
 // A chat thumbnail is an issue photo. `path` is set once the issue id is known.
@@ -25,6 +27,8 @@ export type ChatMessage =
       matchStatus: StoryMatchStatus
       matches: StoryMatch[]
       followUps: string[]
+      post?: PostDraft
+      repairOutcome?: RepairOutcomePrompt
     }
 
 export type ExampleQuestion = {
