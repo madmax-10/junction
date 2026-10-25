@@ -255,7 +255,12 @@ export function SituationIsland({ className = '', onEdit }: SituationIslandProps
           onEdit={onEdit}
           onConfirm={confirmSection}
         >
-          <p className="font-body text-sm font-medium">{insuranceLabel}</p>
+          <p className={`font-body text-sm ${insuranceLabel ? 'font-medium' : 'text-text/40'}`}>
+            {insuranceLabel ?? 'Not added yet'}
+          </p>
+          {draft.insuranceSettlement && (
+            <p className="mt-1 line-clamp-3 font-body text-sm leading-snug text-text/70">{draft.insuranceSettlement}</p>
+          )}
         </IslandSection>
 
         <IslandSection
@@ -275,6 +280,22 @@ export function SituationIsland({ className = '', onEdit }: SituationIslandProps
                   {interest}
                 </li>
               ))}
+            </ul>
+          )}
+          {(draft.minBudget || draft.maxBudget) && (
+            <ul className={`space-y-1 ${interests.length > 0 ? 'mt-2.5' : ''}`}>
+              {draft.minBudget && (
+                <li className="flex items-start gap-2 font-body text-sm leading-snug">
+                  <Check size={14} strokeWidth={2.25} className="mt-0.5 shrink-0 text-primary" aria-hidden="true" />
+                  Minimum budget ${draft.minBudget}
+                </li>
+              )}
+              {draft.maxBudget && (
+                <li className="flex items-start gap-2 font-body text-sm leading-snug">
+                  <Check size={14} strokeWidth={2.25} className="mt-0.5 shrink-0 text-primary" aria-hidden="true" />
+                  Maximum budget ${draft.maxBudget}
+                </li>
+              )}
             </ul>
           )}
           {question && (

@@ -31,6 +31,9 @@ export const emptyIntakeDraft: IntakeDraft = {
   },
   interests: [],
   question: '',
+  insuranceSettlement: '',
+  minBudget: '',
+  maxBudget: '',
 }
 
 export const situationSections: SituationSection[] = ['vehicle', 'accident', 'insurance', 'concerns']
@@ -46,6 +49,9 @@ export const noFieldsConfirmed: FieldConfirmation = {
   situation: false,
   interests: false,
   question: false,
+  insuranceSettlement: false,
+  minBudget: false,
+  maxBudget: false,
 }
 
 export const IntakeContext = createContext<IntakeContextValue | null>(null)

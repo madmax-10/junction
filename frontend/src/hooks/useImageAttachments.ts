@@ -2,15 +2,29 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import type { ChatImage } from '../types/chat.ts'
 
 const megabyte = 1024 * 1024
+const extensions = new Map([
+  ['image/jpeg', 'jpg'],
+  ['image/png', 'png'],
+  ['image/webp', 'webp'],
+])
+
+type IssuePhotoTarget = {
+  type: string
+  id: string
+  existingCount: number
+}
 
 type ImageAttachmentOptions = {
   maxImages: number
   maxFileSizeMb: number
+  issue: IssuePhotoTarget | null
 }
+
+let nextPhotoIndex = 0
 
 let attachmentCount = 0
 
-export function useImageAttachments({ maxImages, maxFileSizeMb }: ImageAttachmentOptions) {
+export function useImageAttachments({ maxImages, maxFileSizeMb, issue }: ImageAttachmentOptions) {
   const [attachments, setAttachments] = useState<ChatImage[]>([])
   const [error, setError] = useState<string | null>(null)
   const pendingUrls = useRef(new Set<string>())
@@ -26,17 +40,17 @@ export function useImageAttachments({ maxImages, maxFileSizeMb }: ImageAttachmen
   const addFiles = useCallback(
     (files: Iterable<File>) => {
       const candidates = Array.from(files)
-      const images = candidates.filter((file) => file.type.startsWith('image/'))
+      const images = candidates.filter((file) => extensions.has(file.type))
       const withinSize = images.filter((file) => file.size <= maxFileSizeMb * megabyte)
       const openSlots = Math.max(maxImages - attachments.length, 0)
       const accepted = withinSize.slice(0, openSlots)
 
       if (images.length < candidates.length) {
-        setError('Only image files can be added.')
+        setError('Photo must be a JPEG, PNG, or WebP image.')
       } else if (withinSize.length < images.length) {
         setError(`Photos need to be under ${maxFileSizeMb} MB each.`)
       } else if (accepted.length < withinSize.length) {
-        setError(`You can add up to ${maxImages} photos per message.`)
+        setError(`An issue can have at most ${maxImages} photos.`)
       } else {
         setError(null)
       }
@@ -47,13 +61,23 @@ export function useImageAttachments({ maxImages, maxFileSizeMb }: ImageAttachmen
 
       const added = accepted.map((file) => {
         attachmentCount += 1
+        const extension = extensions.get(file.type) ?? 'jpg'
+        const index = Math.max(nextPhotoIndex, issue?.existingCount ?? 0) + 1
+        nextPhotoIndex = index
+        const filename = issue ? `${issue.id}_${index}.${extension}` : file.name
         const url = URL.createObjectURL(file)
         pendingUrls.current.add(url)
-        return { id: `attachment-${attachmentCount}`, name: file.name, url }
+        return {
+          id: `attachment-${attachmentCount}`,
+          name: file.name,
+          url,
+          filename,
+          path: issue ? `issues/${issue.type}/${issue.id}/${filename}` : null,
+        }
       })
       setAttachments([...attachments, ...added])
     },
-    [attachments, maxImages, maxFileSizeMb],
+    [attachments, issue, maxImages, maxFileSizeMb],
   )
 
   const removeAttachment = useCallback(

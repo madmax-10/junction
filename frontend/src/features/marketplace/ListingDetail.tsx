@@ -1,12 +1,12 @@
-import { CalendarBlank, Check, CheckCircle, MapPin, WarningCircle, X } from '@phosphor-icons/react'
+import { CalendarBlank, Check, MapPin, X } from '@phosphor-icons/react'
 import { AnimatePresence, motion } from 'motion/react'
 import { useEffect, useRef, type KeyboardEvent, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { useScrollFade } from '../../hooks/useScrollFade.ts'
 import { easeOutQuint } from '../../styles/motion.ts'
-import type { ListingDamage, MarketplaceListing } from '../../types/marketplace.ts'
+import type { MarketplaceListing } from '../../types/marketplace.ts'
 import { getVehicleName } from './marketplaceFilters.ts'
-import { formatListedOn, formatMiles, formatPrice, titleStatusLabels } from './marketplaceOptions.tsx'
+import { formatListedOn, formatMiles, formatPrice } from './marketplaceOptions.tsx'
 import { ConditionTag } from './ListingTags.tsx'
 
 type ListingDetailProps = {
@@ -40,46 +40,8 @@ function SpecList({ items }: { items: { label: string; value: ReactNode }[] }) {
   )
 }
 
-function DamageFlag({ isGood, children }: { isGood: boolean; children: ReactNode }) {
-  const Icon = isGood ? CheckCircle : WarningCircle
-  return (
-    <span className="inline-flex items-center gap-1.5">
-      <Icon size={16} weight="fill" className={isGood ? 'text-primary' : 'text-danger'} aria-hidden="true" />
-      {children}
-    </span>
-  )
-}
-
-function DamageReport({ damage }: { damage: ListingDamage }) {
-  return (
-    <div className="rounded-xl bg-background/70 p-4">
-      <SpecList
-        items={[
-          { label: 'Damaged areas', value: damage.areas.join(', ') },
-          {
-            label: 'Runs and drives',
-            value: <DamageFlag isGood={damage.runsAndDrives}>{damage.runsAndDrives ? 'Yes' : 'No, needs a tow'}</DamageFlag>,
-          },
-          {
-            label: 'Airbags',
-            value: (
-              <DamageFlag isGood={!damage.airbagsDeployed}>
-                {damage.airbagsDeployed ? 'Deployed' : 'Not deployed'}
-              </DamageFlag>
-            ),
-          },
-          {
-            label: 'Seller’s repair quote',
-            value: damage.repairQuote === null ? 'Not provided' : formatPrice(damage.repairQuote),
-          },
-        ]}
-      />
-    </div>
-  )
-}
-
 function DetailDialog({ listing, onClose }: { listing: MarketplaceListing; onClose: () => void }) {
-  const { vehicle, photo, damage } = listing
+  const { vehicle, photo, knownDamage, conditionLabel, highlights } = listing
   const titleId = `${listing.id}-detail-title`
   const panelRef = useRef<HTMLDivElement>(null)
   const closeButtonRef = useRef<HTMLButtonElement>(null)
@@ -149,7 +111,7 @@ function DetailDialog({ listing, onClose }: { listing: MarketplaceListing; onClo
 
         <div ref={setFadeElement} className="scroll-fade-y min-h-0 flex-1 overflow-y-auto overscroll-contain">
           <div className="relative aspect-[16/9] bg-background">
-            <img src={photo.src} alt={photo.alt} className="size-full object-cover" />
+            {photo && <img src={photo.src} alt={photo.alt} className="size-full object-cover" />}
           </div>
 
           <div className="px-6 pt-5 pb-6 sm:px-8 sm:pt-6">
@@ -159,7 +121,8 @@ function DetailDialog({ listing, onClose }: { listing: MarketplaceListing; onClo
                   {getVehicleName(listing)}
                 </h2>
                 <p className="mt-0.5 font-body text-sm text-muted">
-                  {vehicle.trim} · {vehicle.bodyStyle}
+                  {vehicle.trim}
+                  {listing.kind === 'new' ? ' · New' : ' · Used'}
                 </p>
               </div>
               <p className="font-heading text-2xl font-extrabold tracking-[-0.02em] tabular-nums">
@@ -168,11 +131,13 @@ function DetailDialog({ listing, onClose }: { listing: MarketplaceListing; onClo
             </header>
 
             <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 font-body text-sm text-muted">
-              <ConditionTag condition={listing.condition} />
-              <span className="inline-flex items-center gap-1.5">
-                <MapPin size={16} className="text-primary" aria-hidden="true" />
-                {listing.location}
-              </span>
+              {conditionLabel && <ConditionTag label={conditionLabel} />}
+              {listing.location && (
+                <span className="inline-flex items-center gap-1.5">
+                  <MapPin size={16} className="text-primary" aria-hidden="true" />
+                  {listing.location}
+                </span>
+              )}
               <span className="inline-flex items-center gap-1.5">
                 <CalendarBlank size={16} className="text-primary" aria-hidden="true" />
                 {formatListedOn(listing.listedOn)}
@@ -184,15 +149,16 @@ function DetailDialog({ listing, onClose }: { listing: MarketplaceListing; onClo
                 <p className="font-body text-sm leading-relaxed text-text/85">{listing.description}</p>
               </DetailSection>
 
-              {damage && (
-                <DetailSection title="Damage report">
-                  <DamageReport damage={damage} />
+              {knownDamage && (
+                <DetailSection title="Known damage">
+                  <p className="font-body text-sm leading-relaxed text-text/85">{knownDamage}</p>
                 </DetailSection>
               )}
 
+              {highlights.length > 0 && (
               <DetailSection title="Highlights">
                 <ul className="flex flex-wrap gap-2">
-                  {listing.highlights.map((highlight) => (
+                  {highlights.map((highlight) => (
                     <li
                       key={highlight}
                       className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 font-body text-sm"
@@ -203,32 +169,33 @@ function DetailDialog({ listing, onClose }: { listing: MarketplaceListing; onClo
                   ))}
                 </ul>
               </DetailSection>
+              )}
 
               <DetailSection title="Vehicle details">
                 <SpecList
                   items={[
-                    { label: 'Mileage', value: formatMiles(vehicle.mileage) },
-                    { label: 'Exterior', value: vehicle.exteriorColor },
-                    { label: 'Title', value: titleStatusLabels[listing.titleStatus] },
-                    { label: 'Drivetrain', value: vehicle.drivetrain },
-                    { label: 'Transmission', value: vehicle.transmission },
-                    { label: 'Engine', value: vehicle.engine },
+                    ...(vehicle.mileage !== null ? [{ label: 'Mileage', value: formatMiles(vehicle.mileage) }] : []),
+                    { label: 'Trim', value: vehicle.trim || 'Not listed' },
+                    { label: 'Year', value: vehicle.year },
+                    { label: listing.kind === 'new' ? 'MSRP' : 'Asking price', value: formatPrice(listing.price) },
                   ]}
                 />
               </DetailSection>
             </div>
 
-            <p className="mt-8 font-body text-xs text-text/50">
-              Photo by {photo.credit.author}, {photo.credit.license}, via{' '}
-              <a
-                href={photo.credit.sourceUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="rounded underline underline-offset-2 outline-none hover:text-text focus-visible:ring-2 focus-visible:ring-primary"
-              >
-                Wikimedia Commons
-              </a>
-            </p>
+            {photo?.credit && (
+              <p className="mt-8 font-body text-xs text-text/50">
+                Photo by {photo.credit.author}, {photo.credit.license}, via{' '}
+                <a
+                  href={photo.credit.sourceUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="rounded underline underline-offset-2 outline-none hover:text-text focus-visible:ring-2 focus-visible:ring-primary"
+                >
+                  Wikimedia Commons
+                </a>
+              </p>
+            )}
           </div>
         </div>
       </motion.div>

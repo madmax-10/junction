@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { createMockReply } from '../../mocks/mockChatReplies.ts'
+import { knownIds } from '../../mocks/knownRecords.ts'
 import { extractSituationDetails } from '../../services/situationExtraction.ts'
 import { findSimilarStories } from '../../services/storyMatching.ts'
 import type { ChatImage, ChatMessage } from '../../types/chat.ts'
@@ -80,8 +81,8 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       ])
       setIsResponding(true)
 
-      if (trimmedText) {
-        void extractSituationDetails(trimmedText).then((details) => {
+      if (knownIds.usedCarId || knownIds.issue || knownIds.postId) {
+        void extractSituationDetails(knownIds).then((details) => {
           const suggestions: DetailSuggestion[] = details
             .filter((detail) => !isDetailSaved(detail, draft, confirmed))
             .map((detail) => ({ ...detail, id: `${messageId}-${detail.field}`, status: 'pending' }))

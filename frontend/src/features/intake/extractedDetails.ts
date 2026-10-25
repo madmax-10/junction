@@ -1,17 +1,22 @@
 import type { ExtractedDetail } from '../../types/extraction.ts'
 import type { FieldConfirmation, IntakeDraft, SituationChanges } from '../../types/intake.ts'
+import { formatPrice } from '../marketplace/marketplaceOptions.tsx'
 import { formatMileage } from './intakeHighlights.ts'
-import { accidentTypeOptions, getOptionLabel, situationOptions } from './intakeOptions.tsx'
 import { getFieldValue } from './situationFields.ts'
 
 const detailLabels: Record<ExtractedDetail['field'], string> = {
   make: 'Make',
   model: 'Model',
   year: 'Year',
+  trim: 'Trim',
   mileage: 'Mileage',
-  accidentType: 'What happened',
-  situation: 'Insurance',
+  details: 'What happened',
+  insuranceSettlement: 'Insurance settlement',
+  minBudget: 'Minimum budget',
+  maxBudget: 'Maximum budget',
 }
+
+const vehicleFields = new Set<ExtractedDetail['field']>(['make', 'model', 'year', 'trim', 'mileage'])
 
 export function getDetailLabel(detail: ExtractedDetail) {
   return detailLabels[detail.field]
@@ -21,10 +26,9 @@ function formatFieldValue(field: ExtractedDetail['field'], value: string) {
   switch (field) {
     case 'mileage':
       return `${formatMileage(value)} mi`
-    case 'accidentType':
-      return getOptionLabel(accidentTypeOptions, value) ?? value
-    case 'situation':
-      return getOptionLabel(situationOptions, value) ?? value
+    case 'minBudget':
+    case 'maxBudget':
+      return formatPrice(Number(value))
     default:
       return value
   }
@@ -35,14 +39,10 @@ export function formatDetailValue(detail: ExtractedDetail) {
 }
 
 export function getDetailChanges(detail: ExtractedDetail): SituationChanges {
-  switch (detail.field) {
-    case 'accidentType':
-      return { fields: { accidentType: detail.value } }
-    case 'situation':
-      return { fields: { situation: detail.value } }
-    default:
-      return { vehicle: { [detail.field]: detail.value } }
+  if (vehicleFields.has(detail.field)) {
+    return { vehicle: { [detail.field]: detail.value } }
   }
+  return { fields: { [detail.field]: detail.value } }
 }
 
 function currentValue(detail: ExtractedDetail, draft: IntakeDraft) {

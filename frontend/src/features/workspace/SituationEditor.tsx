@@ -13,7 +13,7 @@ import { easeOutQuint } from '../../styles/motion.ts'
 import type { AccidentType, CurrentSituation, IntakeDraft, LearningInterest, SituationSection } from '../../types/intake.ts'
 import { situationSections, useIntakeDraft } from '../intake/IntakeContext.ts'
 import { formatMileage } from '../intake/intakeHighlights.ts'
-import { detailsMaxLength, questionMaxLength, sanitizeMileage, trimMaxLength } from '../intake/intakeLimits.ts'
+import { detailsMaxLength, questionMaxLength, sanitizeMileage, settlementMaxLength, trimMaxLength } from '../intake/intakeLimits.ts'
 import {
   accidentTypeOptions,
   interestOptions,
@@ -69,6 +69,9 @@ function EditorSheet({ focusSection, onClose }: Omit<SituationEditorProps, 'isOp
     details: draft.details,
     interests: draft.interests,
     question: draft.question,
+    insuranceSettlement: draft.insuranceSettlement,
+    minBudget: draft.minBudget,
+    maxBudget: draft.maxBudget,
   })
   const panelRef = useRef<HTMLDivElement>(null)
   const setFadeElement = useScrollFade<HTMLDivElement>()
@@ -277,6 +280,18 @@ function EditorSheet({ focusSection, onClose }: Omit<SituationEditorProps, 'isOp
                   />
                 ))}
               </div>
+              <div className="mt-5">
+                <Field id="edit-insurance-settlement" label="Insurance settlement" optional>
+                  <TextArea
+                    id="edit-insurance-settlement"
+                    rows={3}
+                    maxLength={settlementMaxLength}
+                    value={fields.insuranceSettlement}
+                    onChange={(event) => updateFields({ insuranceSettlement: event.target.value })}
+                    placeholder="What the insurer paid, or said they would pay"
+                  />
+                </Field>
+              </div>
             </EditorSection>
 
             <EditorSection section="concerns" title="Main concerns" icon={MessagesSquare}>
@@ -296,6 +311,28 @@ function EditorSheet({ focusSection, onClose }: Omit<SituationEditorProps, 'isOp
                     }
                   />
                 ))}
+              </div>
+              <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                <Field id="edit-min-budget" label="Minimum budget" optional>
+                  <TextInput
+                    id="edit-min-budget"
+                    inputMode="decimal"
+                    autoComplete="off"
+                    placeholder="e.g. 5000"
+                    value={fields.minBudget}
+                    onChange={(event) => updateFields({ minBudget: event.target.value.replace(/[^\d.]/g, '') })}
+                  />
+                </Field>
+                <Field id="edit-max-budget" label="Maximum budget" optional>
+                  <TextInput
+                    id="edit-max-budget"
+                    inputMode="decimal"
+                    autoComplete="off"
+                    placeholder="e.g. 12000"
+                    value={fields.maxBudget}
+                    onChange={(event) => updateFields({ maxBudget: event.target.value.replace(/[^\d.]/g, '') })}
+                  />
+                </Field>
               </div>
               <div className="mt-5">
                 <Field id="edit-question" label="Anything specific you’re wondering about?" optional>

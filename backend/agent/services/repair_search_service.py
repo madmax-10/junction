@@ -68,7 +68,8 @@ def search_similar_repairs(repair_issue_id, limit=5, *, user=None):
             # Use only this operation's approved snapshot fields, never contacts,
             # source issue details, internal analysis or arbitrary extra keys.
             public = {key: raw[key] for key in (
-                "make", "model", "symptoms", "method", "work_performed", "owner_reported",
+                "make", "model", "symptoms", "method", "work_performed", "cost",
+                "insurance_settlement", "owner_reported",
             ) if key in raw}
             try:
                 public = normalize_post_data("repair", post["issue_id"], public, publishing=True)
@@ -103,7 +104,11 @@ def search_similar_repairs(repair_issue_id, limit=5, *, user=None):
             match = {
                 "post_id": str(post["id"]), "problem_summary": post["title"],
                 "symptoms": public_symptoms, "vehicle": vehicle,
-                "repair": {key: public[key] for key in ("method", "work_performed") if key in public},
+                "repair": {
+                    key: public[key]
+                    for key in ("method", "work_performed", "cost", "insurance_settlement")
+                    if key in public
+                },
                 "reasons": reasons, "keyword_score": score,
                 "provenance": "community_owner_experience",
             }

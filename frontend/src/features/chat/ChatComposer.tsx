@@ -13,11 +13,12 @@ import {
   type RefObject,
 } from 'react'
 import { useImageAttachments } from '../../hooks/useImageAttachments.ts'
+import { knownIssuePhoto } from '../../mocks/knownRecords.ts'
 import { useScrollFade } from '../../hooks/useScrollFade.ts'
 import type { ChatImage } from '../../types/chat.ts'
 
-const maxImages = 6
-const maxFileSizeMb = 10
+const maxImages = 8
+const maxFileSizeMb = 5
 const maxMessageLength = 2000
 const maxTextareaHeight = 176
 
@@ -40,6 +41,7 @@ export function ChatComposer({ isResponding, onSend, textareaRef }: ChatComposer
   const { attachments, error, addFiles, removeAttachment, takeAttachments } = useImageAttachments({
     maxImages,
     maxFileSizeMb,
+    issue: knownIssuePhoto,
   })
   const setThumbnailFadeElement = useScrollFade<HTMLUListElement>({ axis: 'x' })
   const setTextareaFadeElement = useScrollFade<HTMLTextAreaElement>()
@@ -236,7 +238,7 @@ export function ChatComposer({ isResponding, onSend, textareaRef }: ChatComposer
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/*"
+            accept="image/jpeg,image/png,image/webp"
             multiple
             onChange={handleFileChange}
             tabIndex={-1}

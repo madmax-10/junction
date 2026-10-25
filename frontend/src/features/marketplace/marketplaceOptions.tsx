@@ -1,6 +1,6 @@
-import { CarProfile, Wrench } from '@phosphor-icons/react'
+import { CarProfile, Tag } from '@phosphor-icons/react'
 import type { ReactNode } from 'react'
-import type { ListingCategory, ListingCondition, PriceRange, TitleStatus } from '../../types/marketplace.ts'
+import type { ListingCategory, PriceRange, VehicleKind } from '../../types/marketplace.ts'
 
 type MarketplaceOption<TValue> = {
   value: TValue
@@ -9,45 +9,32 @@ type MarketplaceOption<TValue> = {
 
 export const categoryOptions: (MarketplaceOption<ListingCategory> & { description: string; icon: ReactNode })[] = [
   {
-    value: 'replacement',
-    label: 'Replacement cars',
-    description: 'Ready to drive if yours was totaled',
-    icon: <CarProfile size={22} weight="duotone" />,
+    value: 'sell',
+    label: 'Sell your car',
+    description: 'Cars people are selling',
+    icon: <Tag size={22} weight="duotone" />,
   },
   {
-    value: 'damaged',
-    label: 'Damaged cars',
-    description: 'Sold as-is for repair or parts',
-    icon: <Wrench size={22} weight="duotone" />,
+    value: 'buy',
+    label: 'Buy a car',
+    description: 'Used listings and new cars',
+    icon: <CarProfile size={22} weight="duotone" />,
   },
 ]
 
-export const conditionLabels: Record<ListingCondition, string> = {
-  excellent: 'Excellent condition',
-  good: 'Good condition',
-  fair: 'Fair condition',
-  minor: 'Minor damage',
-  moderate: 'Moderate damage',
-  severe: 'Severe damage',
-}
+export const vehicleTypeOptions: MarketplaceOption<VehicleKind>[] = [
+  { value: 'used', label: 'Used' },
+  { value: 'new', label: 'New' },
+]
 
-const categoryConditions: Record<ListingCategory, ListingCondition[]> = {
-  replacement: ['excellent', 'good', 'fair'],
-  damaged: ['minor', 'moderate', 'severe'],
-}
+export const locationOptions: MarketplaceOption<string>[] = ['Austin, TX', 'Dallas, TX', 'Houston, TX', 'San Antonio, TX'].map(
+  (location) => ({ value: location, label: location }),
+)
 
-export function getConditionOptions(category: ListingCategory): MarketplaceOption<ListingCondition>[] {
-  return categoryConditions[category].map((condition) => ({ value: condition, label: conditionLabels[condition] }))
-}
-
-export const conditionDotClassNames: Record<ListingCondition, string> = {
-  excellent: 'bg-primary',
-  good: 'bg-accent',
-  fair: 'bg-text/35',
-  minor: 'bg-accent',
-  moderate: 'bg-danger/60',
-  severe: 'bg-danger',
-}
+export const trimOptions: MarketplaceOption<string>[] = ['LX', 'EX', 'XLE', 'XLT'].map((trim) => ({
+  value: trim,
+  label: trim,
+}))
 
 export const priceOptions: (MarketplaceOption<PriceRange> & { min: number; max: number })[] = [
   { value: 'under-5k', label: 'Under $5,000', min: 0, max: 5000 },
@@ -62,18 +49,17 @@ export const yearOptions: MarketplaceOption<number>[] = [2021, 2018, 2015, 2010]
   label: `${year} and newer`,
 }))
 
-export const mileageOptions: MarketplaceOption<number>[] = [30000, 60000, 100000, 150000].map((miles) => ({
-  value: miles,
-  label: `Under ${miles.toLocaleString('en-US')} mi`,
+export const yearMaxOptions: MarketplaceOption<number>[] = [2024, 2020, 2016, 2012].map((year) => ({
+  value: year,
+  label: `${year} and older`,
 }))
 
-export const titleStatusLabels: Record<TitleStatus, string> = {
-  clean: 'Clean title',
-  rebuilt: 'Rebuilt title',
-  salvage: 'Salvage title',
-}
-
-const priceFormat = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })
+const priceFormat = new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 2,
+})
 const listedFormat = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' })
 
 export function formatPrice(amount: number) {

@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'vehicles',
     'issues',
     'posts',
+    'agent',
 ]
 
 AUTH_USER_MODEL = "accounts.User"

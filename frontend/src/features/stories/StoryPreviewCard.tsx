@@ -27,7 +27,7 @@ function StoryHeader({ story, subtitle }: { story: StoryPreview; subtitle: strin
 }
 
 function MatchedStoryCard({ story, readMoreHref }: { story: StoryPreview; readMoreHref?: string }) {
-  const subtitle = [story.vehicle, story.accidentType].filter(Boolean).join(' · ')
+  const subtitle = story.vehicle
 
   return (
     <article

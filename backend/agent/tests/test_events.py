@@ -63,12 +63,14 @@ class ValidEventsTests(unittest.TestCase):
         message = user_message()
         message["user_id"] = "someone-else"
         message["extra"] = "x"
+        message["images"] = [{"url": "blob:local"}]
         call = tool_call()
         call["user_id"] = "someone-else"
         cleaned = validate_events([call, message])
         for event in cleaned:
             self.assertNotIn("user_id", event)
             self.assertNotIn("extra", event)
+            self.assertNotIn("images", event)
 
 
 class InvalidEventsTests(unittest.TestCase):
