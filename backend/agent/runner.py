@@ -14,13 +14,13 @@ from google.adk.plugins import BasePlugin
 from google.adk.runners import InMemoryRunner
 from google.genai import types
 
-from agent.auth import bind_current_session
 from agent.agents.buyer import build_buyer_agent
 from agent.agents.coordinator import build_coordinator
 from agent.agents.post_gen import build_post_gen_agent
 from agent.agents.repair import build_repair_agent
 from agent.agents.seller import build_seller_agent
 from agent.agents.valuation import build_valuation_agent
+from agent.auth import get_or_create_authenticated_session
 from agent.config import AGENT_MODEL
 from agent.events import AUTHORS, ENVELOPE_KEYS, validate_events
 from agent.state import build_state
@@ -72,18 +72,6 @@ def _replay_events(history):
 
 # --------------------------------------------------------------- capture ----
 
-class _SessionBinding(BasePlugin):
-    """Gives each tool the signed identity for the session it is actually running in."""
-
-    def __init__(self, user_id):
-        super().__init__(name="session_binding")
-        self._user_id = str(user_id)
-
-    async def before_tool_callback(self, *, tool, tool_args, tool_context):
-        bind_current_session(tool_context, user_id=self._user_id)
-        return None
-
-
 class _EventRecorder(BasePlugin):
     """Collects every event ADK produces, including the specialists' own.
 
@@ -99,6 +87,31 @@ class _EventRecorder(BasePlugin):
     async def on_event_callback(self, *, invocation_context, event):
         if not event.partial:  # ignore half-finished streaming chunks
             self.events.append(event)
+        return None
+
+
+class _AuthenticatedTools(BasePlugin):
+    """Bind each actual ADK session using the request JWT, never model state.
+
+    AgentTool creates a separate child session. A copied parent signature must
+    not authorize it: the existing bridge issues a fresh session-bound signature.
+    This request-local plugin is inherited by the child runners.
+    """
+
+    def __init__(self, request):
+        super().__init__(name="authenticated_tools")
+        self.request = request
+
+    async def before_tool_callback(self, *, tool, tool_args, tool_context):
+        context = tool_context._invocation_context
+        session = await get_or_create_authenticated_session(
+            self.request, session_service=context.session_service,
+            app_name=tool_context.session.app_name,
+            session_id=tool_context.session.id,
+        )
+        # Include the pending state delta seen by the function tool itself.
+        tool_context.state["user_id"] = session.state["user_id"]
+        tool_context.state["_auth_binding"] = session.state["_auth_binding"]
         return None
 
 
@@ -180,7 +193,7 @@ def default_specialists(model=None):
     }
 
 
-async def run_turn_async(user_id, events, *, specialists=None, model=None):
+async def run_turn_async(user_id, events, *, specialists=None, model=None, request=None):
     """Run one turn and return only the new events (a list of dicts).
 
     user_id: the signed-in user, taken from the JWT by the caller. Nothing
@@ -190,6 +203,8 @@ async def run_turn_async(user_id, events, *, specialists=None, model=None):
         stub of the same name (used by tests).
     model: optional model override, passed to the coordinator and the default
         specialists (used by tests to supply a fake model).
+    request: authenticated Django request, required for bridge-bound specialist
+        tools. Direct server/test callers without a request cannot authorize them.
     Raises EventsError when the history does not match the contract.
     """
     cleaned = validate_events(events)  # also guarantees the last event is a user message
@@ -202,7 +217,7 @@ async def run_turn_async(user_id, events, *, specialists=None, model=None):
     runner = InMemoryRunner(
         agent=build_coordinator({**default_specialists(model), **(specialists or {})}, model=model),
         app_name=APP_NAME,
-        plugins=[_SessionBinding(state["user_id"]), recorder],
+        plugins=[recorder, *([_AuthenticatedTools(request)] if request is not None else [])],
     )
     # A throwaway session that lives only for this request.
     session = await runner.session_service.create_session(
@@ -229,10 +244,10 @@ async def run_turn_async(user_id, events, *, specialists=None, model=None):
     return new_events
 
 
-def run_turn(user_id, events, *, specialists=None, model=None):
+def run_turn(user_id, events, *, specialists=None, model=None, request=None):
     """Blocking version of run_turn_async, for normal (synchronous) Django views.
 
     async_to_sync (not asyncio.run) so that database work done by the tools
     runs back on this same thread and uses this request's database connection.
     """
-    return async_to_sync(run_turn_async)(user_id, events, specialists=specialists, model=model)
+    return async_to_sync(run_turn_async)(user_id, events, specialists=specialists, model=model, request=request)
