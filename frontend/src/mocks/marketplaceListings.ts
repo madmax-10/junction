@@ -1,7 +1,7 @@
 import type { MarketplaceListing } from '../types/marketplace.ts'
 
 // Synthetic demo content. These are not real vehicles for sale.
-// Sell rows are published sell posts. New rows are the new-car catalog.
+// Sell rows are published sell posts, shown on Buy a car. New rows are the new-car catalog.
 // Photos on sell posts are credited sample images; the `photos` paths are the issue-folder locations.
 
 const civicIssue = 'b22e0000-0000-4000-8000-000000000001'

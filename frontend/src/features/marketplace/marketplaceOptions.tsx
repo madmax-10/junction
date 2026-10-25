@@ -11,13 +11,13 @@ export const categoryOptions: (MarketplaceOption<ListingCategory> & { descriptio
   {
     value: 'sell',
     label: 'Sell your car',
-    description: 'Cars people are selling',
+    description: 'People looking to buy',
     icon: <Tag size={22} weight="duotone" />,
   },
   {
     value: 'buy',
     label: 'Buy a car',
-    description: 'Used listings and new cars',
+    description: 'Cars for sale, plus new catalog prices',
     icon: <CarProfile size={22} weight="duotone" />,
   },
 ]
@@ -64,6 +64,13 @@ const listedFormat = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'nu
 
 export function formatPrice(amount: number) {
   return priceFormat.format(amount)
+}
+
+export function formatBudget(min: number | null, max: number | null) {
+  if (min !== null && max !== null) return `${formatPrice(min)} – ${formatPrice(max)}`
+  if (max !== null) return `Up to ${formatPrice(max)}`
+  if (min !== null) return `From ${formatPrice(min)}`
+  return 'Budget not listed'
 }
 
 export function formatMiles(miles: number) {

@@ -51,7 +51,7 @@ export function MarketplacePage() {
   const visibleListings = useMemo(() => filterListings(listings, category, filters), [listings, category, filters])
   const categoryCounts = useMemo(() => countByCategory(listings, filters), [listings, filters])
   const categoryTotal = useMemo(
-    () => listings.filter((listing) => (category === 'sell' ? listing.kind === 'sell' : true)).length,
+    () => listings.filter((listing) => (category === 'sell' ? listing.kind === 'buy' : listing.kind !== 'buy')).length,
     [listings, category],
   )
   const selectedListing = listings.find((listing) => listing.id === listingId)
@@ -88,7 +88,7 @@ export function MarketplacePage() {
               Marketplace
             </h1>
             <p className="mt-2 max-w-xl font-body text-sm leading-relaxed text-muted">
-              Sample listings for this demo. They are not verified vehicles for sale.
+              Sample posts for this demo. They are not verified offers.
             </p>
           </div>
           <ListYourCarButton />
@@ -141,8 +141,12 @@ export function MarketplacePage() {
               {visibleListings.length === 0 ? (
                 <StatusMessage
                   icon={<MagnifyingGlass size={26} weight="duotone" />}
-                  title="No cars match yet"
-                  description="Try a different make or model, or widen the price, year, mileage, and condition filters."
+                  title={category === 'sell' ? 'No buyers match yet' : 'No cars match yet'}
+                  description={
+                    category === 'sell'
+                      ? 'Try a different make or model, or widen the budget, year, and location filters.'
+                      : 'Try a different make or model, or widen the price, year, and location filters.'
+                  }
                   action={clearFiltersButton}
                 />
               ) : (

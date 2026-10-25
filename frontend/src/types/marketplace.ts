@@ -10,10 +10,16 @@ export type ListingPhoto = {
   credit?: { author: string; license: string; sourceUrl: string }
 }
 
-// Sell posts and the new-car catalog. Used cars for sale are published sell posts.
-export type MarketplaceListing = {
+type ListingBase = {
   id: string
   source: 'sample' | 'owner'
+  location: string | null
+  listedOn: string
+  description: string
+}
+
+// Published sell posts, and the new-car catalog. Shown on Buy a car.
+export type VehicleListing = ListingBase & {
   kind: 'sell' | 'new'
   vehicle: {
     year: number
@@ -23,14 +29,31 @@ export type MarketplaceListing = {
     mileage: number | null
   }
   price: number
-  location: string | null
-  listedOn: string
   conditionLabel: string | null
-  description: string
   knownDamage: string | null
   highlights: string[]
   photos: string[]
   photo: ListingPhoto | null
+}
+
+// Published buy posts: someone looking for a car. Shown on Sell your car.
+export type BuyerListing = ListingBase & {
+  kind: 'buy'
+  title: string
+  minBudget: number | null
+  maxBudget: number | null
+  makes: string[]
+  models: string[]
+  minimumYear: number | null
+  maximumMileage: number | null
+  vehicleType: VehicleKind | null
+  fuelType: string | null
+}
+
+export type MarketplaceListing = VehicleListing | BuyerListing
+
+export function isBuyerListing(listing: MarketplaceListing): listing is BuyerListing {
+  return listing.kind === 'buy'
 }
 
 export type MarketplaceFilters = {

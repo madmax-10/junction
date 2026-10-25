@@ -63,6 +63,10 @@ function FilterSelect<TValue extends string | number>({
 }
 
 export function MarketplaceToolbar({ category, filters, onChange }: MarketplaceToolbarProps) {
+  const browsingNewCatalog = category === 'buy' && filters.vehicleType === 'new'
+  const priceLabel = category === 'sell' ? 'Budget' : browsingNewCatalog ? 'MSRP' : 'Price'
+  const priceAnyLabel = category === 'sell' ? 'Any budget' : browsingNewCatalog ? 'Any MSRP' : 'Any price'
+
   return (
     <div className="flex flex-col gap-3 @4xl:flex-row @4xl:items-center">
       <div role="search" className="relative @4xl:min-w-56 @4xl:flex-1">
@@ -80,7 +84,7 @@ export function MarketplaceToolbar({ category, filters, onChange }: MarketplaceT
           autoComplete="off"
           value={filters.query}
           onChange={(event) => onChange({ query: event.target.value })}
-          placeholder="Search make or model"
+          placeholder={category === 'sell' ? 'Search makes or models' : 'Search make or model'}
           className={`${fieldClassName} h-11 pr-11 pl-11 [&::-webkit-search-cancel-button]:hidden`}
         />
         {filters.query && (
@@ -98,8 +102,8 @@ export function MarketplaceToolbar({ category, filters, onChange }: MarketplaceT
       <div role="group" aria-label="Filters" className="grid grid-cols-2 gap-2 @xl:grid-cols-4 @4xl:flex @4xl:shrink-0">
         <FilterSelect
           id="marketplace-price"
-          label={category === 'buy' && filters.vehicleType === 'new' ? 'MSRP' : 'Price'}
-          anyLabel={category === 'buy' && filters.vehicleType === 'new' ? 'Any MSRP' : 'Any price'}
+          label={priceLabel}
+          anyLabel={priceAnyLabel}
           value={filters.price}
           options={priceOptions}
           onChange={(price) => onChange({ price })}
@@ -120,7 +124,7 @@ export function MarketplaceToolbar({ category, filters, onChange }: MarketplaceT
           options={yearMaxOptions}
           onChange={(yearMax) => onChange({ yearMax })}
         />
-        {category === 'buy' && filters.vehicleType === 'new' ? (
+        {browsingNewCatalog ? (
           <FilterSelect
             id="marketplace-trim"
             label="Trim"
@@ -139,16 +143,19 @@ export function MarketplaceToolbar({ category, filters, onChange }: MarketplaceT
             onChange={(location) => onChange({ location })}
           />
         )}
-        {category === 'buy' && (
-          <FilterSelect
-            id="marketplace-vehicle-type"
-            label="New or used"
-            anyLabel="Used and new"
-            value={filters.vehicleType}
-            options={vehicleTypeOptions}
-            onChange={(vehicleType) => onChange({ vehicleType, ...(vehicleType === 'new' ? { location: null } : { trim: null }) })}
-          />
-        )}
+        <FilterSelect
+          id="marketplace-vehicle-type"
+          label="New or used"
+          anyLabel="Used and new"
+          value={filters.vehicleType}
+          options={vehicleTypeOptions}
+          onChange={(vehicleType) =>
+            onChange({
+              vehicleType,
+              ...(category === 'buy' && vehicleType === 'new' ? { location: null } : { trim: null }),
+            })
+          }
+        />
       </div>
     </div>
   )
