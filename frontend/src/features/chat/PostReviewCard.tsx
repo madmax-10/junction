@@ -19,7 +19,7 @@ type Phase = 'review' | 'editing' | 'publishing' | 'published' | 'dismissed' | '
 const cardTransition = { duration: 0.25, ease: 'easeOut' } as const
 
 function publishedPath(post: PostDraft) {
-  if (post.issueType === 'sell') return getListingPath(post.id)
+  if (post.issueType === 'sell' || post.issueType === 'buy') return getListingPath(post.id)
   if (post.issueType === 'repair') return getStoryPath(post.id)
   return null
 }
