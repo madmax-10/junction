@@ -15,6 +15,7 @@ from agent.services.repair_cost_service import estimate_repair_cost as estimate_
 from agent.services.repair_mechanic_service import find_mechanics_in_city as find_mechanics_in_city_service
 from agent.services.repair_mechanic_service import find_nearby_mechanics as find_nearby_mechanics_service
 from agent.services.repair_resolution_service import record_resolution as record_resolution_service
+from agent.services.image_reading_service import read_image as read_image_service
 from agent.tools.result import error_result
 from agent.schemas import RepairReply
 
@@ -170,16 +171,40 @@ async def record_resolution(repair_issue_id: str, resolution_details: dict, tool
         return error_result("Unable to record repair resolution.")
 
 
+async def read_image(image_id: str, purpose: str, tool_context: ToolContext) -> dict:
+    """Read one uploaded photo of this user's repair issue with an image model.
+
+    Output is evidence "observed in image", not a diagnosis or confirmed fact.
+
+    Args:
+        image_id: Photo filename from the issue's photo list (for example "<issue_id>_1.jpg").
+            Never a file path or URL.
+        purpose: One of warning_light, damage, vehicle_condition, vin, odometer, part.
+        tool_context: ADK-injected trusted identity context, not a model argument.
+    """
+    try:
+        user = await sync_to_async(get_authenticated_user, thread_sensitive=True)(tool_context)
+        return await sync_to_async(read_image_service, thread_sensitive=True)(
+            image_id, purpose, "repair", user=user,
+        )
+    except (NotAuthenticated, PermissionDenied):
+        return error_result("Trusted authentication context is required.")
+    except (APIException, DjangoValidationError, ValueError, DatabaseError):
+        return error_result("Unable to read the image.")
+
+
 def build_repair_agent(model) -> LlmAgent:
     """Construct one genuine specialist using the repository's supplied model."""
     return LlmAgent(
         name="repair", model=model, output_schema=RepairReply,
         description="Repair specialist for any make: private reports and owner outcomes, uncertain analysis, public experiences, supported costs and nearby businesses.",
         tools=[create_repair_issue, save_diagnosis, search_similar_repairs,
-               estimate_repair_cost, find_nearby_mechanics, find_mechanics_in_city, record_resolution],
+               estimate_repair_cost, find_nearby_mechanics, find_mechanics_in_city, record_resolution,
+               read_image],
         disallow_transfer_to_parent=True, disallow_transfer_to_peers=True,
         instruction=(
             "You are Agent 6, the Repair specialist under the Coordinator. "
+            "Use read_image on the owner's uploaded warning-light or part photos (image_id is the photo filename). Report its result as 'observed in image' evidence with its confidence, never as a diagnosis; observations may inform save_diagnosis symptoms (confirmed only if the owner confirms) and possible causes keep explicit uncertainty. Never pass paths or URLs. "
             "Help owners of any make with repair questions for their identified vehicle. "
             "Ask for missing essential information through the Coordinator; never assume vehicle ownership "
             "or invent an issue/vehicle ID. Use actual workflow IDs; IDs alone are not authorization. "

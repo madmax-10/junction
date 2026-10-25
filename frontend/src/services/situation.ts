@@ -218,11 +218,31 @@ export function photoTarget(saved: SavedSituation): { type: 'repair' | 'sell'; i
 }
 
 export async function uploadIssuePhotos(issue: { type: 'repair' | 'sell'; id: string }, images: ChatImage[]) {
+  const filenames: string[] = []
   for (const image of images) {
     const blob = await fetch(image.url).then((response) => response.blob())
     const file = new File([blob], image.filename || 'photo.jpg', { type: blob.type || 'image/jpeg' })
     const formData = new FormData()
     formData.append('file', file)
-    await api(`/api/issues/${issue.type}/${issue.id}/photos/`, { method: 'POST', formData })
+    const stored = await api<{ filename?: string }>(`/api/issues/${issue.type}/${issue.id}/photos/`, {
+      method: 'POST',
+      formData,
+    })
+    if (stored?.filename) filenames.push(stored.filename)
   }
+  return filenames
+}
+
+// Stage chat photos so the assistant can read them before any issue exists.
+export async function uploadChatPhotos(images: ChatImage[]) {
+  const filenames: string[] = []
+  for (const image of images) {
+    const blob = await fetch(image.url).then((response) => response.blob())
+    const file = new File([blob], image.filename || 'photo.jpg', { type: blob.type || 'image/jpeg' })
+    const formData = new FormData()
+    formData.append('file', file)
+    const stored = await api<{ filename?: string }>('/api/chat/photos/', { method: 'POST', formData })
+    if (stored?.filename) filenames.push(stored.filename)
+  }
+  return filenames
 }

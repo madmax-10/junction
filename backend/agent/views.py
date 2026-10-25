@@ -8,6 +8,7 @@ from rest_framework.views import APIView
 
 from agent.events import EventsError
 from agent.runner import run_turn
+from issues.photos import save_chat_photo
 from agent.responses import database_operations, database_records
 
 logger = logging.getLogger(__name__)
@@ -43,3 +44,13 @@ class ChatTurnView(APIView):
                 status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
         return Response({"events": new_events, "records": records, "database_operations": operations})
+
+
+class ChatPhotoView(APIView):
+    """Stage one chat photo for the signed-in user; returns the image_id the assistant reads."""
+
+    def post(self, request):
+        uploaded = request.FILES.get("file")
+        if uploaded is None:
+            raise serializers.ValidationError({"file": "A photo file is required."})
+        return Response(save_chat_photo(request.user, uploaded), status=status.HTTP_201_CREATED)

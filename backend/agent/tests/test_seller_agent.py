@@ -44,9 +44,10 @@ class SellerAgentConfigurationTests(SimpleTestCase):
             "create_or_update_sell_issue": ({"used_car_id", "selling_details", "sell_issue_id"}, {"used_car_id", "selling_details"}),
             "recommend_asking_price": ({"sell_issue_id", "valuation_context"}, {"sell_issue_id"}),
             "find_and_rank_buyers": ({"sell_issue_id", "limit"}, {"sell_issue_id"}),
+            "read_image": ({"image_id", "purpose"}, {"image_id", "purpose"}),
         }
         tools = async_to_sync(seller.build_seller_agent(AGENT_MODEL).canonical_tools)()
-        self.assertEqual(len(tools), 4)
+        self.assertEqual(len(tools), 5)
         self.assertEqual({tool.name for tool in tools}, set(expected))
         for tool in tools:
             self.assertIsInstance(tool, FunctionTool)

@@ -24,7 +24,7 @@ from rest_framework_simplejwt.tokens import AccessToken
 from accounts.models import User
 from agent.agents.buyer import (
     build_buyer_agent, create_or_update_buy_issue, get_post_contact,
-    search_and_rank_used, search_new_catalog,
+    read_image, search_and_rank_used, search_new_catalog,
 )
 from agent.auth import get_or_create_authenticated_session
 from agent.config import AGENT_MODEL
@@ -52,8 +52,9 @@ class BuyerAgentConfigurationTests(SimpleTestCase):
             "search_and_rank_used": (search_and_rank_used, {"buy_issue_id", "limit"}, {"buy_issue_id"}),
             "search_new_catalog": (search_new_catalog, {"buy_issue_id", "limit"}, {"buy_issue_id"}),
             "get_post_contact": (get_post_contact, {"post_id"}, {"post_id"}),
+            "read_image": (read_image, {"image_id", "purpose"}, {"image_id", "purpose"}),
         }
-        self.assertEqual(len(tools), 4)
+        self.assertEqual(len(tools), 5)
         self.assertEqual({tool.name for tool in tools}, set(expected))
         for tool in tools:
             with self.subTest(tool=tool.name):

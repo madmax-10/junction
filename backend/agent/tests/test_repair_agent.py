@@ -49,9 +49,10 @@ class RepairAgentConfigurationTests(SimpleTestCase):
             "find_nearby_mechanics": ({"repair_issue_id", "latitude", "longitude", "radius_meters", "limit"}, {"repair_issue_id", "latitude", "longitude"}),
             "find_mechanics_in_city": ({"repair_issue_id", "city", "limit"}, {"repair_issue_id", "city"}),
             "record_resolution": ({"repair_issue_id", "resolution_details"}, {"repair_issue_id", "resolution_details"}),
+            "read_image": ({"image_id", "purpose"}, {"image_id", "purpose"}),
         }
         tools = async_to_sync(repair.build_repair_agent(AGENT_MODEL).canonical_tools)()
-        self.assertEqual(len(tools), 7)
+        self.assertEqual(len(tools), 8)
         self.assertEqual({tool.name for tool in tools}, set(expected))
         for tool in tools:
             with self.subTest(tool=tool.name):

@@ -13,6 +13,7 @@ from agent.services.buy_issue_service import create_or_update_buy_issue as creat
 from agent.services.buyer_catalog_service import search_new_catalog as search_new_catalog_service
 from agent.services.buyer_search_service import search_and_rank_used as search_and_rank_used_service
 from agent.services.post_contact_service import get_post_contact as get_post_contact_service
+from agent.services.image_reading_service import read_image as read_image_service
 from agent.tools.result import error_result
 from agent.schemas import BuyerReply
 
@@ -101,6 +102,28 @@ async def get_post_contact(post_id: str) -> dict:
         return error_result("Unable to retrieve public seller contact.")
 
 
+async def read_image(image_id: str, purpose: str, tool_context: ToolContext) -> dict:
+    """Read one uploaded photo of this user's buy issue with an image model.
+
+    Output is evidence "observed in image", not a diagnosis or confirmed fact.
+
+    Args:
+        image_id: Photo filename from the issue's photo list (for example "<issue_id>_1.jpg").
+            Never a file path or URL.
+        purpose: One of warning_light, damage, vehicle_condition, vin, odometer, part.
+        tool_context: ADK-injected trusted identity context, not a model argument.
+    """
+    try:
+        user = await sync_to_async(get_authenticated_user, thread_sensitive=True)(tool_context)
+        return await sync_to_async(read_image_service, thread_sensitive=True)(
+            image_id, purpose, "buy", user=user,
+        )
+    except (NotAuthenticated, PermissionDenied):
+        return error_result("Trusted authentication context is required.")
+    except (APIException, DjangoValidationError, ValueError, DatabaseError):
+        return error_result("Unable to read the image.")
+
+
 def build_buyer_agent(model) -> LlmAgent:
     """Build the genuine Buyer agent using caller-supplied model configuration."""
     return LlmAgent(
@@ -111,11 +134,12 @@ def build_buyer_agent(model) -> LlmAgent:
             "Buyer Recommendation specialist: saves private Buy issues, searches published "
             "used-car posts and catalog MSRP references, and retrieves approved public seller contact."
         ),
-        tools=[create_or_update_buy_issue, search_and_rank_used, search_new_catalog, get_post_contact],
+        tools=[create_or_update_buy_issue, search_and_rank_used, search_new_catalog, get_post_contact, read_image],
         disallow_transfer_to_parent=True,
         disallow_transfer_to_peers=True,
         instruction=(
             "You are Agent 3, the Buyer specialist under the Coordinator, helping find suitable vehicles. "
+            "Use read_image on a buyer's uploaded vehicle photo only when asked; treat the result as observed-in-image evidence, not a diagnosis, and never pass paths or URLs. "
             "Use create_or_update_buy_issue to save confirmed buyer requirements privately. "
             "For a new request explicitly pass buy_issue_id null; for updates use the identified existing ID. "
             "If the user asks to update but no issue ID is identifiable, request clarification through "
