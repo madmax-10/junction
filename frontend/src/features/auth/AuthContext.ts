@@ -3,7 +3,9 @@ import type { AuthUser } from '../../types/auth.ts'
 
 export type AuthContextValue = {
   user: AuthUser | null
-  signIn: (user: AuthUser) => void
+  isReady: boolean
+  signIn: (email: string, password: string) => Promise<void>
+  signUp: (name: string, email: string, password: string) => Promise<void>
   signOut: () => void
 }
 

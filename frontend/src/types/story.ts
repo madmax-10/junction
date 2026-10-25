@@ -15,7 +15,7 @@ export type RepairPostData = {
   trim: string
   mileage: number
   symptoms: RepairSymptoms
-  method: RepairMethod
+  method: RepairMethod | null
   work_performed: string
   cost: number | null
   mechanic_name: string

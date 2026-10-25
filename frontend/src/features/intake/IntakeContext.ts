@@ -1,4 +1,5 @@
 import { createContext, useContext } from 'react'
+import { emptySavedSituation, type SavedSituation } from '../../services/situation.ts'
 import type {
   FieldConfirmation,
   IntakeDraft,
@@ -11,10 +12,12 @@ import type {
 export type IntakeContextValue = {
   draft: IntakeDraft
   confirmed: FieldConfirmation
+  saved: SavedSituation
   updateDraft: (changes: Partial<IntakeFields>) => void
   updateVehicle: (changes: Partial<VehicleInfo>) => void
   confirmSections: (sections: SituationSection[]) => void
   applyConfirmedChanges: (changes: SituationChanges) => void
+  setSaved: (saved: SavedSituation) => void
   resetDraft: () => void
 }
 
@@ -35,6 +38,8 @@ export const emptyIntakeDraft: IntakeDraft = {
   minBudget: '',
   maxBudget: '',
 }
+
+export { emptySavedSituation }
 
 export const situationSections: SituationSection[] = ['vehicle', 'accident', 'insurance', 'concerns']
 

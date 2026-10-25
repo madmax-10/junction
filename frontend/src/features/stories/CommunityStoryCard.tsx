@@ -45,7 +45,9 @@ function StoryDetails({ story }: { story: CommunityStory }) {
   const decision =
     method === 'mechanic'
       ? `Repaired by ${mechanic_name || 'a mechanic'}`
-      : 'Repaired it themselves'
+      : method === 'self'
+        ? 'Repaired it themselves'
+        : 'No repair decision reported yet'
 
   return (
     <>
@@ -87,7 +89,7 @@ function StoryDetails({ story }: { story: CommunityStory }) {
 export function CommunityStoryCard({ story, isExpanded, onToggle }: CommunityStoryCardProps) {
   const articleRef = useRef<HTMLElement>(null)
   const shouldReduceMotion = useReducedMotion()
-  const method = getMethodOption(story.post_data.method)
+  const method = story.post_data.method ? getMethodOption(story.post_data.method) : null
   const symptomLabel = getSymptomLabel(story)
   const displayStatus: StoryStatus = story.post_data.work_performed || story.post_data.cost !== null ? 'resolved' : 'ongoing'
   const titleId = `${story.id}-title`
@@ -139,18 +141,22 @@ export function CommunityStoryCard({ story, isExpanded, onToggle }: CommunitySto
 
       <section className="mt-4 rounded-xl bg-background/70 p-3.5">
         <h3 className="sr-only">Decision and outcome</h3>
-        <p className="inline-flex items-center gap-1.5 rounded-full border border-primary/15 bg-surface px-2.5 py-1 font-body text-xs font-semibold text-primary">
-          {method.icon}
-          <span className="sr-only">Repair method: </span>
-          {method.label}
-        </p>
-        <p className={`mt-2.5 ${termClassName}`}>
+        {method && (
+          <p className="inline-flex items-center gap-1.5 rounded-full border border-primary/15 bg-surface px-2.5 py-1 font-body text-xs font-semibold text-primary">
+            {method.icon}
+            <span className="sr-only">Repair method: </span>
+            {method.label}
+          </p>
+        )}
+        <p className={`${method ? 'mt-2.5' : ''} ${termClassName}`}>
           {displayStatus === 'resolved' ? 'Reported outcome' : 'Where things stand'}
           {story.post_data.insurance_settlement && (
             <span className={asideClassName}> · {story.post_data.insurance_settlement}</span>
           )}
         </p>
-        <p className={`mt-0.5 font-body text-sm leading-snug ${clampClassName}`}>{story.post_data.work_performed}</p>
+        <p className={`mt-0.5 font-body text-sm leading-snug ${clampClassName}`}>
+          {story.post_data.work_performed || 'No outcome reported yet'}
+        </p>
       </section>
 
       <AnimatePresence initial={false}>
