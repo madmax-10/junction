@@ -145,6 +145,34 @@ function toSellListing(post: ApiPost): MarketplaceListing | null {
   }
 }
 
+function toBuyListing(post: ApiPost): MarketplaceListing | null {
+  if (post.issue_type !== 'buy' || post.status !== 'published') return null
+  const data = post.post_data
+  const makes = stringList(data.preferred_makes) ?? []
+  const models = stringList(data.preferred_models) ?? []
+  const minBudget = numberOrNull(data.min_budget)
+  const maxBudget = numberOrNull(data.max_budget)
+  const vehicleType = data.vehicle_type === 'new' || data.vehicle_type === 'used' ? data.vehicle_type : null
+  if (!post.title && makes.length === 0 && models.length === 0 && minBudget === null && maxBudget === null) return null
+  return {
+    id: post.id,
+    source: 'owner',
+    kind: 'buy',
+    title: text(post.title) || 'Looking to buy',
+    description: post.content,
+    minBudget,
+    maxBudget,
+    makes,
+    models,
+    minimumYear: numberOrNull(data.minimum_year),
+    maximumMileage: numberOrNull(data.maximum_mileage),
+    vehicleType,
+    fuelType: text(data.fuel_type) || null,
+    location: text(data.location) || null,
+    listedOn: post.created_at.slice(0, 10),
+  }
+}
+
 function toNewListing(car: ApiNewCar): MarketplaceListing | null {
   const price = numberOrNull(car.msrp)
   if (!car.make || !car.model || price === null) return null
@@ -274,13 +302,18 @@ export async function getRepairStories() {
 }
 
 export async function getMarketplaceListingsFromApi() {
-  const [sellPosts, newCars] = await Promise.all([
+  const [sellPosts, buyPosts, newCars] = await Promise.all([
     fetchAllPages<ApiPost>('/api/posts/?issue_type=sell&page_size=100'),
+    fetchAllPages<ApiPost>('/api/posts/?issue_type=buy&page_size=100'),
     fetchAllPages<ApiNewCar>('/api/cars/new/?page_size=100'),
   ])
   return [
     ...sellPosts.flatMap((post) => {
       const listing = toSellListing(post)
+      return listing ? [listing] : []
+    }),
+    ...buyPosts.flatMap((post) => {
+      const listing = toBuyListing(post)
       return listing ? [listing] : []
     }),
     ...newCars.flatMap((car) => {

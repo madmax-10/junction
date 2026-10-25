@@ -1,4 +1,4 @@
-import type { ListingCategory, MarketplaceFilters, MarketplaceListing } from '../../types/marketplace.ts'
+import { isBuyerListing, type ListingCategory, type MarketplaceFilters, type MarketplaceListing, type VehicleListing } from '../../types/marketplace.ts'
 import { priceOptions } from './marketplaceOptions.tsx'
 
 export const emptyMarketplaceFilters: MarketplaceFilters = {
@@ -11,7 +11,7 @@ export const emptyMarketplaceFilters: MarketplaceFilters = {
   vehicleType: null,
 }
 
-export function getVehicleName({ vehicle }: MarketplaceListing) {
+export function getVehicleName({ vehicle }: VehicleListing) {
   return `${vehicle.year} ${vehicle.make} ${vehicle.model}`
 }
 
@@ -19,23 +19,43 @@ function normalize(text: string) {
   return text.toLowerCase().normalize('NFKD').replace(/[^a-z0-9\s]/g, '')
 }
 
-function matchesQuery({ vehicle }: MarketplaceListing, query: string) {
+function matchesQuery(listing: MarketplaceListing, query: string) {
   const terms = normalize(query).split(/\s+/).filter(Boolean)
   if (terms.length === 0) return true
-  const text = normalize(`${vehicle.year} ${vehicle.make} ${vehicle.model} ${vehicle.trim}`)
+  const text = isBuyerListing(listing)
+    ? normalize(`${listing.title} ${listing.makes.join(' ')} ${listing.models.join(' ')} ${listing.fuelType ?? ''}`)
+    : normalize(`${listing.vehicle.year} ${listing.vehicle.make} ${listing.vehicle.model} ${listing.vehicle.trim}`)
   return terms.every((term) => text.includes(term))
 }
 
 function matchesPrice(listing: MarketplaceListing, price: MarketplaceFilters['price']) {
   const range = priceOptions.find((option) => option.value === price)
-  return !range || (listing.price >= range.min && (range.max === Infinity || listing.price < range.max))
+  if (!range) return true
+  if (isBuyerListing(listing)) {
+    if (listing.minBudget === null && listing.maxBudget === null) return true
+    const lower = listing.minBudget ?? 0
+    const upper = listing.maxBudget ?? Infinity
+    return upper >= range.min && lower < range.max
+  }
+  return listing.price >= range.min && (range.max === Infinity || listing.price < range.max)
 }
 
+function matchesYear(listing: MarketplaceListing, yearMin: number | null, yearMax: number | null) {
+  if (isBuyerListing(listing)) {
+    if (listing.minimumYear === null) return true
+    return (yearMin === null || listing.minimumYear >= yearMin) && (yearMax === null || listing.minimumYear <= yearMax)
+  }
+  return (yearMin === null || listing.vehicle.year >= yearMin) && (yearMax === null || listing.vehicle.year <= yearMax)
+}
+
+// Buy a car browses cars for sale. Sell your car browses people who published a buy post.
 function matchesKind(listing: MarketplaceListing, category: ListingCategory, vehicleType: MarketplaceFilters['vehicleType']) {
-  if (category === 'sell') return listing.kind === 'sell'
+  if (category === 'sell') {
+    return isBuyerListing(listing) && (vehicleType === null || listing.vehicleType === vehicleType)
+  }
   if (vehicleType === 'used') return listing.kind === 'sell'
   if (vehicleType === 'new') return listing.kind === 'new'
-  return true
+  return listing.kind === 'sell' || listing.kind === 'new'
 }
 
 export function hasActiveFilters({ query, price, yearMin, yearMax, location, trim, vehicleType }: MarketplaceFilters) {
@@ -56,10 +76,9 @@ export function filterListings(listings: MarketplaceListing[], category: Listing
     (listing) =>
       matchesKind(listing, category, vehicleType) &&
       matchesPrice(listing, price) &&
-      (yearMin === null || listing.vehicle.year >= yearMin) &&
-      (yearMax === null || listing.vehicle.year <= yearMax) &&
+      matchesYear(listing, yearMin, yearMax) &&
       (location === null || listing.location === location) &&
-      (trim === null || listing.vehicle.trim.toLowerCase().includes(trim.toLowerCase())) &&
+      (trim === null || (!isBuyerListing(listing) && listing.vehicle.trim.toLowerCase().includes(trim.toLowerCase()))) &&
       matchesQuery(listing, query),
   )
 }
